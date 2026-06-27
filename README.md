@@ -85,10 +85,16 @@ binaries are built (Linux/WSL).
 
 ## Adding your own target
 
-Copy the templates in `docs/templates/` and `Audit/Template/`, fill them in, set the mapping's
-`state: HUMAN_APPROVED` and `human_approved: true` (and the matching review frontmatter), then
-re-run the quick-start commands. `run_mutants.py` refuses to assemble packages until the
-human-approval gate is satisfied.
+1. **Add the source.** Put your `.tex` source under `examples/<target>/source.tex` (or
+   `docs/source/<target>.tex`).
+2. **Transcribe a theorem card.** Manually transcribe/extract the relevant theorem into
+   `docs/theorem_index.yaml` using `docs/templates/theorem_card.template.yaml` (the harness does
+   not auto-parse LaTeX — a human copies the claim across, source side only).
+3. **Continue the pipeline.** Add the mapping, fidelity review, mutants, the Lean proof, and the
+   Comparator `Audit/<Target>/` triple by copying the templates in `docs/templates/` and
+   `Audit/Template/`; set the mapping's `state: HUMAN_APPROVED` and `human_approved: true` (and
+   the matching review frontmatter), then re-run the quick-start checks. `run_mutants.py` refuses
+   to assemble packages until the human-approval gate is satisfied.
 
 ## Requirements
 
