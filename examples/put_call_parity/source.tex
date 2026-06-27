@@ -1,0 +1,22 @@
+% Minimal source document for the audit-first harness smoke test.
+% This is a self-contained LaTeX statement of put--call (payoff) parity; it plays the role
+% that a real lecture-notes / paper excerpt would play in the pipeline. The harness does NOT
+% parse this file automatically -- a human transcribes it into docs/theorem_index.yaml (the
+% theorem card). It is kept here so the example target has a real source artefact.
+
+\documentclass{article}
+\usepackage{amsmath}
+\begin{document}
+
+\begin{theorem}[Put--call payoff parity]\label{thm:putcall}
+Let $S \ge 0$ be the price of an underlying asset at expiry and let $K$ be the strike of a
+European call and a European put written on it. The payoff of a long call minus the payoff
+of a long put equals the forward payoff:
+\begin{equation}\label{eq:putcall}
+\max(S - K,\, 0) - \max(K - S,\, 0) = S - K .
+\end{equation}
+This is a pointwise identity in $S$ and $K$; it requires no interest rate and no
+no-arbitrage assumption.
+\end{theorem}
+
+\end{document}

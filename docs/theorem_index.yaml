@@ -1,0 +1,40 @@
+# Source ledger for the audit-first harness (example instance).
+#
+# SOURCE SIDE ONLY. This file describes the mathematics as stated in the source
+# document (examples/put_call_parity/source.tex). It deliberately mentions NO Lean
+# declarations; the source <-> Lean bridge lives in docs/formal_mapping.yaml.
+#
+# `auto:` blocks would be extracted from the source (env, title, line range, verbatim
+# body). `curated:` blocks are written by hand (paraphrase, informal assumptions, notes).
+# In this MVP the card is hand-written; see docs/templates/theorem_card.template.yaml.
+
+source_file: examples/put_call_parity/source.tex
+source_title: "Put–call payoff parity (smoke-test source)"
+source_author: "audit-first-harness example"
+# `source_sha256` pins the exact source these line numbers/bodies were taken from.
+source_sha256: "TODO: sha256 of examples/put_call_parity/source.tex"
+generated_utc: "2026-06-27T00:00:00Z"
+generator: "hand-curated example (no auto-extractor in this MVP)"
+
+entries:
+
+  thm:putcall:
+    auto:
+      env: theorem
+      title: "Put–call payoff parity"
+      line_start: 13
+      line_end: 22
+      equation_labels: [eq:putcall]
+      body_tex: |
+        \max(S - K,\, 0) - \max(K - S,\, 0) = S - K .
+    curated:
+      paraphrase: >-
+        The payoff of a long call minus the payoff of a long put, both struck at K on an
+        underlying worth S at expiry, equals the forward payoff S - K. As a pointwise
+        identity in the reals: max(S - K, 0) - max(K - S, 0) = S - K.
+      informal_assumptions:
+        - "S and K are real numbers"
+        - "no interest rate or no-arbitrage assumption is required (a pointwise identity)"
+      notes: >-
+        Smoke-test source claim for the example target. max(S - K, 0) is the call payoff and
+        max(K - S, 0) is the put payoff; their difference is the forward payoff S - K.

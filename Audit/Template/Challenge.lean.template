@@ -1,0 +1,25 @@
+-- COMPARATOR CHALLENGE TEMPLATE.
+--
+-- Copy to Audit/<Target>/Challenge.lean and fill in. This file must be *Mathlib-only*: it
+-- imports nothing from this project. Copy verbatim the minimal definitions needed to STATE
+-- the theorem into the `AuditHarness.StatementAudit` namespace, then state the theorem with
+-- proof `:= by sorry`. The Comparator pins down this statement independently of your proofs.
+--
+-- IMPORTANT: import only the specific Mathlib modules you need (as the library's own files
+-- do); never `import Mathlib` (the umbrella), which forces building thousands of modules.
+--
+-- This file has a `.template` extension on purpose so Lake does NOT try to build it.
+
+import Mathlib.Data.Real.Basic
+-- import Mathlib.… (the same specific modules the library module uses to state the theorem)
+
+namespace AuditHarness.StatementAudit
+
+-- Copy here, verbatim, any `def`/`abbrev` the statement needs (definitionally equal copies).
+
+/-- TODO challenge statement — identical to the Solution's statement. -/
+theorem TODO_lemma_name (S K : ℝ) :
+    TODO = TODO := by
+  sorry
+
+end AuditHarness.StatementAudit

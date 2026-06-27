@@ -1,0 +1,37 @@
+# Source <-> Lean bridge for the audit-first harness (example instance).
+#
+# Links source claims (keys into docs/theorem_index.yaml) to Lean declarations and to
+# their Comparator audit triples. It carries the lifecycle state, the fidelity verdict, and
+# the human-approval flag, but NO mathematics (that is in theorem_index.yaml) and NO prose
+# judgment (that is in docs/fidelity_reviews/<target>.md).
+#
+# `comparator_status` is recorded by a human/pipeline after a Comparator run; it is NOT
+# re-derived by validate_mapping.py. See docs/templates/mapping.template.yaml.
+
+version: "0.1"
+
+# Axioms permitted by every audit triple (see Audit/<T>/comparator.json).
+permitted_axioms: [propext, Quot.sound, Classical.choice]
+
+targets:
+
+  PutCallParity:
+    source_refs: ["thm:putcall"]
+    lean:
+      declaration: put_call_payoff_parity
+      module: AuditHarness.PutCallParity
+      fully_qualified: AuditHarness.put_call_payoff_parity
+    comparator:
+      dir: Audit/PutCallParity
+      config: Audit/PutCallParity/comparator.json
+      challenge_module: Audit.PutCallParity.Challenge
+      solution_module: Audit.PutCallParity.Solution
+      audit_theorem: AuditHarness.StatementAudit.put_call_payoff_parity
+    verdict: PASS
+    equivalence: null
+    # Set by scripts/rebuild_pipeline.py / a human after a Comparator run. One of:
+    #   PASSED_REAL_LANDRUN | PASSED_FAKE_LANDRUN | NOT_RUN | SKIPPED_COMPARATOR_TOOL_UNAVAILABLE
+    comparator_status: NOT_RUN
+    review: docs/fidelity_reviews/PutCallParity.md
+    state: HUMAN_APPROVED
+    human_approved: true

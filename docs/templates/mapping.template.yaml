@@ -1,0 +1,33 @@
+# MAPPING TEMPLATE — one source <-> Lean target.
+#
+# Copy ONE block under `targets:` in docs/formal_mapping.yaml and fill it in. The target is
+# gated: scripts/run_mutants.py refuses to assemble judge packages unless `state` is at least
+# HUMAN_APPROVED and `human_approved` is true in BOTH this file and the review frontmatter.
+
+targets:
+
+  TODOTarget:                         # CamelCase target name; also the Audit/<Target>/ dir
+    source_refs: ["thm:TODO-key"]     # keys into docs/theorem_index.yaml
+    lean:
+      declaration: TODO_lemma_name    # bare Lean declaration name (must exist in the lib)
+      module: AuditHarness.TODOModule # Lake module path
+      fully_qualified: TODO_lemma_name
+    comparator:
+      dir: Audit/TODOTarget
+      config: Audit/TODOTarget/comparator.json
+      challenge_module: Audit.TODOTarget.Challenge
+      solution_module: Audit.TODOTarget.Solution
+      audit_theorem: AuditHarness.StatementAudit.TODO_lemma_name
+    verdict: PASS                     # PASS | PASS_EQUIV | PASS_PROVABLE_EQUIV | WARN
+    # Required (non-null `equivalence.direction`) when verdict is PASS_EQUIV or WARN:
+    equivalence: null
+    # equivalence:
+    #   kind: TODO
+    #   direction: >-
+    #     TODO why the Lean form is equivalent to / a faithful caveat of the source form.
+    #   provable_equiv_target: false
+    #   provable_equiv_lemma: null
+    comparator_status: NOT_RUN        # set after a Comparator run (see rebuild_pipeline.py)
+    review: docs/fidelity_reviews/TODOTarget.md
+    state: HUMAN_APPROVED             # EXTRACTED|MAPPED|FIDELITY_REVIEWED|HUMAN_APPROVED|...
+    human_approved: true

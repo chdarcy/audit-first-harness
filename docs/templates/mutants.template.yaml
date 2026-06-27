@@ -1,0 +1,43 @@
+# MUTANTS TEMPLATE — adversarial test cases for one target.
+#
+# Save as docs/mutants/<Target>.yaml. These are TEXTUAL statements shown to the fidelity
+# judge; they are NOT compiled. Expected labels are frozen (hashed as mutants_sha256) before
+# any judge run, so they are the answer key the judge is scored against.
+#
+#   discriminative -> a real defect; the judge MUST reject  (expected_verdict: FAIL or WARN)
+#   consistency    -> a meaning-preserving variant; the judge MUST accept
+#                     (expected_verdict: PASS / PASS_EQUIV / PASS_PROVABLE_EQUIV)
+#
+# Blind the declaration name to `candidate_statement` in every mutated_statement so the judge
+# cannot tell real from mutant by name (run_mutants.py also enforces this on the real one).
+
+target: TODOTarget
+real_statement_ref: TODO_lemma_name
+lean_ambient: ""              # e.g. "variable {n : Type*} [Fintype n] [DecidableEq n]"
+
+formalisation_choices:        # neutral modelling notes shown to the judge
+  - "TODO modelling note"
+
+real_statement: |
+  theorem TODO_lemma_name (S K : ℝ) :
+      TODO = TODO
+
+mutants:
+  - id: TODO-D1
+    class: discriminative
+    operator: alter-formula   # alter-formula | swap-variable | drop-hypothesis |
+                              # weaken-conclusion | change-quantifier | negate-side-condition
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement (S K : ℝ) :
+          TODO  -- a genuinely WRONG variant
+    note: "TODO what defect this injects"
+
+  - id: TODO-C1
+    class: consistency
+    operator: rename-variables  # rename-variables | reorder-hypotheses | notation-variant
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement (X Y : ℝ) :
+          TODO  -- a meaning-preserving variant
+    note: "TODO why this is still faithful"

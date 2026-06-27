@@ -1,0 +1,29 @@
+-- COMPARATOR SOLUTION TEMPLATE.
+--
+-- Copy to Audit/<Target>/Solution.lean and fill in. This file imports the FULL library,
+-- repeats the IDENTICAL copied definitions and the IDENTICAL statement from Challenge.lean
+-- in the same `AuditHarness.StatementAudit` namespace, and proves it by delegating to the
+-- real library theorem.
+--
+-- Delegation patterns:
+--   * plain `def`/`abbrev` copies are definitionally equal to the library's, so a bare
+--       exact _root_.TODO_lemma_name args
+--     closes the goal (the `_root_.` escapes the same-named StatementAudit theorem);
+--   * if the statement mentions a project `structure`/`class`/`inductive`, a copied one is a
+--     FRESH inductive (not defeq), so repack it through the anonymous constructor, e.g.
+--       exact _root_.TODO_lemma_name args ⟨field₁, field₂⟩.
+--
+-- This file has a `.template` extension on purpose so Lake does NOT try to build it.
+
+import AuditHarness
+
+namespace AuditHarness.StatementAudit
+
+-- Repeat here the SAME copies as Challenge.lean.
+
+/-- TODO solution statement — identical to the Challenge's statement. -/
+theorem TODO_lemma_name (S K : ℝ) :
+    TODO = TODO := by
+  exact _root_.AuditHarness.TODO_lemma_name S K
+
+end AuditHarness.StatementAudit

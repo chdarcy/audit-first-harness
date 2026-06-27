@@ -1,0 +1,30 @@
+# THEOREM CARD TEMPLATE — one source claim.
+#
+# Copy ONE `entries:` block into docs/theorem_index.yaml (the source ledger) and fill it in.
+# SOURCE SIDE ONLY: never name a Lean declaration here (that belongs in formal_mapping.yaml).
+#
+# `auto:` = transcribed from the source document. `curated:` = written by a human.
+# Only `curated.paraphrase`, `auto.body_tex`, and `curated.informal_assumptions` are ever
+# shown to the fidelity judge; keep answer-key language (verdicts, "discriminative",
+# "consistency", approvals) OUT of those three fields.
+
+entries:
+
+  thm:TODO-key:                       # stable source key, e.g. thm:putcall / eq:cml
+    auto:
+      env: theorem                    # theorem | lemma | equation | definition | ...
+      title: "TODO short title"
+      line_start: 0                   # line range in the source file (optional)
+      line_end: 0
+      equation_labels: []             # e.g. [eq:putcall]
+      cross_refs: []                  # other source keys this depends on
+      body_tex: |
+        TODO verbatim LaTeX of the claim (judge-visible)
+    curated:
+      paraphrase: >-
+        TODO one-paragraph plain-text restatement of the claim (judge-visible).
+      informal_assumptions:           # judge-visible
+        - "TODO assumption 1"
+      notes: >-
+        TODO reviewer notes: bundle decomposition, modelling caveats, what is / is not
+        formalised. NOT shown to the judge.

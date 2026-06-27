@@ -1,0 +1,23 @@
+_note: Membership only (blind_id -> target + input_sha256). NO answer-key labels. Safe for run_judge.py;
+  _manifest.yaml remains the answer key.
+generated_utc: '2026-06-27T23:10:32Z'
+mutants_sha256: 8fe2db652167273547916b0ea2f6da9e7a45bb50b49323165dfbc80494b26455
+variants:
+  V-0004:
+    target: PutCallParity
+    input_sha256: 39589eab62208d3490c272773f414b180cb64ed865da750d9bb43a46a870a9c1
+  V-0005:
+    target: PutCallParity
+    input_sha256: 8fb07dd4d697cf899aa72e06e18faabad8ccdc49a557b4e5029782be802781dc
+  V-0001:
+    target: PutCallParity
+    input_sha256: 923e7d7e624782d1bb5e23e323f428b5a76533df04c53fd37b6964e5a185aa9f
+  V-0003:
+    target: PutCallParity
+    input_sha256: f8db026f1d9021363d15d2397f38a0412b90360aa9fa960b2370274738701b19
+  V-0002:
+    target: PutCallParity
+    input_sha256: 7ec2edb706e8b8e7d579adf0b93817cf8a0c98c94ef2018e39c466ea5f67486f
+  V-0006:
+    target: PutCallParity
+    input_sha256: e22b3d012a3af4665982136c0a6a1a13b316257d10ed90df87e393f1341dc3b6

@@ -1,0 +1,32 @@
+meta:
+  blind_id: V-0002
+  dry_run: true
+  prompt_sha256: 31c543738d015c9a9a958fc6266ffcf726e6d4225f60b9016a4f29e3f3450319
+  input_sha256: 7ec2edb706e8b8e7d579adf0b93817cf8a0c98c94ef2018e39c466ea5f67486f
+  mutants_sha256: 8fe2db652167273547916b0ea2f6da9e7a45bb50b49323165dfbc80494b26455
+  note: DRY RUN ONLY. 'package' below is exactly what a judge would receive as user content. 'meta' is
+    NOT sent to the judge.
+package:
+  variant: V-0002
+  instructions: Compare the source claim to the Lean statement and output the verdict YAML defined in
+    the system prompt. Judge this package in isolation.
+  source:
+    refs:
+    - thm:putcall
+    claims:
+    - ref: thm:putcall
+      paraphrase: 'The payoff of a long call minus the payoff of a long put, both struck at K on an underlying
+        worth S at expiry, equals the forward payoff S - K. As a pointwise identity in the reals: max(S
+        - K, 0) - max(K - S, 0) = S - K.'
+      body_tex: \max(S - K,\, 0) - \max(K - S,\, 0) = S - K .
+      informal_assumptions:
+      - S and K are real numbers
+      - no interest rate or no-arbitrage assumption is required (a pointwise identity)
+  lean:
+    ambient: ''
+    statement: "theorem candidate_statement (X Y : ℝ) :\n    max (X - Y) 0 - max (Y - X) 0 = X - Y"
+  formalisation_choices:
+  - 'payoffs modelled directly over the reals: call = max (S - K) 0, put = max (K - S) 0'
+  - the forward payoff is the right-hand side S - K
+  - no non-negativity hypothesis on S is carried (the identity does not need it)
+  provable_equiv_lemma: null

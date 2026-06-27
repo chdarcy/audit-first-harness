@@ -1,0 +1,7 @@
+{
+    "challenge_module": "Audit.PutCallParity.Challenge",
+    "solution_module": "Audit.PutCallParity.Solution",
+    "theorem_names": ["AuditHarness.StatementAudit.put_call_payoff_parity"],
+    "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+    "enable_nanoda": false
+}

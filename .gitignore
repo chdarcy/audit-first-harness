@@ -1,0 +1,19 @@
+# Lake build output and fetched dependencies
+/.lake/
+/lake-packages/
+/build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Secrets — never commit API keys
+.env
+*.key

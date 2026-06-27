@@ -1,0 +1,66 @@
+# Mutation test cases for the PutCallParity example target.
+#
+# Textual judge test cases; not compiled. Expected labels are fixed before any judge run.
+#   discriminative -> judge must REJECT (FAIL or WARN)
+#   consistency    -> judge must ACCEPT (PASS / PASS_EQUIV / PASS_PROVABLE_EQUIV)
+
+target: PutCallParity
+real_statement_ref: put_call_payoff_parity
+lean_ambient: ""
+
+formalisation_choices:
+  - "payoffs modelled directly over the reals: call = max (S - K) 0, put = max (K - S) 0"
+  - "the forward payoff is the right-hand side S - K"
+  - "no non-negativity hypothesis on S is carried (the identity does not need it)"
+
+real_statement: |
+  theorem put_call_payoff_parity (S K : ℝ) :
+      max (S - K) 0 - max (K - S) 0 = S - K
+
+mutants:
+  # ---------------- Discriminative (judge must REJECT) ----------------
+  - id: PCP-D1
+    class: discriminative
+    operator: alter-formula
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement (S K : ℝ) :
+          max (S - K) 0 - max (K - S) 0 = K - S
+    note: "right-hand side sign flipped to K - S; the forward payoff is negated"
+
+  - id: PCP-D2
+    class: discriminative
+    operator: swap-variable
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement (S K : ℝ) :
+          max (K - S) 0 - max (S - K) 0 = S - K
+    note: "the two payoff legs are swapped, so the left-hand side now equals K - S, not S - K"
+
+  - id: PCP-D3
+    class: discriminative
+    operator: weaken-conclusion
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement (S K : ℝ) :
+          max (S - K) 0 = S - K
+    note: "drops the put leg entirely; the call payoff alone equals S - K only when S >= K"
+
+  # ---------------- Consistency (judge must ACCEPT) ----------------
+  - id: PCP-C1
+    class: consistency
+    operator: rename-variables
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement (X Y : ℝ) :
+          max (X - Y) 0 - max (Y - X) 0 = X - Y
+    note: "S -> X and K -> Y; identical statement up to renaming"
+
+  - id: PCP-C2
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement (S K : ℝ) :
+          max (S - K) (0 : ℝ) - max (K - S) (0 : ℝ) = S - K
+    note: "explicit (0 : ℝ) type ascriptions only; the statement is unchanged"

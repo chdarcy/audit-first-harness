@@ -1,0 +1,26 @@
+name = "AuditHarness"
+version = "0.1.0"
+keywords = ["lean", "formalisation", "fidelity", "audit"]
+defaultTargets = ["AuditHarness"]
+
+[leanOptions]
+pp.unicode.fun = true # pretty-prints `fun a ↦ b`
+relaxedAutoImplicit = false
+weak.linter.mathlibStandardSet = true
+weak.linter.style.header = false # not part of mathlib; skip the mandatory-header check
+
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.31.0"
+
+[[lean_lib]]
+name = "AuditHarness"
+
+# Comparator audit triples (Challenge/Solution). Not in defaultTargets, so a plain
+# `lake build` is unaffected; build explicitly with `lake build Audit.<Target>.*`.
+# `Audit/Template/` holds *.lean.template skeletons (not valid modules), so the
+# `Audit.+` glob does not pick them up.
+[[lean_lib]]
+name = "Audit"
+globs = ["Audit.+"]
