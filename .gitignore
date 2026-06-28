@@ -27,4 +27,5 @@ venv/
 docs/judge_results/*.yaml
 !docs/judge_results/*_preview.yaml
 docs/promotion/*.yaml
+docs/pipeline_status.json
 /evidence/

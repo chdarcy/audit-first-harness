@@ -75,6 +75,13 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   acceptance of statement equality under a bounded axiom set) — **not** source-`.tex` fidelity
   evidence. The status is conservative: `BEST_EFFORT` because `landrun` runs `--best-effort` and the
   Landlock ABI was not asserted ≥ 5 (ARCHITECTURE §13.4).
+- **Structured pipeline status + gate freshness check** — `rebuild_pipeline.py --pipeline-status-out`
+  emits a machine-readable `pipeline_status.v0.1` JSON (per-stage status + sha256 fingerprints of the
+  target-relevant formal inputs); `gate_decision.py --pipeline-status` consumes it in preference to
+  the markdown report, validating schema/target/required stages and **failing closed (BLOCK)** on a
+  stale (fingerprint-mismatched), target-mismatched, malformed, or missing status. Closes the
+  GAP_ANALYSIS "stale-report" risk for the structured path; the markdown fallback is preserved for
+  backward compatibility. Formal stage evidence only — never source fidelity (ARCHITECTURE §11.3).
 
 ---
 

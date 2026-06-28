@@ -36,6 +36,7 @@ Exit code 0 if no executed stage failed, 1 otherwise. SKIPPED stages never fail 
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import platform
@@ -107,6 +108,71 @@ def resolve_target(arg_target: str | None, available: dict) -> tuple[str | None,
 def select_targets(available: dict, target: str | None) -> dict:
     """All targets when target is None, else just the selected one (assumed validated)."""
     return available if target is None else {target: available[target]}
+
+
+# ---------------------------------------------------------------------------
+# Structured pipeline-status output (machine-readable; consumed by gate_decision.py
+# --pipeline-status with a freshness/fingerprint check). Formal evidence only — NOT
+# source-fidelity evidence. See ARCHITECTURE.md §11.3.
+# ---------------------------------------------------------------------------
+PIPELINE_STATUS_SCHEMA = "pipeline_status.v0.1"
+
+
+def sha256_file(path: Path) -> str | None:
+    """Hex sha256 of a file's bytes, or None if it cannot be read."""
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def target_input_files(target: str | None, targets: dict) -> list[tuple[str, Path]]:
+    """The target-relevant formal inputs to fingerprint, as sorted (relpath, abspath) pairs.
+
+    Shared by the writer (rebuild_pipeline) and the verifier (gate_decision) so the two cannot
+    drift. Always includes the global ledgers; for a target it adds the Comparator triple, the
+    theorem module, and the helper module **if it exists**. Only existing files are returned."""
+    candidates: list[Path] = [FORMAL_MAPPING, ROOT / "docs" / "theorem_index.yaml"]
+    tmap = (targets or {}).get(target) if target else None
+    if isinstance(tmap, dict):
+        comp = tmap.get("comparator") or {}
+        cdir = comp.get("dir")
+        cfg = comp.get("config")
+        base = (ROOT / cdir) if cdir else ((ROOT / cfg).parent if cfg else None)
+        if base is not None:
+            candidates += [base / "Challenge.lean", base / "Solution.lean",
+                           (ROOT / cfg) if cfg else (base / "comparator.json")]
+        module = (tmap.get("lean") or {}).get("module")
+        if isinstance(module, str) and module:
+            stem = module.replace(".", "/")
+            candidates += [ROOT / f"{stem}.lean", ROOT / stem / "Helpers.lean"]
+    seen: dict[str, Path] = {}
+    for p in candidates:
+        if p.is_file():
+            rel = p.relative_to(ROOT).as_posix()
+            seen[rel] = p
+    return [(rel, seen[rel]) for rel in sorted(seen)]
+
+
+def build_pipeline_status(stages: list, overall: str, target: str | None, command: dict,
+                          targets: dict, generated_utc: str | None = None) -> dict:
+    """Assemble the machine-readable status document (pure; deterministic except the timestamp)."""
+    fps = {rel: f"sha256:{sha256_file(p)}" for rel, p in target_input_files(target, targets)
+           if sha256_file(p) is not None}
+    return {
+        "schema_version": PIPELINE_STATUS_SCHEMA,
+        "generated_utc": generated_utc or datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+        "target": target,
+        "command": command,
+        "stages": {s.name: {"status": s.status, "message": s.detail} for s in stages},
+        "overall_status": overall,
+        "input_fingerprints": fps,
+    }
+
+
+def write_pipeline_status(path: Path, doc: dict) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
 # ---------------------------------------------------------------------------
@@ -392,6 +458,11 @@ def main() -> int:
                     help="after the Comparator run, write the resulting status back to the "
                          "selected target's comparator_status in docs/formal_mapping.yaml "
                          "(opt-in; requires --target and --with-comparator)")
+    ap.add_argument("--pipeline-status-out", metavar="PATH",
+                    help="also write a machine-readable pipeline_status.json (schema "
+                         f"{PIPELINE_STATUS_SCHEMA}) to PATH, with stage statuses + input "
+                         "fingerprints, for gate_decision.py --pipeline-status (formal evidence "
+                         "only). The markdown report is still written.")
     args = ap.parse_args()
 
     target, err = resolve_target(args.target, load_targets())
@@ -436,8 +507,21 @@ def main() -> int:
     now = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     write_report(stages, now, overall, target, writeback)
 
+    if args.pipeline_status_out:
+        command = {
+            "with_build": args.with_build,
+            "with_axiom_audit": args.with_axiom_audit,
+            "with_equivalence_check": args.with_equivalence_check,
+            "with_comparator": args.with_comparator,
+            "writeback_comparator_status": args.writeback_comparator_status,
+        }
+        status_doc = build_pipeline_status(stages, overall, target, command, load_targets(), now)
+        write_pipeline_status(Path(args.pipeline_status_out), status_doc)
+
     scope = "all targets" if target is None else f"target {target}"
     print(f"PIPELINE {overall} ({scope}) — report: {REPORT.relative_to(ROOT)}")
+    if args.pipeline_status_out:
+        print(f"  pipeline status: {args.pipeline_status_out}")
     for s in stages:
         print(f"  [{s.status:>7}] {s.name}: {s.detail}")
     if writeback and writeback["performed"]:

@@ -70,7 +70,7 @@ Risk = impact if left as-is on the harness's anti-drift claim.
 | Structured judge metric gate caps | Implemented | `gate_decision.py --judge-metrics` (cap→HUMAN_REVIEW only) + tests | optional path; gate's primary judge signal is still legacy `scored.yaml` | Med | Unify on the structured summary |
 | Structured judge-output export | Implemented | `export_structured_judge_results.py` + tests | only fixture-exercised | Low | — |
 | Offline structured-judge workflow runner | Implemented | `run_structured_judge_workflow.py` + tests | needs a real `judge_results` input to be useful | Low | — |
-| Promotion gate | Implemented | `gate_decision.py` (PROMOTE/BLOCK/REVISE/HUMAN_REVIEW) + tests | reads `pipeline_report.md` markdown (no `pipeline_status.json`) | **High** | Emit a structured `pipeline_status.json` |
+| Promotion gate | Implemented | `gate_decision.py` (PROMOTE/BLOCK/REVISE/HUMAN_REVIEW) + tests; `--pipeline-status` consumes a validated, fingerprint-checked `pipeline_status.v0.1` (fail-closed) | markdown remains the unvalidated default when `--pipeline-status` is not passed | Low (was High) | use `--pipeline-status` in promotion runs |
 | Target-scoped rebuild pipeline | Implemented | `rebuild_pipeline.py --target` + tests | — | Low | — |
 | Guarded PASS_PROVABLE_EQUIV | Implemented | `check_equivalence.py`; gate downgrades bare claims | unexercised (no target uses it; all `equivalence: null`) | Low | Add a target that needs it |
 | Worked targets | Implemented | PutCallParity, TwoAssetMinVar | only 2 finance targets | Med | More targets (§7) |
@@ -120,9 +120,11 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 - **Does not:** run the gated heavy stages (build/comparator/axiom/equiv) by default; they are
   SKIPPED unless flags are passed. CI runs the default → those stages are SKIPPED.
 - **Can fail silently:** a SKIPPED stage "never fails the run", so a green default run says little
-  about formal correctness. A stale `pipeline_report.md` is consumed downstream as if current.
-- **Improve next:** emit a structured `pipeline_status.json` (with per-stage status + a timestamp);
-  add a CI Lean job that runs build + axiom_audit (+ comparator where feasible) for all targets.
+  about formal correctness. (A stale markdown `pipeline_report.md` consumed downstream is mitigated
+  on the gate side by the fingerprint-checked `--pipeline-status` path, §4c.)
+- **Improve next:** `--pipeline-status-out` now emits a structured `pipeline_status.v0.1` (per-stage
+  status + sha256 input fingerprints); still to do — a CI Lean job that runs build + axiom_audit
+  (+ comparator where feasible) for all targets.
 
 ### 4b. Structured-judge evidence pipeline (export → validate → score → workflow)
 - **Does:** un-blinds judge results into `schema_version 0.3.0` records, validates, scores
@@ -138,12 +140,15 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 - **Does:** deterministic, ordered BLOCK/REVISE/HUMAN_REVIEW/PROMOTE; consumes mapping, review,
   legacy `scored.yaml`, manifest provenance, and formal status; optionally caps on the structured
   summary (`--judge-metrics`).
-- **Does not:** read a structured formal-status file (none exists) — it parses the markdown report.
-- **Can fail silently:** **stale-report risk** — it trusts whatever `pipeline_report.md` says; if the
-  report is old, a stage shown PASS may no longer hold. Missing `scored.yaml` ⇒ BLOCK (safe), so no
-  target promotes today.
-- **Improve next:** consume `pipeline_status.json` with a freshness/age check; fail closed if the
-  formal status is older than the artifacts it describes.
+- **Does:** with `--pipeline-status` it consumes a structured `pipeline_status.v0.1` (schema/target
+  validated + sha256 fingerprint-checked for freshness), preferred over the markdown report and
+  **failing closed (BLOCK)** on a stale/mismatched/missing status; without it, it parses the markdown
+  report (unvalidated fallback).
+- **Can fail silently:** only on the **markdown fallback** (when `--pipeline-status` is not passed) —
+  it trusts whatever `pipeline_report.md` says. The structured path detects staleness via input
+  fingerprints. Missing `scored.yaml` ⇒ BLOCK (safe), so no target promotes today.
+- **Improve next:** make `--pipeline-status` the default in promotion runs; optionally extend the
+  freshness check to the markdown fallback.
 
 ### 4d. Artifact policy
 - **Does:** `.gitignore` keeps `judge_results/*.yaml` (except `*_preview.yaml`), `promotion/*.yaml`,
@@ -174,8 +179,11 @@ written-back real Comparator pass; what is still missing is a committed real *ju
    committed real judge run**. We have not measured discriminative recall / false-alarm rate on
    actual model output; we have only proven the plumbing on synthetic fixtures. The central
    empirical claim ("the judge can catch planted defects") is **unvalidated**. **(High)**
-3. **Gate consumes a markdown report.** `gate_decision.py` parses `pipeline_report.md`; the preferred
-   `pipeline_status.json` is unimplemented. Stale or hand-edited reports are trusted verbatim. **(High)**
+3. **Gate consumes a markdown report. — REDUCED.** By default `gate_decision.py` still parses
+   `pipeline_report.md`, but `--pipeline-status` now consumes a structured `pipeline_status.v0.1`
+   that is schema/target-validated and **sha256 fingerprint-checked for freshness**, failing closed
+   (BLOCK) on any stale / mismatched / missing status. Residual: the markdown path remains the
+   unvalidated default when `--pipeline-status` is not passed. **(was High → low for the structured path)**
 4. **Two parallel judge representations.** The legacy blinded `scored.yaml` (per-`blind_id`) and the
    v0.3 structured JSON coexist; the gate's primary judge signal is still legacy, with the structured
    summary as an optional cap. This is functional but risks UX/maintenance fragmentation and two
@@ -222,7 +230,9 @@ written-back real Comparator pass; what is still missing is a committed real *ju
   `PASSED_REAL_LANDRUN_BEST_EFFORT`).
 - Run the judge for real once (opt-in), score it, and record discriminative-recall / FAR — i.e.
   produce *evidence the judge works*, not just infrastructure.
-- Emit a structured `pipeline_status.json` and have the gate consume it with a freshness check.
+- ~~Emit a structured `pipeline_status.json` and have the gate consume it with a freshness check.~~ —
+  **done** (`rebuild_pipeline.py --pipeline-status-out` / `gate_decision.py --pipeline-status`,
+  sha256 fingerprint-checked, fail-closed).
 - Expand CI to build all Comparator triples and run the axiom audit.
 
 **Should do before scaling targets:**
@@ -245,9 +255,10 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 1. **Comparator-status writeback for all targets.** *Why:* unblocks PROMOTE; makes the ledger
    truthful. *Files:* `docs/formal_mapping.yaml` (writeback output), evidence (gitignored). *Risk:*
    Med. *Type:* Python-run + data (uses existing `--writeback`; no logic change).
-2. **Structured `pipeline_status.json` + gate consumption with freshness check.** *Why:* removes the
-   stale-markdown risk; makes the gate's formal inputs machine-readable. *Files:*
-   `rebuild_pipeline.py`, `gate_decision.py`, tests. *Risk:* Med. *Type:* Python.
+2. **Structured `pipeline_status.json` + gate consumption with freshness check. — DONE.**
+   Implemented as `rebuild_pipeline.py --pipeline-status-out` (`pipeline_status.v0.1`, sha256 input
+   fingerprints) and `gate_decision.py --pipeline-status` (validated, fingerprint-checked,
+   fail-closed). The markdown fallback is preserved for backward compatibility.
 3. **Expand CI for the formal layer.** *Why:* green CI should imply the formal audit ran for all
    targets. *Files:* `.github/workflows/ci.yml`. *Risk:* Low. *Type:* CI/architecture-adjacent.
 4. **One real judge round, scored and recorded.** *Why:* first empirical evidence the judge detects
@@ -281,7 +292,9 @@ enabled target:
 3. A **real** judge run (opt-in) has been scored, with discriminative-recall and false-alarm-rate
    recorded, demonstrating the judge catches the planted defects (not just that the plumbing runs).
 4. `gate_decision.py` consumes a **fresh, structured** formal-status input and emits a defensible
-   decision; at least one target reaches **PROMOTE** under genuine (non-mock) evidence.
+   decision; at least one target reaches **PROMOTE** under genuine (non-mock) evidence. *(The
+   structured, fingerprint-checked input is now implemented via `--pipeline-status`; the open part is
+   reaching PROMOTE on real judge evidence with all formal stages actually run.)*
 5. `validate_mapping` is green and the artifact policy holds (no generated evidence committed).
 
 Criterion 2 is now satisfied for the three current targets (`ce5d8f3`). Until criteria 1, 3, and 4

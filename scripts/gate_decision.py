@@ -37,6 +37,7 @@ Inputs (all optional except the mapping; missing critical inputs are reported, n
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from datetime import datetime, timezone
@@ -49,6 +50,11 @@ except ModuleNotFoundError:
     sys.exit(2)
 
 ROOT = Path(__file__).resolve().parent.parent
+
+# Structured pipeline-status schema this gate understands (mirrors rebuild_pipeline.py). The
+# structured status is *formal* evidence only; it never establishes source fidelity.
+PIPELINE_STATUS_SCHEMA = "pipeline_status.v0.1"
+REQUIRED_FORMAL_STAGES = {"build", "no_sorry", "axiom_audit", "equivalence_check", "comparator"}
 
 PROMOTE, BLOCK, REVISE, HUMAN_REVIEW = "PROMOTE", "BLOCK", "REVISE", "HUMAN_REVIEW"
 
@@ -127,6 +133,9 @@ def _decide_formal(sig: dict, thr: dict | None = None) -> dict:
 
     # ---- Rule 1: hard formal / integrity failures -> BLOCK -------------------
     blocks: list[str] = []
+    if sig.get("structured_status_error"):
+        blocks.append("Structured pipeline status is unusable (formal-evidence integrity "
+                      f"failure): {sig['structured_status_error']}.")
     if not sig.get("mapping_present"):
         blocks.append("Formal mapping is missing, or the target is not in formal_mapping.yaml.")
     if not sig.get("card_present"):
@@ -388,15 +397,81 @@ def _load_frontmatter(path: Path) -> dict | None:
     return yaml.safe_load("\n".join(lines[1:end])) or {}
 
 
+def _stage_status_value(v) -> str | None:
+    """Normalise a stage value to PASS/FAIL/SKIPPED — accepts a bare string or a
+    {"status": ...} object (the pipeline_status.v0.1 nested shape)."""
+    if isinstance(v, str):
+        return v.upper()
+    if isinstance(v, dict) and isinstance(v.get("status"), str):
+        return v["status"].upper()
+    return None
+
+
+def _sha256_file(path: Path) -> str | None:
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def read_structured_status(path: str, target: str, root: Path) -> tuple[dict, str | None]:
+    """Validate an explicit structured pipeline-status file and return (formal_stages, error).
+
+    On any integrity problem (missing/unreadable, wrong schema, target mismatch, missing required
+    stage, or a **stale** input fingerprint) it returns ({}, reason) — the caller fails closed
+    (BLOCK). On success it returns the flattened {stage: PASS/FAIL/SKIPPED} dict and None.
+
+    Freshness is by content: every `input_fingerprints` entry must still match a re-hash of the
+    file at that repo-relative path under `root` (not timestamps)."""
+    p = Path(path)
+    if not p.exists():
+        return {}, f"structured pipeline status not found: {path}"
+    try:
+        doc = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return {}, f"structured pipeline status is not valid JSON ({exc})"
+    if not isinstance(doc, dict):
+        return {}, "structured pipeline status is not a JSON object"
+    if doc.get("schema_version") != PIPELINE_STATUS_SCHEMA:
+        return {}, f"unknown pipeline-status schema_version {doc.get('schema_version')!r}"
+    if doc.get("target") != target:
+        return {}, (f"pipeline status is for target {doc.get('target')!r}, not {target!r} "
+                    "(target-scoped formal evidence is required)")
+    stages = doc.get("stages")
+    if not isinstance(stages, dict):
+        return {}, "structured pipeline status has no 'stages' object"
+    missing = sorted(REQUIRED_FORMAL_STAGES - set(stages))
+    if missing:
+        return {}, f"structured pipeline status is missing required stages: {missing}"
+    fps = doc.get("input_fingerprints")
+    if not isinstance(fps, dict) or not fps:
+        return {}, "structured pipeline status has no input_fingerprints"
+    stale = []
+    for rel, recorded in fps.items():
+        current = _sha256_file(root / rel)
+        if current is None or f"sha256:{current}" != recorded:
+            stale.append(rel)
+    if stale:
+        return {}, f"structured pipeline status is stale; input fingerprint mismatch for {sorted(stale)}"
+    formal = {name: _stage_status_value(node) for name, node in stages.items()
+              if _stage_status_value(node) is not None}
+    return formal, None
+
+
 def read_formal_status(root: Path) -> dict:
-    """build / no_sorry / comparator stage status. Prefers a structured JSON (future), then the
-    markdown pipeline report. Returns each stage as PASS/FAIL/SKIPPED, or absent if unknown."""
+    """build / no_sorry / comparator stage status. Prefers a structured JSON (auto, if present),
+    then the markdown pipeline report. Returns each stage as PASS/FAIL/SKIPPED, or absent if
+    unknown. This is the *unvalidated* fallback; the explicit, fingerprint-checked path is
+    `read_structured_status` via --pipeline-status."""
     js = root / "docs" / "pipeline_status.json"
     if js.exists():
         try:
             doc = json.loads(js.read_text(encoding="utf-8")) or {}
             stages = doc.get("stages", doc)
-            return {k: str(v).upper() for k, v in stages.items() if isinstance(v, str)}
+            out = {k: _stage_status_value(v) for k, v in stages.items()
+                   if _stage_status_value(v) is not None}
+            if out:
+                return out
         except (json.JSONDecodeError, AttributeError):
             pass
     md = root / "docs" / "pipeline_report.md"
@@ -433,7 +508,8 @@ def load_judge_metrics(path: str | None) -> tuple[str, dict | None]:
     return JM_INVALID, None
 
 
-def gather(target: str, root: Path = ROOT, judge_metrics_path: str | None = None) -> dict:
+def gather(target: str, root: Path = ROOT, judge_metrics_path: str | None = None,
+           pipeline_status_path: str | None = None) -> dict:
     """Read all artifacts and build the signals + provenance dicts for `decide`."""
     mapping_doc = _load_yaml(root / "docs" / "formal_mapping.yaml") or {}
     targets = (mapping_doc.get("targets") or {}) if isinstance(mapping_doc, dict) else {}
@@ -476,13 +552,21 @@ def gather(target: str, root: Path = ROOT, judge_metrics_path: str | None = None
             and scored.get("mutants_sha256") == manifest.get("mutants_sha256")
         )
 
-    formal = read_formal_status(root)
+    # Formal-stage status. With an explicit --pipeline-status, use the validated, fingerprint-checked
+    # structured artifact and fail closed on any integrity problem; otherwise fall back to the
+    # (unvalidated) markdown/auto-JSON reader for backward compatibility.
+    structured_status_error = None
+    if pipeline_status_path:
+        formal, structured_status_error = read_structured_status(pipeline_status_path, target, root)
+    else:
+        formal = read_formal_status(root)
 
     # Optional structured judge-scoring summary (v0.3 1c). Absent -> NOT_RUN (no effect).
     jm_status, jm_summary = load_judge_metrics(judge_metrics_path)
 
     sig = {
         "target": target,
+        "structured_status_error": structured_status_error,
         "judge_metrics_status": jm_status,
         "judge_metrics": jm_summary,
         "mapping_present": mapping_present,
@@ -559,6 +643,11 @@ def main() -> int:
                     help="optional structured judge-scoring summary JSON (score_judge.py "
                          "--structured); conservative-only: it may cap an otherwise-promotable "
                          "target to HUMAN_REVIEW, never BLOCK or PROMOTE (ARCHITECTURE.md §11.5)")
+    ap.add_argument("--pipeline-status", metavar="PATH",
+                    help="explicit structured pipeline_status.json (rebuild_pipeline.py "
+                         "--pipeline-status-out). Preferred over the markdown report: it is "
+                         "validated (schema, target, required stages) and fingerprint-checked for "
+                         "freshness, and the gate fails closed (BLOCK) on any mismatch.")
     args = ap.parse_args()
 
     out_path = Path(args.output) if args.output else ROOT / "docs" / "promotion" / f"{args.target}.yaml"
@@ -571,7 +660,8 @@ def main() -> int:
         "max_far": args.max_consistency_far,
         "max_malformed": args.max_malformed_yaml_rate,
     }
-    gathered = gather(args.target, judge_metrics_path=args.judge_metrics)
+    gathered = gather(args.target, judge_metrics_path=args.judge_metrics,
+                      pipeline_status_path=args.pipeline_status)
     decision = decide(gathered["sig"], thr)
     out_doc = build_output(args.target, decision, gathered["provenance"])
 

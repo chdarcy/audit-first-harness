@@ -735,7 +735,7 @@ A **pure, offline, idempotent** script. It **must not** call any API, **must not
 - `docs/fidelity_reviews/<Target>.md` (frontmatter: approval, rubric, verdict);
 - `docs/judge_results/<Target>_scored.yaml` (fidelity + parse-format metrics);
 - `docs/judge_inputs_dryrun/_manifest.yaml` (`prompt_sha256`, `mutants_sha256` for provenance match);
-- `docs/pipeline_report.md` — or, preferably, a future **structured pipeline JSON** carrying build / no-sorry / Comparator stage results;
+- `docs/pipeline_report.md` (the markdown report, unvalidated fallback) — or, preferably, a **structured pipeline-status JSON** (`pipeline_status.v0.1`) written by `rebuild_pipeline.py --pipeline-status-out` and consumed via `gate_decision.py --pipeline-status`. The structured path is **target-scoped, validated (schema/target/required stages), and fingerprint-checked for freshness** (sha256 of the target-relevant formal inputs); the gate **fails closed (BLOCK)** on a stale/mismatched/missing status. This is formal stage evidence only — build / no-sorry / axiom audit / Comparator — never source-fidelity. The status artifact is generated (gitignored), not committed;
 - thresholds for `discriminative_recall`, `consistency_false_alarm_rate`, and `malformed_yaml_rate`.
 
 **Output:** `docs/promotion/<Target>.yaml`

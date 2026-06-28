@@ -19,6 +19,8 @@ jobs:
         run: python scripts/test_judge_parsing.py
       - name: Promotion-gate decision unit tests
         run: python scripts/test_gate_decision.py
+      - name: Structured pipeline-status unit tests
+        run: python scripts/test_pipeline_status.py
       - name: Pipeline --target unit tests
         run: python scripts/test_rebuild_pipeline.py
       - name: Axiom-audit parser unit tests
