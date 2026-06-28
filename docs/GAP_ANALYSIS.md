@@ -42,7 +42,7 @@ detects defects on real model output.
 | Blinded judge packages / manual import / live opt-in | **Implemented** |
 | Structured-judge pipeline (schema / scoring / gate caps / export / workflow) | **Implemented** |
 | Promotion gate | **Implemented** (but reads markdown report; no target promotable yet) |
-| Empirical judge reliability (real run scored & committed) | **First round done** (GoldIrrationalSqrtTwo / gpt-4o: recall 1.0, FAR 0.0; see `JUDGE_EVIDENCE_SUMMARY.md`) — broaden across targets/models next |
+| Empirical judge reliability (real run scored & committed) | **Broadened to all 3 targets** (gpt-4o: aggregate recall 0.875 / FAR 0.0; per-target 0.667 / 0.833 / 1.0; see `JUDGE_EVIDENCE_SUMMARY.md`) — judge is strong but imperfect; vary models/seeds + grow suites next |
 | Closed-loop controller, non-LLM signal, ensemble, vacuity/unused-hyp checks, scaling | **Future research** |
 
 ---
@@ -178,13 +178,17 @@ written-back real Comparator pass; what is still missing is a committed real *ju
    now records `PASSED_REAL_LANDRUN_BEST_EFFORT` for all three, so the ledger reflects the verified
    formal pass. (Residual: the status is conservative `BEST_EFFORT`; it is formal Challenge/Solution
    evidence only, not source fidelity.) **(was High → resolved)**
-2. **Infrastructure-rich, evidence-poor judging. — REDUCED.** A first real (opt-in) round was run:
-   `GoldIrrationalSqrtTwo` × `gpt-4o` @ temp 0, 10 packages → **discriminative recall 1.0**,
-   **consistency false-alarm rate 0.0**, real accepted, 10/10 clean parses (see
-   `JUDGE_EVIDENCE_SUMMARY.md`; raw artifacts gitignored). The central claim ("the judge can catch
-   planted defects") now has its first empirical support. Residual: a single target / model /
-   temperature / 10-package round — broaden across targets, models, and seeds before generalising.
-   **(was High → Med, pending breadth)**
+2. **Infrastructure-rich, evidence-poor judging. — REDUCED (broadened to all targets).** Real
+   (opt-in) rounds were run across all three targets with `gpt-4o` @ temp 0 (25 packages):
+   **aggregate discriminative recall 0.875 (14/16)**, **consistency false-alarm rate 0.0**, all real
+   mappings accepted, **25/25 clean parses & schema-VALID** (see `JUDGE_EVIDENCE_SUMMARY.md`; raw
+   artifacts gitignored). Per-target recall 0.667 / 0.833 / 1.0. The central claim ("the judge can
+   catch planted defects") now has multi-target empirical support — **but the judge is imperfect**:
+   it missed `PCP-D2` (swap-variable) and `TAM-D1` (drop-hypothesis). That is calibration evidence
+   about the *judge* (keep automation confidence capped / require human review), not a refutation of
+   those mappings. Residual: one model / temperature / round, small mutation suites — vary
+   models/seeds and grow suites before generalising. **(was High → Med, pending breadth + a stronger
+   judge or ensemble)**
 3. **Gate consumes a markdown report. — REDUCED.** By default `gate_decision.py` still parses
    `pipeline_report.md`, but `--pipeline-status` now consumes a structured `pipeline_status.v0.1`
    that is schema/target-validated and **sha256 fingerprint-checked for freshness**, failing closed
@@ -240,9 +244,13 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 **Must do before claiming a robust audit harness:**
 - ~~Write back a real `comparator_status` for each target~~ — **done** (`ce5d8f3`; all three record
   `PASSED_REAL_LANDRUN_BEST_EFFORT`).
-- ~~Run the judge for real once (opt-in), score it, and record discriminative-recall / FAR~~ —
-  **done** (GoldIrrationalSqrtTwo / gpt-4o: recall 1.0, FAR 0.0; `JUDGE_EVIDENCE_SUMMARY.md`).
-  Still to do: broaden across targets / models / seeds for a real benchmark.
+- ~~Run the judge for real once, score it, and record discriminative-recall / FAR~~ — **done and
+  broadened to all 3 targets** (gpt-4o: aggregate recall 0.875, FAR 0.0, 25/25 clean parses; misses
+  on `PCP-D2` / `TAM-D1`; `JUDGE_EVIDENCE_SUMMARY.md`). The remaining gap is **not** "run a judge
+  once" but **making judge results operational in the workflow**: a real-mapping `FAIL`/`WARN` blocks
+  or revises *before* proof work; mutant misses cap automation confidence and trigger
+  review / stronger calibration (better prompts, more mutants, a second judge / ensemble). Also
+  broaden across models / seeds.
 - ~~Emit a structured `pipeline_status.json` and have the gate consume it with a freshness check.~~ —
   **done** (`rebuild_pipeline.py --pipeline-status-out` / `gate_decision.py --pipeline-status`,
   sha256 fingerprint-checked, fail-closed).
@@ -310,8 +318,8 @@ enabled target:
    targets (`ce5d8f3`: `PASSED_REAL_LANDRUN_BEST_EFFORT`); must hold for any new target.**
 3. A **real** judge run (opt-in) has been scored, with discriminative-recall and false-alarm-rate
    recorded, demonstrating the judge catches the planted defects (not just that the plumbing runs).
-   **— first round satisfied for GoldIrrationalSqrtTwo (gpt-4o: recall 1.0, FAR 0.0); should be
-   repeated across targets/models for a robust claim.**
+   **— satisfied across all 3 targets (gpt-4o: aggregate recall 0.875, FAR 0.0; misses on PCP-D2 /
+   TAM-D1); should be repeated across models/seeds with larger suites for a robust claim.**
 4. `gate_decision.py` consumes a **fresh, structured** formal-status input and emits a defensible
    decision; at least one target reaches **PROMOTE** under genuine (non-mock) evidence. *(The
    structured, fingerprint-checked input is now implemented via `--pipeline-status`; the open part is

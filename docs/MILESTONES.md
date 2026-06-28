@@ -107,6 +107,15 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   **empirical judge-reliability** evidence (not theorem truth); the blinded runner read only
   `_targets.yaml`, with un-blinding on the scoring side via `_manifest.yaml`. Also fixed a
   `.gitignore` gap so generated `docs/judge_results/*.json` exports are excluded too.
+- **Broadened judge calibration across all targets** — ran the same live, blinded, scored
+  calibration (`gpt-4o` @ temp 0, opt-in) on **all three** targets: PutCallParity (6),
+  TwoAssetMinVar (9), GoldIrrationalSqrtTwo (10) = **25 packages / 25 API calls**. Aggregate
+  **discriminative recall 0.875 (14/16)**, **consistency false-alarm rate 0.0**, all real mappings
+  accepted, **25/25 clean parses & schema-VALID**. Per-target recall 0.667 / 0.833 / 1.0 — the judge
+  is strong but **imperfect**: it missed `PCP-D2` (swap-variable) and `TAM-D1` (drop-hypothesis),
+  which is calibration evidence about the judge (keep automation confidence capped / require human
+  review), not a refutation of those mappings. Appended to `docs/JUDGE_EVIDENCE_SUMMARY.md`; raw
+  artifacts gitignored; blinding preserved.
 
 ---
 
