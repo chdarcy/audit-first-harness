@@ -645,6 +645,26 @@ Interpretation:
 - Recovered verdicts are auditable but lower-confidence.
 - Unrecoverable parse errors should block automated promotion.
 
+### 10.3 Structured judge scoring (v0.3 milestone 1b)
+
+`score_judge.py --structured <path>` scores **stored structured judge-result JSON files**
+(`schema_version: "0.3.0"`, §9.1) against the existing real/mutant answer key
+(`docs/mutants/<Target>.yaml`). Each record is validated with `validate_judge_schema.py` (§9.1)
+**before** it is scored, so schema validity is reported separately from the verdict buckets.
+
+Buckets: **accept** = `{PASS, PASS_EQUIV, PASS_PROVABLE_EQUIV}`; **reject** = `{WARN, FAIL}`.
+`UNPARSEABLE` verdicts and schema-`INVALID` records are **parse/schema failures**, counted
+separately and **excluded** from the accept/reject rates; `PARTIAL_RECOVERED` records are counted
+separately from fully `VALID` ones. The machine-readable JSON summary reports schema-quality rates
+(valid / partial / invalid / unparseable), reliability metrics (discriminative recall, consistency
+accept rate, false acceptance/rejection rates, real accept rate), high/critical concern counts, and
+per-target / per-concern-type breakdowns.
+
+These metrics measure **judge reliability, not theorem truth** (§0, §10.1). Structured scoring makes
+**no promotion decision** and never lets a judge verdict override the Lean build, no-sorry, axiom
+audit (§14), Comparator (§13), or guarded provable-equivalence (§20.6) results. Gate consumption of
+these metrics is deferred to a later v0.3 milestone; milestone 1b is **scoring only**.
+
 ---
 
 ## 11. Promotion decision policy

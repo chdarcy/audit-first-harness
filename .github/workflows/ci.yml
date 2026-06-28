@@ -27,6 +27,8 @@ jobs:
         run: python scripts/test_check_equivalence.py
       - name: Structured judge-schema validator unit tests
         run: python scripts/test_validate_judge_schema.py
+      - name: Structured judge-scoring unit tests
+        run: python scripts/test_score_judge.py
       - name: Validate ledger (cards <-> mapping <-> reviews)
         run: python scripts/validate_mapping.py
       - name: Assemble blinded judge packages (dry-run, no model)

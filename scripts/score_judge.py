@@ -24,6 +24,7 @@ canonical repo paths are used.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -36,11 +37,16 @@ except ModuleNotFoundError:
     )
     sys.exit(2)
 
+# Reuse the structured-schema validator (milestone 1a) rather than duplicating schema logic.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import validate_judge_schema as vjs  # noqa: E402
+
 ROOT = Path(__file__).resolve().parent.parent
 RESULTS_DIR = ROOT / "docs" / "judge_results"
 MANIFEST = ROOT / "docs" / "judge_inputs_dryrun" / "_manifest.yaml"
 MUTATION_REPORT = ROOT / "docs" / "mutation_report.md"
 FORMAL_MAPPING = ROOT / "docs" / "formal_mapping.yaml"
+MUTANTS_DIR = ROOT / "docs" / "mutants"
 
 ACCEPT = {"PASS", "PASS_EQUIV", "PASS_PROVABLE_EQUIV"}
 REJECT = {"WARN", "FAIL"}
@@ -174,6 +180,194 @@ def update_report(report_path: Path, target: str, section_md: str) -> None:
     report_path.write_text(new, encoding="utf-8")
 
 
+# ===================================================================================
+# Structured judge scoring (v0.3 milestone 1b) — see ARCHITECTURE.md §10.3.
+#
+# Scores stored *structured* judge-result JSON files (schema_version 0.3.0, §9.1) against the
+# existing real/mutant answer key. It REUSES validate_judge_schema.py for schema validation and
+# measures judge **reliability** only. It is offline, makes no promotion decision, and never lets a
+# judge verdict override a formal-layer result (Lean build / no-sorry / axiom audit / Comparator /
+# guarded equivalence). Buckets: accept = ACCEPT; reject = REJECT; UNPARSEABLE / schema-INVALID are
+# parse/schema failures counted separately and excluded from the accept/reject rates.
+# ===================================================================================
+
+def build_structured_answer_key(mutants_dir: Path) -> dict:
+    """{target: {candidate_id: class}} read from docs/mutants/*.yaml (read-only answer key).
+
+    The real statement's candidate_id is 'real' (and, as an alias, the file's
+    `real_statement_ref`); each mutant `id` maps to its declared `class`
+    (`discriminative` / `consistency`)."""
+    key: dict[str, dict[str, str]] = {}
+    for mf in sorted(mutants_dir.glob("*.yaml")):
+        doc = yaml.safe_load(mf.read_text(encoding="utf-8")) or {}
+        target = doc.get("target")
+        if not target:
+            continue
+        t = key.setdefault(target, {})
+        t["real"] = "real"
+        ref = doc.get("real_statement_ref")
+        if isinstance(ref, str) and ref:
+            t[ref] = "real"
+        for m in doc.get("mutants") or []:
+            if isinstance(m, dict) and m.get("id") and m.get("class"):
+                t[str(m["id"])] = str(m["class"])
+    return key
+
+
+def structured_bucket(verdict: str | None) -> str:
+    """accept / reject / parse_fail. UNPARSEABLE (and None/unexpected) are parse/schema failures."""
+    if verdict in ACCEPT:
+        return "accept"
+    if verdict in REJECT:
+        return "reject"
+    return "parse_fail"
+
+
+def score_one_structured(rec, answer_key: dict) -> dict:
+    """Classify + bucket a single structured record against the answer key (pure)."""
+    if isinstance(rec, dict):
+        st = vjs.classify_record(rec)
+        target = rec.get("target") if isinstance(rec.get("target"), str) else None
+        cand = rec.get("candidate_id") if isinstance(rec.get("candidate_id"), str) else None
+        concerns = rec.get("concerns") if isinstance(rec.get("concerns"), list) else []
+    else:  # a load error placeholder, etc.
+        st, target, cand, concerns = {"status": vjs.INVALID, "verdict": None}, None, None, []
+
+    status = st["status"]
+    verdict = st.get("verdict")
+    cls = answer_key.get(target, {}).get(cand, "unknown") if target else "unknown"
+    vb = structured_bucket(verdict)
+    usable = status in (vjs.VALID, vjs.PARTIAL_RECOVERED) and vb in ("accept", "reject")
+    hi = sum(1 for c in concerns
+             if isinstance(c, dict) and c.get("severity") in ("high", "critical"))
+    ctypes = [c.get("type") for c in concerns if isinstance(c, dict) and c.get("type")]
+    return {
+        "target": target, "candidate_id": cand, "class": cls,
+        "schema_status": status, "verdict": verdict, "verdict_bucket": vb,
+        "usable": usable, "is_unparseable": verdict == "UNPARSEABLE",
+        "high_critical_concerns": hi, "concern_types": ctypes,
+    }
+
+
+def _rate(num: int, den: int):
+    """Rounded rate, or None when the denominator is zero (no usable examples)."""
+    return round(num / den, 4) if den else None
+
+
+def _aggregate(entries: list[dict]) -> dict:
+    total = len(entries)
+    valid = sum(1 for e in entries if e["schema_status"] == vjs.VALID)
+    partial = sum(1 for e in entries if e["schema_status"] == vjs.PARTIAL_RECOVERED)
+    invalid = sum(1 for e in entries if e["schema_status"] == vjs.INVALID)
+    unparseable = sum(1 for e in entries if e["is_unparseable"])
+
+    by_class: dict[str, dict] = {}
+    for e in entries:
+        d = by_class.setdefault(
+            e["class"], {"n": 0, "usable": 0, "accept": 0, "reject": 0, "parse_fail": 0})
+        d["n"] += 1
+        if e["usable"]:
+            d["usable"] += 1
+            d[e["verdict_bucket"]] += 1
+        else:
+            d["parse_fail"] += 1
+
+    def c(name):
+        return by_class.get(name, {"n": 0, "usable": 0, "accept": 0, "reject": 0, "parse_fail": 0})
+    disc, cons, real = c("discriminative"), c("consistency"), c("real")
+
+    concern_types: dict[str, int] = {}
+    for e in entries:
+        for t in e["concern_types"]:
+            concern_types[t] = concern_types.get(t, 0) + 1
+
+    return {
+        "totals": {
+            "total": total,
+            "schema_valid": valid,
+            "partial_recovered": partial,
+            "invalid": invalid,
+            "unparseable": unparseable,
+            "schema_valid_rate": _rate(valid, total),
+            "partial_recovered_rate": _rate(partial, total),
+            "invalid_rate": _rate(invalid, total),
+            "unparseable_rate": _rate(unparseable, total),
+        },
+        "reliability": {
+            "discriminative_recall": _rate(disc["reject"], disc["usable"]),
+            "false_acceptance_rate_discriminative": _rate(disc["accept"], disc["usable"]),
+            "consistency_accept_rate": _rate(cons["accept"], cons["usable"]),
+            "false_rejection_rate_consistency": _rate(cons["reject"], cons["usable"]),
+            "real_accept_rate": _rate(real["accept"], real["usable"]),
+        },
+        "counts_by_class": by_class,
+        "high_critical_concern_count": sum(e["high_critical_concerns"] for e in entries),
+        "concern_types": concern_types,
+    }
+
+
+def score_structured_records(records: list, answer_key: dict) -> dict:
+    """Score structured judge records against the answer key (pure, offline).
+
+    Measures judge reliability: does the judge accept the real & consistency variants and reject
+    the discriminative mutants? Makes no promotion decision."""
+    entries = [score_one_structured(r, answer_key) for r in records]
+    summary = _aggregate(entries)
+    summary["expected_schema_version"] = vjs.SCHEMA_VERSION
+    targets = sorted({e["target"] for e in entries if e["target"]})
+    summary["per_target"] = {
+        t: _aggregate([e for e in entries if e["target"] == t]) for t in targets
+    }
+    summary["per_record"] = entries
+    return summary
+
+
+def load_structured_records(path: Path) -> list:
+    """Load structured records from a JSON file or a directory of *.json files.
+
+    Each file may hold a single record, a list of records, or a {'results': [...]} mapping.
+    A file that is not valid JSON contributes one placeholder that scores as INVALID/unknown."""
+    files = sorted(path.glob("*.json")) if path.is_dir() else [path]
+    records: list = []
+    for f in files:
+        try:
+            obj = json.loads(f.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            records.append({"_load_error": str(f)})
+            continue
+        if isinstance(obj, list):
+            records.extend([o for o in obj if isinstance(o, dict)])
+        elif isinstance(obj, dict) and isinstance(obj.get("results"), list):
+            records.extend([o for o in obj["results"] if isinstance(o, dict)])
+        elif isinstance(obj, dict):
+            records.append(obj)
+    return records
+
+
+def run_structured(args) -> int:
+    path = Path(args.structured)
+    if not path.exists():
+        return fail(f"structured path not found: {path}")
+    mutants_dir = Path(args.mutants_dir) if args.mutants_dir else MUTANTS_DIR
+    answer_key = build_structured_answer_key(mutants_dir)
+    records = load_structured_records(path)
+    if not records:
+        print("No structured judge records found; nothing to score.")
+        return 0
+    summary = score_structured_records(records, answer_key)
+    summary["scored_utc"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    summary["note"] = ("judge-reliability metrics only; not theorem truth and not a promotion "
+                       "decision (see ARCHITECTURE.md §10.3)")
+    text = json.dumps(summary, indent=2, sort_keys=True)
+    if args.structured_out:
+        outp = Path(args.structured_out)
+        outp.parent.mkdir(parents=True, exist_ok=True)
+        outp.write_text(text + "\n", encoding="utf-8")
+        print(f"SCORED (structured): {outp}")
+    print(text)
+    return 0
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--target", default=None,
@@ -183,7 +377,17 @@ def main() -> int:
     ap.add_argument("--out", help="override path to <target>_scored.yaml (testing)")
     ap.add_argument("--report", help="override path to mutation_report.md (testing)")
     ap.add_argument("--manifest", help="override path to _manifest.yaml (testing)")
+    ap.add_argument("--structured", metavar="PATH",
+                    help="v0.3 1b: score stored structured judge-result JSON (file or directory) "
+                         "against the real/mutant answer key; offline, makes no promotion decision")
+    ap.add_argument("--structured-out", metavar="PATH",
+                    help="optional path to write the structured-scoring JSON summary")
+    ap.add_argument("--mutants-dir", help="override docs/mutants directory (testing)")
     args = ap.parse_args()
+
+    # v0.3 1b structured-scoring path is fully separate from the legacy blinded path below.
+    if args.structured:
+        return run_structured(args)
 
     allowed = load_allowed_targets()
     target = args.target or (sorted(allowed)[0] if len(allowed) == 1 else None)

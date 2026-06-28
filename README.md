@@ -61,7 +61,7 @@ examples/put_call_parity/source.tex   the example source document
 | `run_mutants.py --dry-run` | Assemble blinded judge packages + answer key from the ledger | No |
 | `run_judge.py` | `--dry-run` / `--export-manual` / **`--execute-api`** (opt-in) judge runner | Only with `--execute-api` |
 | `import_manual_judge_results.py` | Aggregate manually-collected judge replies, with provenance | No |
-| `score_judge.py` | Score judge results vs the local answer key; write metrics | No |
+| `score_judge.py` | Score judge results vs the local answer key; write metrics (incl. `--structured` JSON reliability scoring) | No |
 | `validate_mapping.py` | Structural consistency of cards ↔ mapping ↔ reviews | No |
 | `check_sorries.py` | Fail if any non-Challenge Lean file contains `sorry`/`admit` | No |
 | `check_axioms.py` | Kernel/axiom audit: mapped declarations within `permitted_axioms` (needs Lean) | No |
@@ -75,6 +75,7 @@ examples/put_call_parity/source.tex   the example source document
 | `test_check_axioms.py` | Unit tests for the axiom-audit parser/classifier | No |
 | `test_check_equivalence.py` | Unit tests for the provable-equivalence validator | No |
 | `test_validate_judge_schema.py` | Unit tests for the structured judge-schema validator | No |
+| `test_score_judge.py` | Unit tests for structured judge-reliability scoring | No |
 
 The judge is **never** contacted unless you explicitly pass `--execute-api` (OpenAI provider,
 reads `OPENAI_API_KEY` from the environment).
