@@ -280,6 +280,34 @@ audit-first-harness/
     └── test_judge_parsing.py
 ```
 
+### 5.1 Lean module readability convention
+
+For nontrivial targets, keep the **source-facing theorem statement** in a short public theorem
+module, and push proof-engineering detail into a sibling helper module. The mapped declaration in
+`docs/formal_mapping.yaml` must point to the **final source-facing theorem** in the public module,
+never to an internal helper lemma.
+
+```text
+AuditHarness/<Target>.lean            # public, source-facing
+  - imports the helper module(s);
+  - contains the final source-facing theorem statement (the mapped declaration);
+  - has a short, readable proof that invokes named helper lemmas.
+
+AuditHarness/<Target>/Helpers.lean    # internal proof engineering
+  - definitions (e.g. `twoAssetVariance`);
+  - algebraic identities (e.g. the completed-square lemma);
+  - technical / minimality lemmas;
+  - proof-engineering details such as `ring_nf`, `field_simp`, `ring`, `linarith`.
+```
+
+Use more than one helper file only if it genuinely improves clarity. A definition's
+fully-qualified name is fixed by its **namespace, not its file**, so moving e.g.
+`AuditHarness.twoAssetVariance` into a helper module (still under `namespace AuditHarness`) leaves
+its name — and therefore the Comparator triple, mutants, and mapping — unchanged. Comparator
+`Challenge`/`Solution` files import the public module (or the `AuditHarness` umbrella), not the
+internal helper modules. Never weaken a theorem statement to simplify its proof; add helper lemmas
+instead. The worked targets `PutCallParity` and `TwoAssetMinVar` follow this convention.
+
 ---
 
 ## 6. Core ledger files
