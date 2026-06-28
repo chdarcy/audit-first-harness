@@ -37,6 +37,8 @@ jobs:
         run: python scripts/test_structured_judge_workflow.py
       - name: Blinding-boundary regression tests
         run: python scripts/test_blinding_boundary.py
+      - name: Source-fidelity review decision unit tests
+        run: python scripts/test_source_review_decision.py
       - name: Validate ledger (cards <-> mapping <-> reviews)
         run: python scripts/validate_mapping.py
       - name: Assemble blinded judge packages (dry-run, no model)

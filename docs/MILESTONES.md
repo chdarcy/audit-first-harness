@@ -116,6 +116,19 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   which is calibration evidence about the judge (keep automation confidence capped / require human
   review), not a refutation of those mappings. Appended to `docs/JUDGE_EVIDENCE_SUMMARY.md`; raw
   artifacts gitignored; blinding preserved.
+- **Source-fidelity review decision layer** — `scripts/source_review_decision.py`, the **pre-proof
+  candidate gate** (ARCHITECTURE §11.4), distinct from the post-Comparator promotion gate. It
+  consumes the structured judge evidence (the real candidate's verdict + concerns) and the judge's
+  calibration over the target's mutants, and emits `SOURCE_REVIEW_PASS / HUMAN_REVIEW / REVISE /
+  BLOCK` with an explicit reasons list: real `FAIL` → REVISE; `UNPARSEABLE` / schema-INVALID /
+  missing → BLOCK; `WARN` or high/critical concerns → HUMAN_REVIEW; and any calibration imperfection
+  (recall < 1.0, a false acceptance, a consistency false alarm, or any invalid/unparseable record)
+  caps an otherwise-PASS to HUMAN_REVIEW. This operationalises the judge: a `FAIL`/`WARN` on a real
+  mapping blocks/revises *before* hard proof work, and mutant misses cap automation confidence (e.g.
+  PutCallParity's real-run recall 0.667 → HUMAN_REVIEW). It is **source-fidelity review evidence,
+  not theorem truth**: it never calls a model, never edits Lean or mappings, and never overrides the
+  formal layers. No Lean changed; the `AuditHarness/<Target>.lean` + helper-module split (CLAUDE.md,
+  §5.1) is preserved as the layout for future targets that this gate decides whether to start.
 
 ---
 

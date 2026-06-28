@@ -246,11 +246,15 @@ written-back real Comparator pass; what is still missing is a committed real *ju
   `PASSED_REAL_LANDRUN_BEST_EFFORT`).
 - ~~Run the judge for real once, score it, and record discriminative-recall / FAR~~ — **done and
   broadened to all 3 targets** (gpt-4o: aggregate recall 0.875, FAR 0.0, 25/25 clean parses; misses
-  on `PCP-D2` / `TAM-D1`; `JUDGE_EVIDENCE_SUMMARY.md`). The remaining gap is **not** "run a judge
-  once" but **making judge results operational in the workflow**: a real-mapping `FAIL`/`WARN` blocks
-  or revises *before* proof work; mutant misses cap automation confidence and trigger
-  review / stronger calibration (better prompts, more mutants, a second judge / ensemble). Also
-  broaden across models / seeds.
+  on `PCP-D2` / `TAM-D1`; `JUDGE_EVIDENCE_SUMMARY.md`). Broaden across models / seeds next.
+- ~~Make judge results operational in the workflow (real-mapping `FAIL`/`WARN` blocks/revises before
+  proof work; mutant misses cap automation confidence and trigger review/stronger calibration)~~ —
+  **done** (`scripts/source_review_decision.py`, the pre-proof candidate gate, §11.4): emits
+  `SOURCE_REVIEW_PASS / HUMAN_REVIEW / REVISE / BLOCK` with reasons; `FAIL`→REVISE,
+  `UNPARSEABLE`/INVALID→BLOCK, `WARN`/high-critical→HUMAN_REVIEW, and any calibration imperfection
+  caps an otherwise-PASS to HUMAN_REVIEW (source-fidelity evidence only; never edits Lean, never
+  calls a model, never overrides formal checks). Still open: wire it into a one-command target
+  workflow and a stronger judge / ensemble for the targets where recall < 1.0.
 - ~~Emit a structured `pipeline_status.json` and have the gate consume it with a freshness check.~~ —
   **done** (`rebuild_pipeline.py --pipeline-status-out` / `gate_decision.py --pipeline-status`,
   sha256 fingerprint-checked, fail-closed).
