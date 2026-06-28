@@ -1,5 +1,13 @@
 # Agent instructions for audit-first-harness
 
+## Documentation map
+
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — the **stable design**: principles, boundaries, current
+  architecture, and the constraints to honour. Read it for design decisions.
+- [`docs/MILESTONES.md`](docs/MILESTONES.md) — the **implementation chronology** (what was built
+  when). Add a new entry there when you complete a milestone; keep `ARCHITECTURE.md` describing the
+  stable design, not a per-milestone log.
+
 ## Lean readability convention
 
 For nontrivial Lean targets, split source-facing theorem statements from proof-engineering helpers.

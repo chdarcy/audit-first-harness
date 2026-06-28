@@ -1,0 +1,78 @@
+# MILESTONES — implementation history
+
+Chronological log of how the audit-first harness was built, milestone by milestone. This is the
+**history**; the **stable design** lives in [`../ARCHITECTURE.md`](../ARCHITECTURE.md) (section
+references below point there). Short commit hashes are given for traceability, not as an exhaustive
+git history.
+
+Versioning shorthand: **v0.1** = the audit & measurement spine; **v0.2** = the offline formal
+gate/pipeline engineering; **v0.3** = the structured-judge source-fidelity evidence pipeline. The
+closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
+
+---
+
+## v0.1 — audit & measurement spine
+
+- **Initial harness** (`7cc9451`). Source cards (`docs/theorem_index.yaml`), the formal-mapping
+  bridge (`docs/formal_mapping.yaml`), fidelity reviews + the human-approval *input* gate, blinded
+  hash-provenanced mutation packages (`run_mutants.py --dry-run`), the opt-in live judge runner
+  (`run_judge.py --execute-api`) + manual import, judge scoring (`score_judge.py`), the textual
+  no-sorry check (`check_sorries.py`), Comparator triples with a real run on **PutCallParity**, and
+  generated pipeline/validation/mutation reports.
+- **First-steps docs** (`d453187`) — spelled out the `source.tex → theorem-card` path for new
+  targets.
+- **Judge-parsing hardening** (`a494c27`) — malformed-output reporting, verdict recovery, and
+  parse-format metrics (ARCHITECTURE §9, §10.2).
+- **ARCHITECTURE.md added** (`9ebe5db`) — the design document.
+
+## v0.2 — offline formal gate & pipeline
+
+- **Repo cleanup** before the gate work (`ea6e0d5`).
+- **Offline promotion gate** (`e9e2d8c`) — `scripts/gate_decision.py`, a pure offline
+  `PROMOTE / BLOCK / REVISE / HUMAN_REVIEW` decision (ARCHITECTURE §11).
+- **Target-scoped pipeline runs** (`fe6f887`) — `rebuild_pipeline.py --target` (ARCHITECTURE §20.2).
+- **Comparator-status writeback** (`f19ce73`) — explicit `comparator_status` into
+  `formal_mapping.yaml`, with an honest sandbox-status vocabulary (ARCHITECTURE §13.4).
+- **Kernel axiom audit** (`dbef69e`) — `check_axioms.py`, `#print axioms` ⊆ permitted set, no
+  `sorryAx` (ARCHITECTURE §14).
+- **Guarded provable-equivalence path** (`33a02fe`) — `PASS_PROVABLE_EQUIV` requires a *built*
+  in-Lean equivalence lemma; `check_equivalence.py` (ARCHITECTURE §20.6).
+- **TwoAssetMinVar worked target** (`1330531`) — the second worked target (ARCHITECTURE §19).
+- **Lean theorem/helper module refactor** (`bf1a8c0`) — short source-facing theorem modules +
+  `Helpers.lean` proof-engineering modules (ARCHITECTURE §5.1).
+- **GoldIrrationalSqrtTwo reference target** (`092bbd0`) — a public gold-reference fixture wrapping
+  Mathlib's `irrational_sqrt_two` (ARCHITECTURE §19.1).
+
+## v0.3 — structured-judge evidence pipeline
+
+- **1a — structured judge schema validator** (`7dae994`) — `validate_judge_schema.py`; the
+  `schema_version: "0.3.0"` record and its `VALID / PARTIAL_RECOVERED / INVALID` classification
+  (ARCHITECTURE §9.1).
+- **1b — structured judge scoring** (`874a787`) — `score_judge.py --structured`; reliability metrics
+  over the real/mutant answer key, schema validity reported separately (ARCHITECTURE §10.3).
+- **1c — conservative judge-metric gate caps** (`64f1ab1`) — `gate_decision.py --judge-metrics`;
+  structured metrics may only cap an otherwise-promotable target to `HUMAN_REVIEW`, never BLOCK or
+  PROMOTE (ARCHITECTURE §11.5).
+- **2a — structured judge-output export** (`32c5e71`) — `export_structured_judge_results.py`;
+  un-blinds blinded judge results via the answer key into validated structured JSON, on the scoring
+  side of the blinding boundary (ARCHITECTURE §10.4).
+- **2b — offline structured-judge workflow runner** (`ba34aaf`) —
+  `run_structured_judge_workflow.py`; chains export → validate → score → (optional) gate over
+  existing judge results, offline and deterministic, separate from the formal pipeline
+  (ARCHITECTURE §10.5).
+
+---
+
+## Invariants preserved across all milestones
+
+These are design constraints (see ARCHITECTURE.md), repeated here so the history reads against them:
+
+- Formal correctness ≠ source fidelity; judge metrics ≠ theorem truth (§0).
+- The GPT judge is a calibrated source-fidelity reviewer, **not** a theorem oracle.
+- Live judge/API calls are **opt-in only** (`run_judge.py --execute-api`); nothing else calls a model.
+- `run_judge.py` and `import_manual_judge_results.py` stay **blinded** (read `_targets.yaml`, never
+  the answer key); un-blinding via `_manifest.yaml` happens only on the scoring/export side.
+- `rebuild_pipeline.py` is the **formal** pipeline; the structured-judge workflow is separate.
+- Judge metrics can cap to `HUMAN_REVIEW` through the gate but cannot override a formal failure.
+- The Comparator compares **Challenge vs Solution**, not `.tex` source vs Lean.
+- `PASS_PROVABLE_EQUIV` is guarded by an in-Lean equivalence check.

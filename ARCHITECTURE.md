@@ -1,11 +1,11 @@
 # ARCHITECTURE.md — Audit-First Lean Formalisation Harness
 
-**Status:** v0.1 experimental architecture  
+**Status:** audit-first harness — the v0.2 formal gate/pipeline and the v0.3 structured-judge evidence workflow are implemented; closed-loop agentic revision remains future research.<br>
 **Audience:** Claude Opus / coding agent / human maintainer  
 **Repository:** `audit-first-harness`  
 **Purpose:** Build a reusable, audit-first pipeline for turning mathematical source claims into Lean formalisation targets while preventing source-to-Lean semantic drift.
 
-**Scope note:** The current repository is **v0.1 — an audit and measurement harness**. It audits, reports, and (via the human-approval *input* gate) gates; it is **not** a fully agentic anti-drift system. The closed-loop controller that would let judge output directly drive statement revision and proof attempts is a **v0.3 research goal** (see §0.1 and §12).
+**Scope note:** This document describes the **stable architecture**: the design, boundaries, and the currently-implemented pipeline. The harness **audits, reports, scores, and gates** — it implements both the formal pipeline (build / no-sorry / axiom audit / Comparator / equivalence / promotion gate) and the structured-judge source-fidelity evidence pipeline (schema / scoring / export / offline workflow). It is **not yet** a fully agentic anti-drift system: the closed-loop controller that would let judge output directly drive statement revision and proof attempts remains future research (§12, §20.1). For the dated, milestone-by-milestone record of how the implemented pieces were built, see [`docs/MILESTONES.md`](docs/MILESTONES.md).
 
 ---
 
@@ -37,7 +37,7 @@ The harness therefore separates two validation layers:
    - parse-format metrics for judge output reliability
    - future: non-LLM alignment signal, vacuity checks, unused-hypothesis checks, and closed-loop revision
 
-The current MVP already implements the core audit/reporting stack. The next major architectural step is to make the fidelity judge **drive a promotion/revision gate**, rather than merely produce a report.
+The harness implements the core audit/reporting stack **and** the machine-readable promotion gate that turns judge and formal evidence into a `PROMOTE / BLOCK / REVISE / HUMAN_REVIEW` decision (§11), plus the structured-judge source-fidelity evidence pipeline (§9.1, §10.3–§10.5). The remaining architectural step is the **closed-loop controller** (§12, §20.1), which would let a `REVISE` decision automatically drive statement revision and a re-judge/re-prove loop rather than requiring a human to act on it.
 
 **Two boundaries this document keeps sharp:**
 
@@ -46,42 +46,37 @@ The current MVP already implements the core audit/reporting stack. The next majo
 
 ---
 
-## 0.1 Versioned scope (v0.1 / v0.2 / v0.3)
+## 0.1 Implemented scope and future direction
 
-**v0.1 — already implemented (the audit & measurement spine):**
+The harness is built in layers. Two are **implemented and in use**; one remains **future research**.
+This section summarises the *current* architecture; the dated, milestone-by-milestone record of how
+the implemented pieces were built lives in [`docs/MILESTONES.md`](docs/MILESTONES.md).
 
-- source cards (`docs/theorem_index.yaml`);
-- formal mapping bridge (`docs/formal_mapping.yaml`);
-- fidelity reviews and the human-approval **input** gate;
-- blinded, hash-provenanced mutation packages (`run_mutants.py --dry-run`);
-- live judge runner (`run_judge.py --execute-api`, opt-in);
-- judge scoring (`score_judge.py`);
-- parse-format metrics + prompt-format hardening;
-- textual no-sorry check (`check_sorries.py`);
-- Comparator triples (Challenge / Solution / comparator.json);
-- a real Comparator run demonstrated end-to-end on **PutCallParity**;
-- generated pipeline / validation / mutation reports.
+**Implemented — the audit & formal pipeline.** Source cards (`docs/theorem_index.yaml`), the
+formal-mapping bridge (`docs/formal_mapping.yaml`), fidelity reviews and the human-approval *input*
+gate, blinded hash-provenanced mutation packages (`run_mutants.py --dry-run`), the opt-in live judge
+runner (`run_judge.py --execute-api`) and manual import, judge scoring (`score_judge.py`) with
+parse-format metrics, the textual no-sorry check (`check_sorries.py`) and the kernel/axiom audit
+(§14), Comparator triples with a real run demonstrated end-to-end, the guarded `PASS_PROVABLE_EQUIV`
+equivalence check (§20.6), target-scoped pipeline runs and Comparator-status writeback, and the
+offline **promotion gate** (`gate_decision.py`, §11). Worked targets: **PutCallParity**,
+**TwoAssetMinVar**, and the public gold-reference **GoldIrrationalSqrtTwo**.
 
-**v0.2 — immediate engineering (no new research):**
+**Implemented — the structured-judge evidence pipeline (source-fidelity side).** A structured
+judge-evidence schema and validator (§9.1), structured scoring (§10.3), conservative gate caps
+(§11.5), structured-output export (§10.4), and an offline workflow runner that chains them (§10.5).
+This pipeline only *produces, validates, scores, and conservatively gates* source-fidelity evidence;
+it never runs the judge by itself and never overrides a formal result.
 
-- `scripts/gate_decision.py` — a pure, offline promotion gate (§11);
-- `rebuild_pipeline.py --target` (§20.2);
-- Comparator-status writeback into `formal_mapping.yaml`;
-- a cleaner evidence-artifact policy (§15);
-- a kernel/axiom audit using `#print axioms` and/or `lean4checker`, augmenting the textual no-sorry scan (§14);
-- **TwoAssetMinVar** as the second worked target (§19);
-- a real `PASS_PROVABLE_EQUIV` path requiring a *built* in-Lean equivalence lemma (§8, §20.6).
+**Future — the closed-loop controller (§12, §20.1).** Letting judge output *directly drive*
+statement revision and proof attempts (judge failure → revise card / statement / mapping →
+regenerate the Comparator triple → re-judge → prove) is **not yet implemented**. Other future
+extensions (§20): a FormalAlign-style **non-LLM** alignment signal, a **multi-judge ensemble**,
+kernel-backed vacuity checks, an unused-hypothesis linter, a dependency-graph blueprint, and scaling
+to a Markowitz mini-suite.
 
-**v0.3 — research extensions:**
-
-- the **closed-loop controller**: judge failure → revise statement / card / mapping → regenerate the Comparator triple → re-judge → prove;
-- a FormalAlign-style **non-LLM** alignment signal;
-- a **multi-judge ensemble**;
-- vacuity and unused-hypothesis checks;
-- a blueprint / dependency graph (LeanArchitect-style);
-- scaling to a Markowitz mini-suite.
-
-Only once the v0.3 loop exists should the system be described as "agentic anti-drift." Until then it is an audit/measurement harness.
+Only once the closed loop exists should the system be described as "agentic anti-drift." Today it
+**audits, reports, scores, and gates** — judge output does not yet drive construction.
 
 ---
 
@@ -577,10 +572,11 @@ Tests should cover:
 4. no verdict line is unrecoverable;
 5. recovered malformed output preserves raw output and parse error.
 
-### 9.1 Structured judge-evidence schema (v0.3 milestone 1a — validation only)
+### 9.1 Structured judge-evidence schema
 
-v0.3 introduces a **structured** judge-evidence record (`schema_version: "0.3.0"`) so the future
-closed-loop controller (§20.1) can consume source-fidelity judgements machine-readably. The schema
+The harness uses a **structured** judge-evidence record (`schema_version: "0.3.0"`) so that scoring
+(§10.3), the gate (§11.5), and the future closed-loop controller (§20.1) can consume source-fidelity
+judgements machine-readably. The schema
 carries `target`, `source_ref`, `candidate_id`, `verdict`
 (`PASS | PASS_EQUIV | PASS_PROVABLE_EQUIV | WARN | FAIL | UNPARSEABLE`), `confidence` ∈ [0, 1], a
 list of typed `concerns` (each with a `type`, `severity`, `description`, and optional source/formal
@@ -591,10 +587,10 @@ classifies a record as `VALID`, `PARTIAL_RECOVERED` (a legacy/minimal output fro
 single unambiguous verdict can be safely recovered — fabricating nothing else, per §9), or
 `INVALID`. It calls no model/API, reads no answer key, and makes **no promotion decision**.
 
-This milestone (1a) is **schema validation only**. The structured record is **source-fidelity
-evidence, not theorem truth**: a `verdict: PASS` here never overrides the Lean build, no-sorry,
-axiom audit (§14), Comparator (§13), or guarded provable-equivalence (§20.6) results, and it does
-not change the promotion gate (§11). Scoring and gate integration are deferred to later v0.3 steps.
+Validation is **schema-shape only**. The structured record is **source-fidelity evidence, not
+theorem truth**: a `verdict: PASS` here never overrides the Lean build, no-sorry, axiom audit (§14),
+Comparator (§13), or guarded provable-equivalence (§20.6) results, and it does not change the
+promotion gate (§11) by itself. Scoring is §10.3 and conservative gate consumption is §11.5.
 
 ---
 
@@ -645,7 +641,7 @@ Interpretation:
 - Recovered verdicts are auditable but lower-confidence.
 - Unrecoverable parse errors should block automated promotion.
 
-### 10.3 Structured judge scoring (v0.3 milestone 1b)
+### 10.3 Structured judge scoring
 
 `score_judge.py --structured <path>` scores **stored structured judge-result JSON files**
 (`schema_version: "0.3.0"`, §9.1) against the existing real/mutant answer key
@@ -662,10 +658,10 @@ per-target / per-concern-type breakdowns.
 
 These metrics measure **judge reliability, not theorem truth** (§0, §10.1). Structured scoring makes
 **no promotion decision** and never lets a judge verdict override the Lean build, no-sorry, axiom
-audit (§14), Comparator (§13), or guarded provable-equivalence (§20.6) results. Gate consumption of
-these metrics is deferred to a later v0.3 milestone; milestone 1b is **scoring only**.
+audit (§14), Comparator (§13), or guarded provable-equivalence (§20.6) results. Conservative gate
+consumption of these metrics is §11.5.
 
-### 10.4 Structured judge-output export (v0.3 milestone 2a)
+### 10.4 Structured judge-output export
 
 `scripts/export_structured_judge_results.py` *produces* the structured records that §10.3 scores and
 §11.5 may consume. It is a **pure, offline** converter on the *scoring* side of the answer-key
@@ -689,7 +685,7 @@ recovered-only → `0.3`, otherwise a neutral `0.5`); each `detected_issues[].ax
 is set for `WARN`/`FAIL`/`UNPARSEABLE`, a recovered verdict, or any high/critical concern. The
 records are **source-fidelity evidence, not theorem truth** (§0); the judge is not a theorem oracle.
 
-### 10.5 Offline structured-judge workflow (v0.3 milestone 2b)
+### 10.5 Offline structured-judge workflow
 
 `scripts/run_structured_judge_workflow.py` chains the structured pieces over **already-existing**
 judge results, deterministically and **offline** (no model/API call, no API key):
@@ -711,7 +707,7 @@ Comparator (§13), or guarded provable-equivalence (§20.6) results.
 
 ## 11. Promotion decision policy
 
-The v0.1 harness mostly **reports**; the only gate today is the *input* human-approval gate. v0.2 adds a **machine-readable promotion gate** as a pure, offline script `scripts/gate_decision.py` (it may also be folded into `rebuild_pipeline.py`, but a standalone script is preferred).
+Beyond the human-approval *input* gate, the harness has a **machine-readable promotion gate**: a pure, offline script `scripts/gate_decision.py` that turns the existing formal and fidelity artifacts into one `PROMOTE / BLOCK / REVISE / HUMAN_REVIEW` decision. It is a standalone script (kept separate from `rebuild_pipeline.py`, the formal pipeline).
 
 ### 11.1 Global vs. local signals
 
@@ -729,7 +725,7 @@ Promotion logic must separate two kinds of signal:
 3. **HUMAN_REVIEW / lower confidence** — formal checks pass and the real mapping is accepted, but **judge calibration is weak**: low discriminative recall, nonzero consistency false-alarm rate, malformed/recovered YAML, `PASS_EQUIV` without a built equivalence lemma, or single-judge disagreement. Set `confidence: medium|low`.
 4. **PROMOTE** — all formal gates pass, the real mapping is accepted, and judge confidence is high.
 
-### 11.3 `gate_decision.py` (v0.2 milestone)
+### 11.3 `gate_decision.py` (the promotion gate)
 
 A **pure, offline, idempotent** script. It **must not** call any API, **must not** run the judge, and only **consumes existing artifacts**.
 
@@ -775,7 +771,7 @@ The harness has **two** gates, and they must not be conflated:
 
 `gate_decision.py` (§11.3) can serve both roles; the available inputs differ (the pre-proof call has no build/Comparator results yet). In §4, the `candidate fidelity gate` is the first gate and the `promotion decision` is the second.
 
-### 11.5 Conservative structured-judge-metric caps (v0.3 milestone 1c)
+### 11.5 Conservative structured-judge-metric caps
 
 `gate_decision.py` optionally consumes a **structured judge-scoring summary**
 (`score_judge.py --structured`, §10.3) via `--judge-metrics <summary.json>`. This is a *global*
@@ -927,7 +923,7 @@ Future enhancement:
 - check for unexpected axioms;
 - check imported declarations for axiom pollution if feasible.
 
-**v0.2 — kernel/axiom audit.** The textual scan is a heuristic and can be fooled (macro-generated `sorry`, axiom pollution, `native_decide`). v0.2 should add a kernel-backed check that, for each promoted declaration, verifies via `#print axioms` (and/or `lean4checker`) that its axiom set ⊆ the permitted axioms `{propext, Quot.sound, Classical.choice}` and contains no `sorryAx`. This is the same guarantee the Comparator relies on, applied to the library proof directly.
+**Kernel/axiom audit (implemented — `check_axioms.py`).** The textual scan is a heuristic and can be fooled (macro-generated `sorry`, axiom pollution, `native_decide`). The harness therefore also runs a kernel-backed check that, for each mapped declaration, verifies via `#print axioms` that its axiom set ⊆ the permitted axioms `{propext, Quot.sound, Classical.choice}` and contains no `sorryAx`. This is the same guarantee the Comparator relies on, applied to the library proof directly.
 
 ---
 
@@ -1051,11 +1047,11 @@ The smoke test failed.
 
 ---
 
-## 19. Recommended next target: TwoAssetMinVar
+## 19. Worked target: TwoAssetMinVar
 
-A good next target is the two-asset minimum-variance portfolio theorem.
-
-Reasons:
+The second worked target is the two-asset minimum-variance portfolio theorem (implemented; see
+[`docs/MILESTONES.md`](docs/MILESTONES.md)). It was chosen as a good fidelity-stress target because
+it is:
 
 - finance-relevant;
 - close to Markowitz;
@@ -1126,21 +1122,25 @@ Possible mutants:
 - portfolio variance drops covariance term;
 - `w*` changed to its complement.
 
-### 19.1 Pre-v0.3 gold-reference target: GoldIrrationalSqrtTwo
+### 19.1 Gold-reference target: GoldIrrationalSqrtTwo
 
 A **public gold-reference fixture** (not a new finance theorem): the irrationality of √2,
 `√2 ∉ ℚ`. The mapped Lean statement `AuditHarness.gold_irrational_sqrt_two : Irrational (√2)` is a
 thin wrapper that delegates to Mathlib's **existing** `irrational_sqrt_two`
 (`Mathlib/NumberTheory/Real/Irrational.lean`) — a known-correct public theorem with an existing
-Lean proof. It is included so the harness's source-to-Lean fidelity machinery (and, later, the
-v0.3 judgement layer) can be exercised against a public, known-correct reference rather than only
-bespoke examples. It follows all the usual conventions (theorem card, mapping, fidelity review,
+Lean proof. It is included so the harness's source-to-Lean fidelity machinery (and the structured
+judge evidence pipeline, §9.1, §10.3–§10.5) can be exercised against a public, known-correct
+reference rather than only bespoke examples. It follows all the usual conventions (theorem card,
+mapping, fidelity review,
 mutants, Comparator triple) and remains `comparator_status: NOT_RUN` until a real Comparator
 writeback run.
 
 ---
 
-## 20. Future improvements
+## 20. Future improvements and design notes
+
+Items below are **future** unless a subsection explicitly notes it is implemented. For the dated
+record of implemented work, see [`docs/MILESTONES.md`](docs/MILESTONES.md).
 
 ### 20.1 Closed-loop controller
 
@@ -1154,15 +1154,14 @@ Add a controller that uses judge output to decide:
 
 ### 20.2 `--target` support in `rebuild_pipeline.py`
 
-The pipeline should support:
+**Status: implemented.** The pipeline supports per-target runs:
 
 ```bash
 python scripts/rebuild_pipeline.py --target TwoAssetMinVar
 ```
 
-Currently it may operate over all mapping targets.
-
-This is a **v0.2** task. Per-target operation is needed for:
+With no `--target` it operates over all mapping targets (that behaviour is preserved). Per-target
+operation matters for:
 
 - **multi-target repos** (don't re-run every target when one changed);
 - **closed-loop iteration** on a single theorem under construction;
@@ -1206,7 +1205,7 @@ Implement a real path for:
 PASS_PROVABLE_EQUIV
 ```
 
-**Status: v0.2 — wired as a guarded path.** `PASS_PROVABLE_EQUIV` is legitimate only when an in-Lean equivalence lemma is supplied and the equivalence-check stage verifies that it builds and uses only permitted axioms; otherwise it is downgraded to review/blocking evidence per §11.2. Emit it **only if** an in-Lean equivalence lemma is supplied **and builds**; otherwise use `PASS_EQUIV`. Treat any `PASS_PROVABLE_EQUIV` without a built lemma as a calibration flag (→ HUMAN_REVIEW, per §11.2).
+**Status: implemented as a guarded path.** `PASS_PROVABLE_EQUIV` is legitimate only when an in-Lean equivalence lemma is supplied and the equivalence-check stage verifies that it builds and uses only permitted axioms; otherwise it is downgraded to review/blocking evidence per §11.2. Emit it **only if** an in-Lean equivalence lemma is supplied **and builds**; otherwise use `PASS_EQUIV`. Treat any `PASS_PROVABLE_EQUIV` without a built lemma as a calibration flag (→ HUMAN_REVIEW, per §11.2).
 
 Example:
 
@@ -1341,9 +1340,9 @@ python scripts/rebuild_pipeline.py --with-build --with-comparator
 
 ---
 
-## 23. Success criteria for v0.2
+## 23. Success criteria (a promotable target)
 
-The harness reaches v0.2 when it can demonstrate the following on a fresh theorem such as `TwoAssetMinVar`:
+The audit/formal layer is working when it can demonstrate the following on a fresh theorem (as it does on `TwoAssetMinVar`):
 
 1. A fresh `.tex` source is added.
 2. Claude/model writes a theorem card.
@@ -1365,7 +1364,7 @@ The harness reaches v0.2 when it can demonstrate the following on a fresh theore
 
 That is the point where the judgement layer is genuinely informing construction, not merely reporting afterwards.
 
-**Automatic or agent-driven revision after a `REVISE` decision is v0.3, not v0.2.** v0.2 only requires that the gate *emits* an actionable `REVISE`; a human acts on it (the v0.3 controller automates that step).
+**Automatic or agent-driven revision after a `REVISE` decision is the future closed-loop controller (§12, §20.1).** The implemented gate *emits* an actionable `REVISE`; today a human acts on it — automating that step is what the controller would add.
 
 ---
 
@@ -1406,18 +1405,24 @@ This remains an architecture document, not a literature review, but the design b
 
 ## 24. Summary
 
-The architecture has not diverged from the original vision; the current repository is a **v0.1 subset** of it (see §0.1).
+The architecture has not diverged from the original vision (see §0.1 for the implemented/future split; [`docs/MILESTONES.md`](docs/MILESTONES.md) for the dated history).
 
-The current repository implements the audit and measurement spine:
-
-```text
-source → card → mapping → review → mutants → judge → score → Lean → Comparator → report
-```
-
-The next step is to add the decision loop:
+The harness implements the audit & formal pipeline **and** its promotion decision:
 
 ```text
-judge/report → revise/block/promote
+source → card → mapping → review → mutants → judge → score → Lean → Comparator → gate decision
 ```
 
-**Today (v0.1), this is an audit and measurement harness, not an agentic system.** Only once the v0.3 closed loop exists should it be described as an agentic anti-drift formalisation system. Until then it audits, reports, and gates; judge output does not yet drive construction.
+It also implements the structured-judge source-fidelity evidence pipeline:
+
+```text
+judge results → export → schema validation → structured scoring → conservative gate caps
+```
+
+The remaining step is to close the loop:
+
+```text
+REVISE decision → automatically revise card/statement/mapping → re-judge → re-prove
+```
+
+**Today this is an audit, measurement, and gating harness — not yet an agentic system.** It audits, reports, scores, and gates; judge output does not yet *drive* construction. Only once the closed-loop controller (§12, §20.1) exists should it be described as an agentic anti-drift formalisation system.

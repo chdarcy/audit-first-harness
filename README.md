@@ -7,7 +7,9 @@ source claim**. It is the extracted, domain-neutral machinery from a Markowitz p
 formalisation, reduced to an MVP and shipped with a single self-contained example
 (put–call payoff parity).
 
-For the design, roadmap, and v0.1 / v0.2 / v0.3 scope, see [`ARCHITECTURE.md`](ARCHITECTURE.md).
+For the stable design, boundaries, and current architecture, see [`ARCHITECTURE.md`](ARCHITECTURE.md).
+For the dated, milestone-by-milestone implementation history, see
+[`docs/MILESTONES.md`](docs/MILESTONES.md).
 
 ## What this is
 
