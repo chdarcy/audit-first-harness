@@ -577,6 +577,25 @@ Tests should cover:
 4. no verdict line is unrecoverable;
 5. recovered malformed output preserves raw output and parse error.
 
+### 9.1 Structured judge-evidence schema (v0.3 milestone 1a — validation only)
+
+v0.3 introduces a **structured** judge-evidence record (`schema_version: "0.3.0"`) so the future
+closed-loop controller (§20.1) can consume source-fidelity judgements machine-readably. The schema
+carries `target`, `source_ref`, `candidate_id`, `verdict`
+(`PASS | PASS_EQUIV | PASS_PROVABLE_EQUIV | WARN | FAIL | UNPARSEABLE`), `confidence` ∈ [0, 1], a
+list of typed `concerns` (each with a `type`, `severity`, `description`, and optional source/formal
+evidence), a `summary`, and `requires_human_review`.
+
+`scripts/validate_judge_schema.py` is a **pure, offline** validator for one such record. It
+classifies a record as `VALID`, `PARTIAL_RECOVERED` (a legacy/minimal output from which only a
+single unambiguous verdict can be safely recovered — fabricating nothing else, per §9), or
+`INVALID`. It calls no model/API, reads no answer key, and makes **no promotion decision**.
+
+This milestone (1a) is **schema validation only**. The structured record is **source-fidelity
+evidence, not theorem truth**: a `verdict: PASS` here never overrides the Lean build, no-sorry,
+axiom audit (§14), Comparator (§13), or guarded provable-equivalence (§20.6) results, and it does
+not change the promotion gate (§11). Scoring and gate integration are deferred to later v0.3 steps.
+
 ---
 
 ## 10. Scoring the judge
