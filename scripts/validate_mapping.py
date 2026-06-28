@@ -80,6 +80,24 @@ REJECT_VERDICTS = {"FAIL", "WARN"}
 ACCEPT_VERDICTS = {"PASS", "PASS_EQUIV", "PASS_PROVABLE_EQUIV"}
 
 
+def equivalence_evidence_error(equivalence) -> str | None:
+    """None if `equivalence` is structurally valid PASS_PROVABLE_EQUIV evidence, else an error.
+
+    Required shape (see ARCHITECTURE.md §20.6): {kind: provable_equiv, lemma: <fqn>,
+    module: <module>} (notes optional). That the lemma actually *builds* is verified separately
+    by scripts/check_equivalence.py; here we only check that the fields are present."""
+    if not isinstance(equivalence, dict):
+        return "no equivalence object"
+    missing = []
+    if equivalence.get("kind") != "provable_equiv":
+        missing.append("kind: provable_equiv")
+    if not equivalence.get("lemma"):
+        missing.append("lemma")
+    if not equivalence.get("module"):
+        missing.append("module")
+    return ("missing " + ", ".join(missing)) if missing else None
+
+
 class Validator:
     def __init__(self) -> None:
         self.errors: list[str] = []
@@ -184,17 +202,28 @@ class Validator:
                 else:
                     review_fm = self.load_frontmatter(review_path)
 
-            # 3. PASS_EQUIV / WARN require non-empty equivalence or modelling notes
+            # 3. PASS_EQUIV / WARN require a non-empty equivalence note (direction or notes);
+            #    PASS_PROVABLE_EQUIV requires built-lemma evidence (checked structurally here and
+            #    for real by scripts/check_equivalence.py).
             verdict = t.get("verdict")
+            eq = t.get("equivalence") if isinstance(t.get("equivalence"), dict) else {}
             if verdict in NOTE_REQUIRED_VERDICTS:
-                eq = t.get("equivalence") or {}
-                direction = (eq.get("direction") or "").strip() if isinstance(eq, dict) else ""
-                if not direction:
+                note = (eq.get("direction") or eq.get("notes") or "").strip()
+                if not note:
                     self.err(
-                        f"[{name}] verdict {verdict} requires a non-empty "
-                        f"equivalence.direction note in formal_mapping.yaml"
+                        f"[{name}] verdict {verdict} requires a non-empty equivalence note "
+                        f"(equivalence.direction or equivalence.notes) in formal_mapping.yaml"
                     )
                     row["notes"].append("missing equivalence note")
+            if verdict == "PASS_PROVABLE_EQUIV":
+                ev_err = equivalence_evidence_error(t.get("equivalence"))
+                if ev_err:
+                    self.err(
+                        f"[{name}] verdict PASS_PROVABLE_EQUIV requires equivalence "
+                        f"{{kind: provable_equiv, lemma, module}} ({ev_err}); run "
+                        f"scripts/check_equivalence.py to verify the lemma builds"
+                    )
+                    row["notes"].append("missing provable-equivalence evidence")
 
             # 4. comparator config path exists
             comp = t.get("comparator") or {}

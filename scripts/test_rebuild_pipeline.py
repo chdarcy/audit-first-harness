@@ -82,7 +82,7 @@ def test_report_notes_and_commands() -> None:
     md = rp.render_report(_stages(), "2026-01-01T00:00:00Z", rp.PASS, "PutCallParity")
     check("report: whole-library note present", "whole-library" in md)
     check("report: target-scoped-stages note present",
-          "Only the `comparator` and `axiom_audit` stages are target-scoped" in md)
+          "Only the `comparator`, `axiom_audit`, and `equivalence_check` stages are target-scoped" in md)
     check("report: gate_decision note present", "scripts/gate_decision.py --target" in md)
     check("report: commands section present", "**Commands run:**" in md)
     check("report: a command is listed", "`python validate_mapping.py`" in md)

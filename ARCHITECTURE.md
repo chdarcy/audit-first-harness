@@ -1066,7 +1066,7 @@ Implement a real path for:
 PASS_PROVABLE_EQUIV
 ```
 
-**Status: aspirational until wired.** In v0.1 `provable_equiv_lemma` is always `null`, so the judge can never legitimately emit `PASS_PROVABLE_EQUIV`. Emit it **only if** an in-Lean equivalence lemma is supplied **and builds**; otherwise use `PASS_EQUIV`. Treat any `PASS_PROVABLE_EQUIV` without a built lemma as a calibration flag (→ HUMAN_REVIEW, per §11.2).
+**Status: v0.2 — wired as a guarded path.** `PASS_PROVABLE_EQUIV` is legitimate only when an in-Lean equivalence lemma is supplied and the equivalence-check stage verifies that it builds and uses only permitted axioms; otherwise it is downgraded to review/blocking evidence per §11.2. Emit it **only if** an in-Lean equivalence lemma is supplied **and builds**; otherwise use `PASS_EQUIV`. Treat any `PASS_PROVABLE_EQUIV` without a built lemma as a calibration flag (→ HUMAN_REVIEW, per §11.2).
 
 Example:
 

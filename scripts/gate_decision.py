@@ -89,9 +89,9 @@ def decide(sig: dict, thr: dict | None = None) -> dict:
     real row: real_row_present (bool), real_verdict (str|None)
     calibration: discriminative_recall, consistency_false_alarm_rate, malformed_yaml_rate
                  (float|None), recovered_verdict_count (int)
-    formal: build_status, no_sorry_status, axiom_audit_status, comparator_pipeline
-            (PASS/FAIL/SKIPPED/UNKNOWN), comparator_status (mapping field, str)
-    misc: human_override (bool)
+    formal: build_status, no_sorry_status, axiom_audit_status, equivalence_check_status,
+            comparator_pipeline (PASS/FAIL/SKIPPED/UNKNOWN), comparator_status (mapping field, str)
+    misc: human_override (bool), mapping_verdict (str, the recorded mapping verdict)
     """
     thr = thr or DEFAULT_THRESHOLDS
     cs = sig.get("comparator_status") or "UNKNOWN"
@@ -119,6 +119,9 @@ def decide(sig: dict, thr: dict | None = None) -> dict:
         blocks.append("No-sorry check failed (pipeline report).")
     if sig.get("axiom_audit_status") == "FAIL":
         blocks.append("Axiom audit failed: unexpected axioms or sorryAx (pipeline report).")
+    if sig.get("equivalence_check_status") == "FAIL":
+        blocks.append("Equivalence check failed: provable-equivalence lemma missing, unbuilt, "
+                      "or using unexpected axioms (pipeline report).")
     if comp_failed:
         blocks.append(f"Comparator failed (status {cs!r}, pipeline {comp_pipeline!r}).")
     missing_scored = not sig.get("scored_present")
@@ -186,6 +189,11 @@ def decide(sig: dict, thr: dict | None = None) -> dict:
     if rv == "PASS_EQUIV":
         cal.append("The real mapping was judged PASS_EQUIV without a built equivalence lemma; "
                    "needs review (see ARCHITECTURE.md §20.6).")
+    if ((rv == "PASS_PROVABLE_EQUIV" or sig.get("mapping_verdict") == "PASS_PROVABLE_EQUIV")
+            and sig.get("equivalence_check_status") != "PASS"):
+        cal.append("PASS_PROVABLE_EQUIV is claimed but the equivalence check is not a recorded "
+                   "PASS; a bare 'provably equivalent' claim is not evidence (run the pipeline "
+                   "with --with-equivalence-check).")
 
     unknown: list[str] = []
     if sig.get("build_status") != "PASS":
@@ -340,8 +348,10 @@ def gather(target: str, root: Path = ROOT) -> dict:
         "build_status": formal.get("build", "UNKNOWN"),
         "no_sorry_status": formal.get("no_sorry", "UNKNOWN"),
         "axiom_audit_status": formal.get("axiom_audit", "UNKNOWN"),
+        "equivalence_check_status": formal.get("equivalence_check", "UNKNOWN"),
         "comparator_pipeline": formal.get("comparator", "UNKNOWN"),
         "comparator_status": comparator_status,
+        "mapping_verdict": tmap.get("verdict"),
         "human_override": bool(tmap.get("human_override")) or bool((fm or {}).get("human_override")),
     }
     provenance = {

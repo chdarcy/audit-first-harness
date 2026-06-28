@@ -28,6 +28,15 @@ targets:
       solution_module: Audit.PutCallParity.Solution
       audit_theorem: AuditHarness.StatementAudit.put_call_payoff_parity
     verdict: PASS
+    # equivalence: provable-equivalence evidence (see ARCHITECTURE.md §20.6,
+    # scripts/check_equivalence.py). `null` or kind=direct when the Lean statement matches the
+    # source directly (verdict PASS). For verdict PASS_PROVABLE_EQUIV this MUST be a built lemma:
+    #   equivalence:
+    #     kind: provable_equiv
+    #     lemma: AuditHarness.some_equivalence_lemma
+    #     module: AuditHarness.SomeModule
+    #     notes: "why the Lean form is equivalent to the source"
+    # (PASS_EQUIV may carry an informal equivalence.direction/notes but no built lemma.)
     equivalence: null
     # Set by a human after a Comparator run (automatic writeback is a v0.2 task).
     # One of (see ARCHITECTURE.md §13.4):

@@ -23,6 +23,8 @@ jobs:
         run: python scripts/test_rebuild_pipeline.py
       - name: Axiom-audit parser unit tests
         run: python scripts/test_check_axioms.py
+      - name: Provable-equivalence unit tests
+        run: python scripts/test_check_equivalence.py
       - name: Validate ledger (cards <-> mapping <-> reviews)
         run: python scripts/validate_mapping.py
       - name: Assemble blinded judge packages (dry-run, no model)

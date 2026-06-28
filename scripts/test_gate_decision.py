@@ -50,8 +50,10 @@ def base_sig() -> dict:
         "build_status": "PASS",
         "no_sorry_status": "PASS",
         "axiom_audit_status": "PASS",
+        "equivalence_check_status": "PASS",
         "comparator_pipeline": "PASS",
         "comparator_status": "PASSED_REAL_LANDRUN",
+        "mapping_verdict": "PASS",
         "human_override": False,
     }
 
@@ -138,6 +140,31 @@ def test_axiom_audit_unverified_human_review() -> None:
     check("axiom-audit SKIPPED: HUMAN_REVIEW", d["status"] == gd.HUMAN_REVIEW, d["status"])
 
 
+def test_equivalence_check_fail_blocks() -> None:
+    d = gd.decide({**base_sig(), "equivalence_check_status": "FAIL"})
+    check("equiv-check FAIL: BLOCK", d["status"] == gd.BLOCK, d["status"])
+
+
+def test_judge_provable_equiv_without_check_human_review() -> None:
+    # A bare judge PASS_PROVABLE_EQUIV must not promote without the equivalence check passing.
+    d = gd.decide({**base_sig(), "real_verdict": "PASS_PROVABLE_EQUIV",
+                   "equivalence_check_status": "SKIPPED"})
+    check("PPE judge + equiv SKIPPED: not PROMOTE", d["status"] != gd.PROMOTE, d["status"])
+    check("PPE judge + equiv SKIPPED: HUMAN_REVIEW", d["status"] == gd.HUMAN_REVIEW, d["status"])
+
+
+def test_mapping_provable_equiv_without_check_human_review() -> None:
+    d = gd.decide({**base_sig(), "mapping_verdict": "PASS_PROVABLE_EQUIV",
+                   "equivalence_check_status": "SKIPPED"})
+    check("PPE mapping + equiv SKIPPED: HUMAN_REVIEW", d["status"] == gd.HUMAN_REVIEW, d["status"])
+
+
+def test_provable_equiv_with_check_promotes() -> None:
+    d = gd.decide({**base_sig(), "real_verdict": "PASS_PROVABLE_EQUIV",
+                   "mapping_verdict": "PASS_PROVABLE_EQUIV", "equivalence_check_status": "PASS"})
+    check("PPE + equiv PASS: PROMOTE", d["status"] == gd.PROMOTE, d["status"])
+
+
 def test_pipeline_report_parser() -> None:
     md = (
         "| # | stage | status | detail |\n"
@@ -171,6 +198,10 @@ def main() -> int:
         test_human_override_promotes_despite_caveat,
         test_axiom_audit_fail_blocks,
         test_axiom_audit_unverified_human_review,
+        test_equivalence_check_fail_blocks,
+        test_judge_provable_equiv_without_check_human_review,
+        test_mapping_provable_equiv_without_check_human_review,
+        test_provable_equiv_with_check_promotes,
         test_pipeline_report_parser,
     ]
     for t in tests:
