@@ -68,6 +68,7 @@ examples/put_call_parity/source.tex   the example source document
 | `gate_decision.py` | Offline promotion decision (PROMOTE/BLOCK/REVISE/HUMAN_REVIEW) → `docs/promotion/<Target>.yaml` | No |
 | `test_judge_parsing.py` | Unit tests for judge-output YAML parsing / verdict recovery | No |
 | `test_gate_decision.py` | Unit tests for the promotion-decision policy | No |
+| `test_rebuild_pipeline.py` | Unit tests for the pipeline `--target` plumbing | No |
 
 The judge is **never** contacted unless you explicitly pass `--execute-api` (OpenAI provider,
 reads `OPENAI_API_KEY` from the environment).
