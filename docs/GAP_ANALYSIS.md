@@ -54,10 +54,10 @@ Risk = impact if left as-is on the harness's anti-drift claim.
 | Architecture goal | Status | Implemented evidence | Remaining gap | Risk | Recommended next action |
 |---|---|---|---|---|---|
 | Source-to-Lean traceability | Implemented | cards (`theorem_index.yaml`) + mapping (`formal_mapping.yaml`) + reviews for all 3; `validate_mapping` PASS | — | Low | Keep `validate_mapping` in CI (done) |
-| Formal correctness layer | Implemented | `lake build` 1823 jobs; pipeline orchestrates build/no-sorry/axiom/equiv/comparator | build/comparator human-gated, not in CI | Med | Add a CI Lean job that builds all triples |
+| Formal correctness layer | Implemented | `lake build` 1823 jobs; pipeline orchestrates build/no-sorry/axiom/equiv/comparator; **CI builds all theorem modules + all 6 triples** | real Comparator stays local/WSL (binaries not in CI) | Low (was Med) | Comparator-in-CI only if toolchain provisioned |
 | No-sorry / no-admit enforcement | Implemented | `check_sorries.py` (9 files, Challenges excluded); in CI | textual heuristic only | Low | (covered by axiom audit) |
-| Kernel / axiom audit | Implemented | `check_axioms.py`: all 3 ⊆ `{propext,Quot.sound,Classical.choice}`, no `sorryAx` | not run in CI | Med | Add axiom audit to a CI Lean job |
-| Comparator Challenge/Solution architecture | Implemented | triples for all 3; real run returned "okay" for all 3 this session | only PCP triple built in CI | Med | Build TAM/Gold triples in CI |
+| Kernel / axiom audit | Implemented | `check_axioms.py`: all 3 ⊆ `{propext,Quot.sound,Classical.choice}`, no `sorryAx`; **now run in CI** | — | Low (was Med) | — |
+| Comparator Challenge/Solution architecture | Implemented | triples for all 3; real run returned "okay" for all 3; **CI now builds all 6 Challenge/Solution modules** | real Comparator acceptance still local/WSL (binaries not in CI) | Low (was Med) | Comparator-in-CI only if toolchain provisioned |
 | Comparator status writeback | **Implemented** (`ce5d8f3`) | real writeback run; all 3 record `PASSED_REAL_LANDRUN_BEST_EFFORT` | conservative `BEST_EFFORT` (landrun `--best-effort`, ABI not asserted ≥5) | Low | optionally confirm ABI ≥5 for `PASSED_REAL_LANDRUN` |
 | Formal mapping ledger | Implemented | `formal_mapping.yaml` (3 targets, verdict/equivalence/comparator_status/approval) | — | Low | — |
 | Theorem-card index | Implemented | `theorem_index.yaml` (3 cards) | — | Low | — |
@@ -76,7 +76,7 @@ Risk = impact if left as-is on the harness's anti-drift claim.
 | Worked targets | Implemented | PutCallParity, TwoAssetMinVar | only 2 finance targets | Med | More targets (§7) |
 | Gold reference target | Implemented | GoldIrrationalSqrtTwo (wraps Mathlib `irrational_sqrt_two`) | — | Low | — |
 | Artifact / generated-output policy | Implemented | `.gitignore` excludes judge_results/promotion/evidence; reports regenerable | reliance on discipline (manual restore) | Low | (optional) make-clean target |
-| CI coverage | **Partial** | Python tests + ledger + dry-run + no-sorry + report; minimal Lean build | no axiom/equiv/comparator; only PCP triple built | **High** | Expand the Lean CI job |
+| CI coverage | **Mostly** (was Partial) | Python tests + ledger + dry-run + no-sorry + report; **Lean CI builds all theorem modules + all 6 triples and runs `check_axioms` + `check_equivalence`** | real Comparator run not in CI (binaries unavailable); no real judge path in CI | Low (was High) | Comparator-in-CI if/when toolchain provisioned |
 | Closed-loop controller | Future | §12, §20.1 (clearly marked future) | not implemented | n/a (future) | Roadmap item |
 | Non-LLM alignment signal | Future | §20.3 | not implemented | n/a | Roadmap item |
 | Multi-judge ensemble | Future | §20.8 | not implemented | n/a | Roadmap item |
@@ -158,13 +158,16 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 
 ### 4e. CI
 - **Does:** runs all Python unit tests, `validate_mapping`, `run_mutants --dry-run`,
-  `check_sorries`, the default `rebuild_pipeline`, and a minimal Lean build of `AuditHarness` + the
-  **PutCallParity** triple.
-- **Does not:** build the TwoAssetMinVar/GoldIrrationalSqrtTwo triples; run `check_axioms`,
-  `check_equivalence`, or the Comparator; exercise any real judge path.
-- **Can fail silently:** a break in a TAM/Gold Challenge/Solution, or an axiom regression, would not
-  be caught by CI (green CI ≠ formally audited).
-- **Improve next:** parametrize the Lean job over all targets; add axiom audit to CI.
+  `check_sorries`, the default `rebuild_pipeline`, and a Lean job that builds **every theorem module
+  and every Challenge/Solution triple for all three targets**, then runs `check_axioms` (kernel/axiom
+  audit, all targets) and `check_equivalence` (all `NOT_REQUIRED` while every `equivalence: null`).
+- **Does not:** run the **real Comparator** (the `landrun`/`comparator`/`lean4export` binaries are not
+  installed in CI) — CI proves the triples *build*, not that the Comparator accepts them; nor does it
+  exercise any real judge path.
+- **Can fail silently:** Comparator acceptance and `comparator_status` writeback are still local/WSL,
+  so a Comparator-only regression (one that still compiles) would not be caught by CI.
+- **Improve next:** if/when the Comparator toolchain can be provisioned in CI (or a hermetic shim is
+  available), add a real Comparator job; until then it stays local/WSL.
 
 ---
 
@@ -199,8 +202,11 @@ written-back real Comparator pass; what is still missing is a committed real *ju
    `run_judge.py`/`import_manual_judge_results.py` read `_targets.yaml` only and never `_manifest`,
    while `score_judge`/`export` read `_manifest`. But there is no automated guard asserting the
    runner/importer never reference the answer key; a future edit could leak it. **(Low–Med)**
-9. **CI under-covers the formal layer** (see §4e): green CI does not imply the formal audit passed
-   for TAM/Gold. **(High for confidence, Med for correctness)**
+9. **CI under-covers the formal layer. — REDUCED.** CI now builds every theorem module and all six
+   Challenge/Solution modules for all three targets and runs `check_axioms` + `check_equivalence`, so
+   a broken triple or an axiom regression is caught. Residual: the **real Comparator** (landrun
+   sandbox) is not run in CI — its binaries are not installed — so Comparator *acceptance* and
+   `comparator_status` writeback remain local/WSL. **(was High → Low; Comparator-in-CI still open)**
 10. **ARCHITECTURE.md post-split stability:** good. The version/diary wording was removed; remaining
     forward-looking statements (§11.3 "future structured pipeline JSON", §20 future items, §12/§20.1
     closed loop) are accurately marked future. No material stale "current" claims found. **(Low)**
@@ -233,7 +239,9 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 - ~~Emit a structured `pipeline_status.json` and have the gate consume it with a freshness check.~~ —
   **done** (`rebuild_pipeline.py --pipeline-status-out` / `gate_decision.py --pipeline-status`,
   sha256 fingerprint-checked, fail-closed).
-- Expand CI to build all Comparator triples and run the axiom audit.
+- ~~Expand CI to build all Comparator triples and run the axiom audit.~~ — **done** (CI builds all
+  theorem modules + 6 triples and runs `check_axioms` + `check_equivalence`; real Comparator stays
+  local/WSL).
 
 **Should do before scaling targets:**
 - Strengthen human approval (per-axis / signed) and grow mutation suites.
@@ -259,8 +267,9 @@ written-back real Comparator pass; what is still missing is a committed real *ju
    Implemented as `rebuild_pipeline.py --pipeline-status-out` (`pipeline_status.v0.1`, sha256 input
    fingerprints) and `gate_decision.py --pipeline-status` (validated, fingerprint-checked,
    fail-closed). The markdown fallback is preserved for backward compatibility.
-3. **Expand CI for the formal layer.** *Why:* green CI should imply the formal audit ran for all
-   targets. *Files:* `.github/workflows/ci.yml`. *Risk:* Low. *Type:* CI/architecture-adjacent.
+3. **Expand CI for the formal layer. — DONE.** CI builds all theorem modules + all 6
+   Challenge/Solution triples and runs `check_axioms` + `check_equivalence`. (Real Comparator-in-CI
+   remains out of scope until its toolchain can be provisioned.)
 4. **One real judge round, scored and recorded.** *Why:* first empirical evidence the judge detects
    defects. *Files:* gitignored judge artifacts + a committed summary/metric snapshot doc. *Risk:*
    Med (opt-in API). *Type:* run + docs.
@@ -285,7 +294,9 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 The harness can honestly be claimed to **meet its current architecture goals** when, for each
 enabled target:
 
-1. `lake build`, `check_sorries`, and `check_axioms` pass **in CI** (not just locally).
+1. `lake build`, `check_sorries`, and `check_axioms` pass **in CI** (not just locally). **— satisfied:
+   CI builds all theorem modules + all 6 triples and runs `check_sorries` + `check_axioms` for all
+   targets. (Real Comparator acceptance remains local/WSL.)**
 2. The Comparator has been run with writeback and the ledger records a **real** pass
    (`comparator_status` ∈ the real-landrun set, not `NOT_RUN`). **— satisfied for the current three
    targets (`ce5d8f3`: `PASSED_REAL_LANDRUN_BEST_EFFORT`); must hold for any new target.**

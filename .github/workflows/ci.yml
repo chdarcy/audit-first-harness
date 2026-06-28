@@ -45,10 +45,28 @@ jobs:
         run: python scripts/rebuild_pipeline.py
 
   lean-build:
-    # Full Lean build of the example library + Audit triples.
+    # Formal Lean layer for ALL current targets: build every theorem module + every
+    # Challenge/Solution triple, then run the kernel/axiom audit and the provable-equivalence
+    # audit. The real Comparator (landrun sandbox + comparator/lean4export binaries) is NOT run
+    # here — those tools are not installed in CI; Comparator execution and comparator_status
+    # writeback stay local/WSL. CI therefore proves the triples *build*, not that the Comparator
+    # accepts them. Formal evidence only — this does not establish source fidelity.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: leanprover/lean-action@v1
+      - uses: actions/setup-python@v5
         with:
-          build-args: "AuditHarness Audit.PutCallParity.Challenge Audit.PutCallParity.Solution"
+          python-version: "3.11"
+      - run: python -m pip install pyyaml
+      - name: Build theorem modules + all Challenge/Solution triples (all targets)
+        uses: leanprover/lean-action@v1
+        with:
+          build-args: >-
+            AuditHarness.PutCallParity AuditHarness.TwoAssetMinVar AuditHarness.GoldIrrationalSqrtTwo
+            Audit.PutCallParity.Challenge Audit.PutCallParity.Solution
+            Audit.TwoAssetMinVar.Challenge Audit.TwoAssetMinVar.Solution
+            Audit.GoldIrrationalSqrtTwo.Challenge Audit.GoldIrrationalSqrtTwo.Solution
+      - name: Kernel/axiom audit — mapped declarations within permitted axioms (all targets)
+        run: python scripts/check_axioms.py
+      - name: Provable-equivalence audit (NOT_REQUIRED where equivalence is null; no targets yet)
+        run: python scripts/check_equivalence.py

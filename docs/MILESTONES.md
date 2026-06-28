@@ -82,6 +82,14 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   stale (fingerprint-mismatched), target-mismatched, malformed, or missing status. Closes the
   GAP_ANALYSIS "stale-report" risk for the structured path; the markdown fallback is preserved for
   backward compatibility. Formal stage evidence only — never source fidelity (ARCHITECTURE §11.3).
+- **Expanded CI formal-layer coverage** — the `lean-build` CI job now builds **every theorem module
+  and every Challenge/Solution triple for all three targets** (not just the PutCallParity triple) and
+  runs `check_axioms.py` (kernel/axiom audit, all targets) and `check_equivalence.py` (all
+  `NOT_REQUIRED` while every `equivalence: null`). Green CI now catches a broken triple or an axiom
+  regression, not just Python-test failures. The **real Comparator** (landrun sandbox) is **not** run
+  in CI — its binaries are not installed — so Comparator *acceptance* and `comparator_status`
+  writeback stay local/WSL; CI proves the triples *build*, which is formal evidence only, not source
+  fidelity. Reduces the GAP_ANALYSIS CI-undercoverage risk.
 
 ---
 
