@@ -31,6 +31,8 @@ jobs:
         run: python scripts/test_score_judge.py
       - name: Structured judge-output export unit tests
         run: python scripts/test_structured_judge_output.py
+      - name: Structured judge-workflow runner unit tests
+        run: python scripts/test_structured_judge_workflow.py
       - name: Validate ledger (cards <-> mapping <-> reviews)
         run: python scripts/validate_mapping.py
       - name: Assemble blinded judge packages (dry-run, no model)

@@ -63,6 +63,7 @@ examples/put_call_parity/source.tex   the example source document
 | `import_manual_judge_results.py` | Aggregate manually-collected judge replies, with provenance | No |
 | `score_judge.py` | Score judge results vs the local answer key; write metrics (incl. `--structured` JSON reliability scoring) | No |
 | `export_structured_judge_results.py` | Convert blinded judge results into structured v0.3 JSON records (un-blinds via the answer key) | No |
+| `run_structured_judge_workflow.py` | Offline chain export → validate → score → (optional) gate over existing judge results | No |
 | `validate_mapping.py` | Structural consistency of cards ↔ mapping ↔ reviews | No |
 | `check_sorries.py` | Fail if any non-Challenge Lean file contains `sorry`/`admit` | No |
 | `check_axioms.py` | Kernel/axiom audit: mapped declarations within `permitted_axioms` (needs Lean) | No |
@@ -78,6 +79,7 @@ examples/put_call_parity/source.tex   the example source document
 | `test_validate_judge_schema.py` | Unit tests for the structured judge-schema validator | No |
 | `test_score_judge.py` | Unit tests for structured judge-reliability scoring | No |
 | `test_structured_judge_output.py` | Unit tests for structured judge-output export | No |
+| `test_structured_judge_workflow.py` | Unit tests for the offline structured-judge workflow runner | No |
 
 The judge is **never** contacted unless you explicitly pass `--execute-api` (OpenAI provider,
 reads `OPENAI_API_KEY` from the environment).

@@ -689,6 +689,24 @@ recovered-only → `0.3`, otherwise a neutral `0.5`); each `detected_issues[].ax
 is set for `WARN`/`FAIL`/`UNPARSEABLE`, a recovered verdict, or any high/critical concern. The
 records are **source-fidelity evidence, not theorem truth** (§0); the judge is not a theorem oracle.
 
+### 10.5 Offline structured-judge workflow (v0.3 milestone 2b)
+
+`scripts/run_structured_judge_workflow.py` chains the structured pieces over **already-existing**
+judge results, deterministically and **offline** (no model/API call, no API key):
+*export (§10.4) → schema validation (§9.1) → structured scoring (§10.3) → optional conservative gate
+(§11.5)*. It reuses those scripts' functions directly (by import; no shelling, no duplicated logic)
+and **does not run the judge** — live judging stays opt-in in `run_judge.py --execute-api`.
+
+It is deliberately **separate from `rebuild_pipeline.py`**: the formal pipeline (build / no-sorry /
+axiom audit / Comparator / equivalence) and this source-fidelity workflow are the two sides of the
+§0 boundary and must not be conflated. Deterministic outputs (under `--out-dir`, default
+`docs/judge_results/`): `<T>_structured.json`, `<T>_structured_score.json`, and — only with
+`--with-gate` — `docs/promotion/<T>.yaml`. `--plan-only` prints the planned paths and writes
+nothing; missing judge results fail clearly unless `--allow-missing` is given. The workflow is a
+transformer/evaluator of existing evidence: it can only cap promotion to HUMAN_REVIEW through the
+existing gate (§11.5) and **never** overrides the Lean build, no-sorry, axiom audit (§14),
+Comparator (§13), or guarded provable-equivalence (§20.6) results.
+
 ---
 
 ## 11. Promotion decision policy
