@@ -665,6 +665,30 @@ These metrics measure **judge reliability, not theorem truth** (§0, §10.1). St
 audit (§14), Comparator (§13), or guarded provable-equivalence (§20.6) results. Gate consumption of
 these metrics is deferred to a later v0.3 milestone; milestone 1b is **scoring only**.
 
+### 10.4 Structured judge-output export (v0.3 milestone 2a)
+
+`scripts/export_structured_judge_results.py` *produces* the structured records that §10.3 scores and
+§11.5 may consume. It is a **pure, offline** converter on the *scoring* side of the answer-key
+boundary: it joins blinded judge results (`docs/judge_results/<target>.yaml`, by `blind_id`) to the
+local answer key (`_manifest.yaml`, `blind_id -> variant_id`) and the source mapping
+(`target -> source_refs`) and emits validated `schema_version: "0.3.0"` records as JSON — either one
+`{"results": [...]}` file or one file per candidate (`--split-dir`).
+
+Because un-blinding requires the answer key, this lives **here**, not in `run_judge.py` /
+`import_manual_judge_results.py`, which must never read `_manifest.yaml` (§9). It calls **no
+model/API** and needs **no API key**; live judging stays opt-in in `run_judge.py --execute-api`, and
+the converter only transforms already-collected replies (manual import, API, or a fixture). The
+workflow is: *judge package/manual or live response → structured record JSON →
+`validate_judge_schema.py` → `score_judge.py --structured` → `gate_decision.py --judge-metrics`.*
+
+Field mapping is documented and never fabricates judge content: legacy `verdict`s pass through, but
+`OUT_OF_SCOPE` / absent / unrecoverable verdicts become `UNPARSEABLE`; the judge's `low|medium|high`
+confidence maps to `0.3|0.6|0.9` (numeric confidences are clamped to `[0,1]`; `UNPARSEABLE → 0.0`,
+recovered-only → `0.3`, otherwise a neutral `0.5`); each `detected_issues[].axis` maps to a concern
+`type` (fallback `other`) with `blocking|caveat|cosmetic → high|medium|low`; `requires_human_review`
+is set for `WARN`/`FAIL`/`UNPARSEABLE`, a recovered verdict, or any high/critical concern. The
+records are **source-fidelity evidence, not theorem truth** (§0); the judge is not a theorem oracle.
+
 ---
 
 ## 11. Promotion decision policy
