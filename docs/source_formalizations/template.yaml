@@ -1,0 +1,87 @@
+# Source-formalisation record — TEMPLATE (generic skeleton; not a real record).
+#
+# Copy this file to docs/source_formalizations/<source_id>.yaml and fill it in to document how an
+# informal source claim becomes a proposed formal target, BEFORE writing a theorem card, a formal
+# mapping, a fidelity review, or any Lean. This layer captures the *autoformalisation* decisions
+# (symbols, assumptions, conclusion shape, abstraction choices, ambiguities, proof decomposition) so
+# that semantic alignment between informal source and formal statement is made explicit and
+# reviewable up front. It records source-fidelity intent only — it is NOT a claim of mathematical
+# truth, and it never runs a model or edits Lean.
+#
+# `scripts/validate_source_formalization.py` checks this file's STRUCTURE only (placeholders are
+# allowed here); real records (any other *.yaml in this directory) must fill in the required content.
+
+schema_version: "0.1.0"
+record_type: "source_formalization"
+
+source:
+  source_id: ""            # stable identifier for the source (required for real records)
+  source_file: ""          # path/reference to the source, if any
+  source_ref: ""           # citation / locator within the source
+  source_span: ""          # line/section span, if applicable
+  source_kind: ""          # paper | lecture_notes | textbook | note | problem_sheet (required)
+  raw_excerpt: ""          # exact source excerpt — filled in only for real records, later
+
+informal_claim:
+  title: ""
+  statement: ""            # the claim, in words/maths as the source states it (required)
+  proof_context: ""        # surrounding assumptions / prior results the source relies on
+  theorem_role: ""         # setup | lemma | theorem | corollary | definition | example (required)
+
+symbols:                   # at least one entry for real records
+  - source_symbol: ""      # symbol/notation as written in the source
+    informal_meaning: ""   # what it denotes
+    proposed_formal_type: ""  # intended Lean/Mathlib type (informal note; not Lean code)
+    scope: ""              # local | global | bound | parameter, etc.
+    notes: ""
+
+assumptions:               # at least one of explicit/implicit/derived for real records
+  explicit: []             # stated in the source
+  implicit: []             # used but not stated
+  derived_or_standard: []  # standard background assumptions made explicit
+  intentionally_not_assumed: []  # assumptions deliberately omitted (scope choice)
+
+conclusion:
+  informal: ""             # the conclusion in words (required)
+  proposed_formal_shape: ""  # intended shape of the formal goal (informal sketch)
+  equality_or_inequality_type: ""  # equality | inequality | iff | existence | other
+  existence_uniqueness_claims: ""
+
+formalization_choices:     # record an abstraction_level or at least one representation_choice
+  abstraction_level: ""    # how abstract the formal statement is vs the source
+  representation_choices: []  # data/structure choices (e.g. how an object is modelled)
+  preserved_from_source: []   # what the formalisation keeps faithful
+  intentionally_abstracted: []  # what is deliberately generalised/simplified
+  out_of_scope: []         # source claims deliberately NOT formalised here
+
+ambiguities:               # at least one ambiguity (with an issue) OR one audit risk, for real records
+  - issue: ""              # the ambiguity / interpretation risk
+    risk: ""               # why it matters for source fidelity
+    resolution: ""         # how it was resolved, if resolved
+    status: ""             # unresolved | resolved | needs_human_review
+
+proof_decomposition:
+  strategy: ""             # overall plan (required for real records)
+  subtargets:              # at least one well-formed subtarget for real records
+    - id: ""               # local id for the subtarget
+      informal_goal: ""    # what this step must establish
+      depends_on: []       # ids of subtargets this depends on
+      proposed_lean_declaration: ""  # intended declaration name (informal; not Lean code)
+
+target_links:              # may be left blank during the early source-formalisation stage
+  theorem_card_id: ""      # docs/theorem_index.yaml entry, once created
+  formal_mapping_id: ""    # docs/formal_mapping.yaml target, once created
+  lean_module: ""          # AuditHarness/<Target>.lean, once it exists
+  lean_declaration: ""     # the public theorem declaration name, once it exists
+  fidelity_review: ""      # docs/fidelity_reviews/<Target>.md, once written
+
+review:
+  status: ""               # draft | ready_for_card | needs_human_review | approved (required)
+  reviewer: ""
+  date: ""
+  notes: ""
+
+audit:
+  created_by: ""
+  created_date: ""
+  source_fidelity_risks: []  # risks that a downstream fidelity review must scrutinise

@@ -143,6 +143,19 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   the closed-loop controller, non-LLM signal, multi-judge ensemble, vacuity/unused-hypothesis checks,
   and real Comparator-in-CI remain future/open. No Lean / theorem / Comparator / mapping / mutant /
   prompt changes.
+- **Generic source-formalisation records** — added a source-agnostic layer that documents *how an
+  informal source claim becomes a proposed formal target* before any theorem card / mapping / Lean:
+  `docs/source_formalizations/` (a `template.yaml` skeleton + `README.md`) and
+  `scripts/validate_source_formalization.py` (+ unit tests, in CI). A record captures the source
+  metadata, informal claim, symbols + intended types, explicit/implicit/standard/omitted assumptions,
+  conclusion shape, abstraction & representation choices, ambiguities/risks, and a proof
+  decomposition into subtargets — making the **semantic alignment** between informal source and formal
+  statement explicit and reviewable up front (the hard part of autoformalisation, beyond Lean
+  syntax). The validator checks **completeness/structure only** — never mathematical truth, never the
+  source's correctness; it runs no model/API and never reads or edits Lean. It **sits before** the
+  theorem card and formal mapping and does not replace them, the fidelity review, or the
+  source-fidelity review gate. **Generic infrastructure only: no real source-specific record was
+  added (template only), and no external/uploaded source content was read, imported, or encoded.**
 
 ---
 

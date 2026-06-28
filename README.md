@@ -66,6 +66,7 @@ examples/put_call_parity/source.tex   the example source document
 | `score_judge.py` | Score judge results vs the local answer key; write metrics (incl. `--structured` JSON reliability scoring) | No |
 | `export_structured_judge_results.py` | Convert blinded judge results into structured v0.3 JSON records (un-blinds via the answer key) | No |
 | `run_structured_judge_workflow.py` | Offline chain export → validate → score → (optional) gate over existing judge results | No |
+| `validate_source_formalization.py` | Structural validation of generic source-formalisation records (informal source → proposed formal target; pre-card) | No |
 | `validate_mapping.py` | Structural consistency of cards ↔ mapping ↔ reviews | No |
 | `check_sorries.py` | Fail if any non-Challenge Lean file contains `sorry`/`admit` | No |
 | `check_axioms.py` | Kernel/axiom audit: mapped declarations within `permitted_axioms` (needs Lean) | No |
@@ -79,6 +80,7 @@ examples/put_call_parity/source.tex   the example source document
 | `test_pipeline_status.py` | Unit tests for structured pipeline status + gate freshness/fingerprint check | No |
 | `test_blinding_boundary.py` | Regression tests that the judge runner/importer stay blinded (no `_manifest` access) | No |
 | `test_source_review_decision.py` | Unit tests for the pre-proof source-fidelity review decision | No |
+| `test_validate_source_formalization.py` | Unit tests for the source-formalisation record validator | No |
 | `test_rebuild_pipeline.py` | Unit tests for the pipeline `--target` plumbing | No |
 | `test_check_axioms.py` | Unit tests for the axiom-audit parser/classifier | No |
 | `test_check_equivalence.py` | Unit tests for the provable-equivalence validator | No |

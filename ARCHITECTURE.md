@@ -160,6 +160,8 @@ The intended architecture is:
 ```text
 source.tex
   ↓
+source_formalizations/<id>.yaml   (optional, for hard multi-step sources)
+  ↓
 theorem_index.yaml
   ↓
 formal_mapping.yaml
@@ -194,6 +196,8 @@ promotion decision
 ```
 
 The current MVP implements most of this path. The missing piece is the **closed-loop controller** that turns judge/gate results into required revisions.
+
+For **hard, multi-step sources**, an optional **source-formalisation record** (`docs/source_formalizations/`, validated structurally by `scripts/validate_source_formalization.py`) may sit between the raw source and the theorem card: it documents how an informal claim becomes a proposed formal target (symbols, assumptions, conclusion shape, abstraction choices, ambiguities, proof decomposition) so the semantic alignment is explicit before any Lean. It is source-fidelity infrastructure only — structural completeness, never mathematical truth — and runs no model and edits no Lean.
 
 ---
 

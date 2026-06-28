@@ -289,6 +289,13 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 - Decide the canonical judge representation (legacy vs structured) and converge the gate on it.
 - ~~Add a test that enforces the blinding boundary (no `_manifest` access in runner/importer).~~ —
   **done** (`scripts/test_blinding_boundary.py`, static + runtime/poison, in CI).
+- ~~Structurally represent the informal-source → theorem-card bridge for hard multi-step targets.~~ —
+  **done** (`docs/source_formalizations/` + `scripts/validate_source_formalization.py`): a generic,
+  source-agnostic **source-formalisation record** captures symbols, assumptions, conclusion shape,
+  abstraction choices, ambiguities, and a proof decomposition *before* the theorem card / mapping.
+  The validator checks **completeness and structure only** — **mathematical correctness still
+  requires the human fidelity review and the source-fidelity review gate**; it asserts no truth, runs
+  no model, and edits no Lean. (No real record committed yet — template only.)
 
 **Future research (as ARCHITECTURE.md states):**
 - Closed-loop controller; non-LLM (FormalAlign-style) signal; multi-judge ensemble;

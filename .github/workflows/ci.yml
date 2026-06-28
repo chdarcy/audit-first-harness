@@ -39,6 +39,10 @@ jobs:
         run: python scripts/test_blinding_boundary.py
       - name: Source-fidelity review decision unit tests
         run: python scripts/test_source_review_decision.py
+      - name: Source-formalisation record validator unit tests
+        run: python scripts/test_validate_source_formalization.py
+      - name: Validate source-formalisation records (structure only)
+        run: python scripts/validate_source_formalization.py
       - name: Validate ledger (cards <-> mapping <-> reviews)
         run: python scripts/validate_mapping.py
       - name: Assemble blinded judge packages (dry-run, no model)
