@@ -98,6 +98,15 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   poisoned with contradictory labels, or removed; and a positive check confirms `score_judge.py` /
   `export_structured_judge_results.py` still read `_manifest.yaml` (un-blinding stays scoring/export
   side). Closes the "convention-enforced, not test-enforced" risk before any real judge round.
+- **First real judge calibration run** — ran the blinded judge live (opt-in, `--execute-api`) on
+  **GoldIrrationalSqrtTwo** (10 packages: 1 real / 7 discriminative / 2 consistency) with
+  `openai` / `gpt-4o` @ temperature 0. Result: **discriminative recall 1.0** (all 7 planted defects
+  rejected), **consistency false-alarm rate 0.0**, real mapping accepted, **10/10 clean parses**,
+  structured schema **VALID 10/10**. The committed `docs/JUDGE_EVIDENCE_SUMMARY.md` records the
+  metrics; raw replies / scored / structured artifacts stay gitignored. This is the harness's first
+  **empirical judge-reliability** evidence (not theorem truth); the blinded runner read only
+  `_targets.yaml`, with un-blinding on the scoring side via `_manifest.yaml`. Also fixed a
+  `.gitignore` gap so generated `docs/judge_results/*.json` exports are excluded too.
 
 ---
 

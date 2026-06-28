@@ -42,7 +42,7 @@ detects defects on real model output.
 | Blinded judge packages / manual import / live opt-in | **Implemented** |
 | Structured-judge pipeline (schema / scoring / gate caps / export / workflow) | **Implemented** |
 | Promotion gate | **Implemented** (but reads markdown report; no target promotable yet) |
-| Empirical judge reliability (real run scored & committed) | **Not implemented** |
+| Empirical judge reliability (real run scored & committed) | **First round done** (GoldIrrationalSqrtTwo / gpt-4o: recall 1.0, FAR 0.0; see `JUDGE_EVIDENCE_SUMMARY.md`) — broaden across targets/models next |
 | Closed-loop controller, non-LLM signal, ensemble, vacuity/unused-hyp checks, scaling | **Future research** |
 
 ---
@@ -178,10 +178,13 @@ written-back real Comparator pass; what is still missing is a committed real *ju
    now records `PASSED_REAL_LANDRUN_BEST_EFFORT` for all three, so the ledger reflects the verified
    formal pass. (Residual: the status is conservative `BEST_EFFORT`; it is formal Challenge/Solution
    evidence only, not source fidelity.) **(was High → resolved)**
-2. **Infrastructure-rich, evidence-poor judging.** The full judge stack exists, but there is **no
-   committed real judge run**. We have not measured discriminative recall / false-alarm rate on
-   actual model output; we have only proven the plumbing on synthetic fixtures. The central
-   empirical claim ("the judge can catch planted defects") is **unvalidated**. **(High)**
+2. **Infrastructure-rich, evidence-poor judging. — REDUCED.** A first real (opt-in) round was run:
+   `GoldIrrationalSqrtTwo` × `gpt-4o` @ temp 0, 10 packages → **discriminative recall 1.0**,
+   **consistency false-alarm rate 0.0**, real accepted, 10/10 clean parses (see
+   `JUDGE_EVIDENCE_SUMMARY.md`; raw artifacts gitignored). The central claim ("the judge can catch
+   planted defects") now has its first empirical support. Residual: a single target / model /
+   temperature / 10-package round — broaden across targets, models, and seeds before generalising.
+   **(was High → Med, pending breadth)**
 3. **Gate consumes a markdown report. — REDUCED.** By default `gate_decision.py` still parses
    `pipeline_report.md`, but `--pipeline-status` now consumes a structured `pipeline_status.v0.1`
    that is schema/target-validated and **sha256 fingerprint-checked for freshness**, failing closed
@@ -237,8 +240,9 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 **Must do before claiming a robust audit harness:**
 - ~~Write back a real `comparator_status` for each target~~ — **done** (`ce5d8f3`; all three record
   `PASSED_REAL_LANDRUN_BEST_EFFORT`).
-- Run the judge for real once (opt-in), score it, and record discriminative-recall / FAR — i.e.
-  produce *evidence the judge works*, not just infrastructure.
+- ~~Run the judge for real once (opt-in), score it, and record discriminative-recall / FAR~~ —
+  **done** (GoldIrrationalSqrtTwo / gpt-4o: recall 1.0, FAR 0.0; `JUDGE_EVIDENCE_SUMMARY.md`).
+  Still to do: broaden across targets / models / seeds for a real benchmark.
 - ~~Emit a structured `pipeline_status.json` and have the gate consume it with a freshness check.~~ —
   **done** (`rebuild_pipeline.py --pipeline-status-out` / `gate_decision.py --pipeline-status`,
   sha256 fingerprint-checked, fail-closed).
@@ -274,9 +278,9 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 3. **Expand CI for the formal layer. — DONE.** CI builds all theorem modules + all 6
    Challenge/Solution triples and runs `check_axioms` + `check_equivalence`. (Real Comparator-in-CI
    remains out of scope until its toolchain can be provisioned.)
-4. **One real judge round, scored and recorded.** *Why:* first empirical evidence the judge detects
-   defects. *Files:* gitignored judge artifacts + a committed summary/metric snapshot doc. *Risk:*
-   Med (opt-in API). *Type:* run + docs.
+4. **One real judge round, scored and recorded. — DONE (first round).** GoldIrrationalSqrtTwo ×
+   gpt-4o @ temp 0: recall 1.0, FAR 0.0, 10/10 clean parses (`JUDGE_EVIDENCE_SUMMARY.md`; raw
+   artifacts gitignored). Next: broaden across targets / models / seeds.
 5. **Blinding-boundary regression test. — DONE.** `scripts/test_blinding_boundary.py` (static guard +
    hermetic runtime/poison test) turns the answer-key separation into a CI-enforced invariant.
 6. **Converge the gate on one judge representation.** *Why:* remove the legacy/structured fork.
@@ -306,6 +310,8 @@ enabled target:
    targets (`ce5d8f3`: `PASSED_REAL_LANDRUN_BEST_EFFORT`); must hold for any new target.**
 3. A **real** judge run (opt-in) has been scored, with discriminative-recall and false-alarm-rate
    recorded, demonstrating the judge catches the planted defects (not just that the plumbing runs).
+   **— first round satisfied for GoldIrrationalSqrtTwo (gpt-4o: recall 1.0, FAR 0.0); should be
+   repeated across targets/models for a robust claim.**
 4. `gate_decision.py` consumes a **fresh, structured** formal-status input and emits a defensible
    decision; at least one target reaches **PROMOTE** under genuine (non-mock) evidence. *(The
    structured, fingerprint-checked input is now implemented via `--pipeline-status`; the open part is
