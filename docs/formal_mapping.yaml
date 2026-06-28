@@ -42,7 +42,7 @@ targets:
     # One of (see ARCHITECTURE.md §13.4):
     #   NOT_RUN | PASSED_REAL_LANDRUN | PASSED_REAL_LANDRUN_BEST_EFFORT |
     #   PASSED_FAKE_LANDRUN | SKIPPED_COMPARATOR_TOOL_UNAVAILABLE | FAILED_COMPARATOR
-    comparator_status: NOT_RUN
+    comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT
     review: docs/fidelity_reviews/PutCallParity.md
     state: HUMAN_APPROVED
     human_approved: true
@@ -63,7 +63,7 @@ targets:
     # null / kind=direct). comparator_status stays NOT_RUN until a real Comparator writeback.
     verdict: PASS
     equivalence: null
-    comparator_status: NOT_RUN
+    comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT
     review: docs/fidelity_reviews/TwoAssetMinVar.md
     state: HUMAN_APPROVED
     human_approved: true
@@ -84,7 +84,7 @@ targets:
     # Direct PASS (Lean statement = source claim). comparator_status stays NOT_RUN until a real run.
     verdict: PASS
     equivalence: null
-    comparator_status: NOT_RUN
+    comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT
     review: docs/fidelity_reviews/GoldIrrationalSqrtTwo.md
     state: HUMAN_APPROVED
     human_approved: true
