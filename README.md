@@ -65,7 +65,9 @@ examples/put_call_parity/source.tex   the example source document
 | `validate_mapping.py` | Structural consistency of cards ↔ mapping ↔ reviews | No |
 | `check_sorries.py` | Fail if any non-Challenge Lean file contains `sorry`/`admit` | No |
 | `rebuild_pipeline.py` | Orchestrate all stages and write `docs/pipeline_report.md` | No |
+| `gate_decision.py` | Offline promotion decision (PROMOTE/BLOCK/REVISE/HUMAN_REVIEW) → `docs/promotion/<Target>.yaml` | No |
 | `test_judge_parsing.py` | Unit tests for judge-output YAML parsing / verdict recovery | No |
+| `test_gate_decision.py` | Unit tests for the promotion-decision policy | No |
 
 The judge is **never** contacted unless you explicitly pass `--execute-api` (OpenAI provider,
 reads `OPENAI_API_KEY` from the environment).
