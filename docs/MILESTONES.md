@@ -61,6 +61,21 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   existing judge results, offline and deterministic, separate from the formal pipeline
   (ARCHITECTURE §10.5).
 
+## Documentation & recorded evidence
+
+- **Documentation split** (`90ae0b5`) — separated the stable design (`ARCHITECTURE.md`) from this
+  chronological log (`MILESTONES.md`); updated the stale "v0.1 experimental" wording to reflect the
+  implemented v0.2/v0.3 layers; closed-loop controller still marked future.
+- **Architecture gap analysis** (`8ecb2b9`) — added `docs/GAP_ANALYSIS.md`, an audit snapshot of
+  what is implemented / partial / future, with a ranked next-step roadmap and acceptance criteria.
+- **Recorded Comparator passes for all targets** (`ce5d8f3`) — ran the real Comparator with
+  `--writeback-comparator-status` for **PutCallParity**, **TwoAssetMinVar**, and
+  **GoldIrrationalSqrtTwo**; all three now record `comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT`
+  (previously `NOT_RUN`). This is **formal Challenge/Solution Comparator evidence only** (kernel
+  acceptance of statement equality under a bounded axiom set) — **not** source-`.tex` fidelity
+  evidence. The status is conservative: `BEST_EFFORT` because `landrun` runs `--best-effort` and the
+  Landlock ABI was not asserted ≥ 5 (ARCHITECTURE §13.4).
+
 ---
 
 ## Invariants preserved across all milestones

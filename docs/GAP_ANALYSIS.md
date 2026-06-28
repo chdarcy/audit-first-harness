@@ -14,22 +14,31 @@ model/API. It is a point-in-time assessment; re-run the audit after material cha
 
 **Have we met the goals in ARCHITECTURE.md?** **Mostly implemented** for the audit/measurement
 spine and the structured-judge evidence pipeline; **partially implemented** at the *completion /
-evidence* level (Comparator status not written back, no committed real judge run); **future
+evidence* level (no committed real judge run; the gate still reads a markdown report); **future
 research** for the closed-loop controller and the second-signal/scaling items, exactly as the
 document states.
 
 The harness has the **infrastructure** for an audit-first, anti-drift workflow and demonstrates it
 end-to-end on three targets. The honest gaps are not missing machinery but **unexercised
-completion** (Comparator validated but `NOT_RUN` in the ledger; the judge pipeline has never been run
-against a real model and committed) and **CI under-coverage** of the Lean-dependent checks. As a
-result, **no target is currently PROMOTE-ready** through the gate, and we have strong evidence the
-*plumbing* works but little evidence the *judge* detects defects on real model output.
+completion** (the judge pipeline has never been run against a real model and committed) and **CI
+under-coverage** of the Lean-dependent checks. As a result, **no target is currently PROMOTE-ready**
+through the gate, and we have strong evidence the *plumbing* works but little evidence the *judge*
+detects defects on real model output.
+
+> **Post-audit update (commit `ce5d8f3`).** Since this snapshot, the **Comparator-status writeback**
+> gap is **closed**: a real Comparator run was performed with `--writeback-comparator-status` for all
+> three targets, and the ledger now records `comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT`
+> (previously `NOT_RUN`) — formal Challenge/Solution evidence only, not source fidelity. **Only this
+> gap is closed.** Promotion is still blocked by the lack of a committed real judge run, the gate's
+> reliance on the markdown `pipeline_report.md` (no `pipeline_status.json`), and CI formal-layer
+> under-coverage. The cells/rows below are annotated where `ce5d8f3` changed the status; everything
+> else stands as of the baseline.
 
 | Layer | Status |
 |---|---|
 | Source→Lean traceability (cards / mapping / reviews) | **Implemented** |
 | Formal correctness (build, no-sorry, axiom audit, Comparator architecture) | **Implemented** |
-| Comparator status writeback (recorded real pass in the ledger) | **Partially implemented** (all `NOT_RUN`) |
+| Comparator status writeback (recorded real pass in the ledger) | **Implemented** (all 3 `PASSED_REAL_LANDRUN_BEST_EFFORT`, `ce5d8f3`) |
 | Blinded judge packages / manual import / live opt-in | **Implemented** |
 | Structured-judge pipeline (schema / scoring / gate caps / export / workflow) | **Implemented** |
 | Promotion gate | **Implemented** (but reads markdown report; no target promotable yet) |
@@ -49,7 +58,7 @@ Risk = impact if left as-is on the harness's anti-drift claim.
 | No-sorry / no-admit enforcement | Implemented | `check_sorries.py` (9 files, Challenges excluded); in CI | textual heuristic only | Low | (covered by axiom audit) |
 | Kernel / axiom audit | Implemented | `check_axioms.py`: all 3 ⊆ `{propext,Quot.sound,Classical.choice}`, no `sorryAx` | not run in CI | Med | Add axiom audit to a CI Lean job |
 | Comparator Challenge/Solution architecture | Implemented | triples for all 3; real run returned "okay" for all 3 this session | only PCP triple built in CI | Med | Build TAM/Gold triples in CI |
-| Comparator status writeback | **Partial** | `--with-comparator --writeback-comparator-status` wired & tested | **all 3 `comparator_status: NOT_RUN`** | **High** | Run a real writeback per target (records the real pass) |
+| Comparator status writeback | **Implemented** (`ce5d8f3`) | real writeback run; all 3 record `PASSED_REAL_LANDRUN_BEST_EFFORT` | conservative `BEST_EFFORT` (landrun `--best-effort`, ABI not asserted ≥5) | Low | optionally confirm ABI ≥5 for `PASSED_REAL_LANDRUN` |
 | Formal mapping ledger | Implemented | `formal_mapping.yaml` (3 targets, verdict/equivalence/comparator_status/approval) | — | Low | — |
 | Theorem-card index | Implemented | `theorem_index.yaml` (3 cards) | — | Low | — |
 | Fidelity reviews | Implemented | 3 reviews with approval frontmatter; `validate_mapping` cross-checks | approvals are coarse (single bool + name) | Med | Per-rubric-axis / signed reviews |
@@ -88,16 +97,17 @@ Legend: ✅ present/passing · ⚠️ present but stale/unrun · ❌ absent.
 | Lean theorem | ✅ `put_call_payoff_parity` | ✅ `two_asset_min_variance_weight` | ✅ `gold_irrational_sqrt_two` |
 | helper/theorem split (§5.1) | ✅ `Helpers.lean` | ✅ `Helpers.lean` | ✅ N/A (one-line wrapper; no helper needed) |
 | Challenge/Solution/comparator triple | ✅ | ✅ | ✅ |
-| Comparator status | ⚠️ `NOT_RUN` (real run "okay" this session, not written back) | ⚠️ `NOT_RUN` (ditto) | ⚠️ `NOT_RUN` (ditto) |
+| Comparator status | ✅ `PASSED_REAL_LANDRUN_BEST_EFFORT` (`ce5d8f3`) | ✅ `PASSED_REAL_LANDRUN_BEST_EFFORT` (`ce5d8f3`) | ✅ `PASSED_REAL_LANDRUN_BEST_EFFORT` (`ce5d8f3`) |
 | fidelity review | ✅ approved | ✅ approved | ✅ approved |
 | mutant set | ✅ 5 (3 disc / 2 cons) | ✅ 8 (6 / 2) | ✅ 9 (7 / 2) |
 | structured-judge compatibility | ✅ answer-key resolves | ✅ | ✅ |
 | axiom-audit compatibility | ✅ within permitted | ✅ | ✅ |
-| promotion readiness | ❌ blocked: comparator `NOT_RUN`, no committed real judge `scored.yaml` | ❌ same | ❌ same |
+| promotion readiness | ❌ blocked: no committed real judge `scored.yaml` (Comparator now recorded) | ❌ same | ❌ same |
 
 **Stale/missing evidence to flag:** the only committed judge artifact is `PutCallParity_preview.yaml`
 (a dry-run preview). A local `PutCallParity.yaml`/`_scored.yaml` exists but is **gitignored mock**
-from a compatibility test — not real judge data. No target has a written-back Comparator pass.
+from a compatibility test — not real judge data. (As of `ce5d8f3`, all three targets **do** have a
+written-back real Comparator pass; what is still missing is a committed real *judge* run.)
 
 ---
 
@@ -155,9 +165,11 @@ from a compatibility test — not real judge data. No target has a written-back 
 
 ## 5. Architectural weaknesses / risks
 
-1. **Comparator "validated but not recorded."** All three `comparator_status: NOT_RUN`. The real
-   Comparator passes were demonstrated interactively but never written back, so the ledger — the
-   thing the gate trusts — shows no real pass. **(High)**
+1. **Comparator "validated but not recorded." — CLOSED by `ce5d8f3`.** Previously all three
+   `comparator_status: NOT_RUN` (validated interactively but never written back). A real writeback run
+   now records `PASSED_REAL_LANDRUN_BEST_EFFORT` for all three, so the ledger reflects the verified
+   formal pass. (Residual: the status is conservative `BEST_EFFORT`; it is formal Challenge/Solution
+   evidence only, not source fidelity.) **(was High → resolved)**
 2. **Infrastructure-rich, evidence-poor judging.** The full judge stack exists, but there is **no
    committed real judge run**. We have not measured discriminative recall / false-alarm rate on
    actual model output; we have only proven the plumbing on synthetic fixtures. The central
@@ -206,7 +218,8 @@ from a compatibility test — not real judge data. No target has a written-back 
 ## 7. What is not complete
 
 **Must do before claiming a robust audit harness:**
-- Write back a real `comparator_status` for each target (so the ledger reflects the verified pass).
+- ~~Write back a real `comparator_status` for each target~~ — **done** (`ce5d8f3`; all three record
+  `PASSED_REAL_LANDRUN_BEST_EFFORT`).
 - Run the judge for real once (opt-in), score it, and record discriminative-recall / FAR — i.e.
   produce *evidence the judge works*, not just infrastructure.
 - Emit a structured `pipeline_status.json` and have the gate consume it with a freshness check.
@@ -263,13 +276,16 @@ enabled target:
 
 1. `lake build`, `check_sorries`, and `check_axioms` pass **in CI** (not just locally).
 2. The Comparator has been run with writeback and the ledger records a **real** pass
-   (`comparator_status` ∈ the real-landrun set, not `NOT_RUN`).
+   (`comparator_status` ∈ the real-landrun set, not `NOT_RUN`). **— satisfied for the current three
+   targets (`ce5d8f3`: `PASSED_REAL_LANDRUN_BEST_EFFORT`); must hold for any new target.**
 3. A **real** judge run (opt-in) has been scored, with discriminative-recall and false-alarm-rate
    recorded, demonstrating the judge catches the planted defects (not just that the plumbing runs).
 4. `gate_decision.py` consumes a **fresh, structured** formal-status input and emits a defensible
    decision; at least one target reaches **PROMOTE** under genuine (non-mock) evidence.
 5. `validate_mapping` is green and the artifact policy holds (no generated evidence committed).
 
-Until criteria 2–4 hold, the accurate claim is: *"an audit-first harness with a complete formal and
-structured-judge **infrastructure**, demonstrated end-to-end, but not yet exercised to a recorded
-PROMOTE on real judge evidence."* The closed-loop controller remains future research regardless.
+Criterion 2 is now satisfied for the three current targets (`ce5d8f3`). Until criteria 1, 3, and 4
+hold, the accurate claim is: *"an audit-first harness with a complete formal and structured-judge
+**infrastructure**, demonstrated end-to-end with recorded real Comparator passes, but not yet
+exercised to a recorded PROMOTE on real judge evidence."* The closed-loop controller remains future
+research regardless.

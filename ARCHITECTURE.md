@@ -1132,8 +1132,9 @@ Lean proof. It is included so the harness's source-to-Lean fidelity machinery (a
 judge evidence pipeline, §9.1, §10.3–§10.5) can be exercised against a public, known-correct
 reference rather than only bespoke examples. It follows all the usual conventions (theorem card,
 mapping, fidelity review,
-mutants, Comparator triple) and remains `comparator_status: NOT_RUN` until a real Comparator
-writeback run.
+mutants, Comparator triple) and records a real Comparator pass
+(`comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT`) — formal Challenge/Solution evidence only,
+not source-fidelity (§13.4).
 
 ---
 
