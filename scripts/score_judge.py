@@ -95,6 +95,32 @@ def record_verdict(rec: dict) -> str | None:
     return None
 
 
+def parse_format_counts(records: list[dict]) -> dict:
+    """Generic output-format health metrics, derived only from the judge result records.
+
+    A record is `clean` when it carried no parse_error; `recovered` when it had a parse_error
+    but a single verdict line was salvaged (recovered_verdict truthy); `unrecoverable` when it
+    had a parse_error and no verdict could be recovered. Records that predate the parse_error /
+    recovered_verdict fields (e.g. some manually-imported replies) default to clean. Target-
+    agnostic: it inspects only per-record fields, never the answer key or any target name."""
+    clean = recovered = unrecoverable = 0
+    for r in records:
+        if not r.get("parse_error"):
+            clean += 1
+        elif r.get("recovered_verdict"):
+            recovered += 1
+        else:
+            unrecoverable += 1
+    total = len(records)
+    malformed = recovered + unrecoverable
+    return {
+        "parsed_clean_count": clean,
+        "recovered_verdict_count": recovered,
+        "unrecoverable_parse_error_count": unrecoverable,
+        "malformed_yaml_rate": round(malformed / total, 4) if total else 0.0,
+    }
+
+
 def build_report_section(target: str, scored: dict) -> str:
     m = scored["metrics"]
     lines = [
@@ -111,6 +137,14 @@ def build_report_section(target: str, scored: dict) -> str:
         f"({m['counts']['consistency']} consistency mutant(s))",
         f"- overall_bucket_accuracy: **{m['overall_bucket_accuracy']}** "
         f"(over {m['counts']['total']} variants)",
+        "",
+        "Output-format health (parse of the raw judge replies):",
+        "",
+        f"- parsed_clean_count: **{m['parse_format']['parsed_clean_count']}**",
+        f"- recovered_verdict_count: **{m['parse_format']['recovered_verdict_count']}**",
+        f"- unrecoverable_parse_error_count: "
+        f"**{m['parse_format']['unrecoverable_parse_error_count']}**",
+        f"- malformed_yaml_rate: **{m['parse_format']['malformed_yaml_rate']}**",
         "",
         "| blind_id | class | operator | expected | judge | bucket_match | exact_match |",
         "|---|---|---|---|---|---|---|",
@@ -274,6 +308,8 @@ def main() -> int:
         d["exact_match"] += int(r["exact_match"])
         d["bucket_match"] += int(r["bucket_match"])
 
+    parse_format = parse_format_counts([rec_by_bid[bid] for bid in sorted(expected_ids)])
+
     scored = {
         "target": target,
         "prompt_sha256": man_prompt,
@@ -291,6 +327,7 @@ def main() -> int:
                 "consistency": len(cons),
                 "total": len(rows),
             },
+            "parse_format": parse_format,
             "per_operator": per_operator,
         },
         "per_variant": rows,
@@ -309,6 +346,11 @@ def main() -> int:
     print(f"  discriminative_recall:         {mx['discriminative_recall']}")
     print(f"  consistency_false_alarm_rate:  {mx['consistency_false_alarm_rate']}")
     print(f"  overall_bucket_accuracy:       {mx['overall_bucket_accuracy']}")
+    pf = mx["parse_format"]
+    print(f"  parsed_clean / recovered / unrecoverable: "
+          f"{pf['parsed_clean_count']} / {pf['recovered_verdict_count']} / "
+          f"{pf['unrecoverable_parse_error_count']}")
+    print(f"  malformed_yaml_rate:           {pf['malformed_yaml_rate']}")
     print(f"  report section updated:        {report_path}")
     return 0
 

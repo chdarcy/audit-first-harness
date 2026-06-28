@@ -84,3 +84,28 @@ rationale: <2-5 sentences explaining the verdict>
 ```
 
 If there are no detected issues, output `detected_issues: []`.
+
+## Formatting rules (must follow exactly)
+
+These rules govern *only* how you serialize the verdict above; they do not change which
+verdict to choose. Your reply must be machine-parseable as a single YAML document.
+
+- **YAML only.** Emit the YAML mapping and nothing else: no preamble, no trailing prose, and
+  no code fences (no ```` ``` ````) around or inside it.
+- **Quote every short free-text scalar.** Wrap any free-text string value (e.g. a one-line
+  `description`) in double quotes, for example `description: "the put leg is dropped"`.
+- **Use block scalars for multi-clause text.** Write `rationale`, `equivalence_argument`, and
+  any longer `detected_issues[].description` as a YAML literal block scalar so internal
+  punctuation cannot break the document:
+
+  ```
+  rationale: |
+    The Lean statement negates the right-hand side: it claims K - S where the
+    source claims S - K, so the forward payoff has the wrong sign.
+  ```
+
+- **Never write an unquoted `: ` (colon-space) inside scalar text.** A bare colon-space is a
+  YAML mapping indicator and will corrupt the document. If your text needs a colon, either
+  quote the whole scalar or put it in a `|` block scalar.
+- **One `verdict:` line.** Emit the top-level `verdict:` key exactly once, with one of the
+  allowed enum values and nothing else on that line.

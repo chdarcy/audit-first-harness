@@ -1,0 +1,5 @@
+# Python dependencies for the audit-first harness scripts.
+# PyYAML is required by every script; openai is only needed for
+# scripts/run_judge.py --execute-api (the opt-in live judge).
+PyYAML
+openai

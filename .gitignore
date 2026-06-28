@@ -3,6 +3,9 @@
 /lake-packages/
 /build/
 
+# Lean toolchain cache (elan); never part of the repo
+.elan/
+
 # Python
 __pycache__/
 *.pyc
@@ -17,3 +20,4 @@ venv/
 # Secrets — never commit API keys
 .env
 *.key
+.oai_key
