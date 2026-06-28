@@ -12,27 +12,42 @@ model/API. It is a point-in-time assessment; re-run the audit after material cha
 
 ## 1. Executive summary
 
-**Have we met the goals in ARCHITECTURE.md?** **Mostly implemented** for the audit/measurement
-spine and the structured-judge evidence pipeline; **partially implemented** at the *completion /
-evidence* level (no committed real judge run; the gate still reads a markdown report); **future
-research** for the closed-loop controller and the second-signal/scaling items, exactly as the
-document states.
+**Have we met the goals in ARCHITECTURE.md?** **Yes, for the current audit-first harness.** The
+audit/measurement spine and the structured-judge evidence pipeline are **implemented and exercised**;
+the formal layer (build / no-sorry / kernel axiom audit / Comparator / guarded equivalence) is built
+and, for all three targets, the **Comparator passes are recorded** in the ledger
+(`PASSED_REAL_LANDRUN_BEST_EFFORT`, `ce5d8f3`). The judge has been **run live** (opt-in) on all three
+targets and scored (`gpt-4o`: aggregate discriminative recall **0.875**, false-alarm rate **0.0**,
+25/25 clean parses — strong but **imperfect**; it missed `PCP-D2` and `TAM-D1`). The judge is now
+**operational** as a pre-proof source-fidelity review gate (`source_review_decision.py`), and the
+promotion gate consumes a fingerprint-checked structured pipeline status. CI runs the full formal
+Lean layer for all targets plus a blinding-boundary regression test.
 
-The harness has the **infrastructure** for an audit-first, anti-drift workflow and demonstrates it
-end-to-end on three targets. The honest gaps are not missing machinery but **unexercised
-completion** (the judge pipeline has never been run against a real model and committed) and **CI
-under-coverage** of the Lean-dependent checks. As a result, **no target is currently PROMOTE-ready**
-through the gate, and we have strong evidence the *plumbing* works but little evidence the *judge*
-detects defects on real model output.
+This **is** an audit-first, anti-drift harness — it audits, reports, scores, and **gates** (both the
+pre-proof source-fidelity gate and the post-Comparator promotion gate). It is **not** a fully
+agentic anti-drift system: the closed-loop controller that would let judge output *drive* statement
+revision and proof attempts remains **future research**, as do a non-LLM alignment signal, a
+multi-judge ensemble, and vacuity / unused-hypothesis checks. Honest residuals: the judge is
+imperfect (so its accept signal is trust-capped, not authoritative); the **real Comparator run** is
+local/WSL only (its binaries are not in CI); and there is no **committed PROMOTE** — by design, since
+raw judge evidence is gitignored and the source-review gate correctly requires human review where
+calibration is imperfect.
 
-> **Post-audit update (commit `ce5d8f3`).** Since this snapshot, the **Comparator-status writeback**
-> gap is **closed**: a real Comparator run was performed with `--writeback-comparator-status` for all
-> three targets, and the ledger now records `comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT`
-> (previously `NOT_RUN`) — formal Challenge/Solution evidence only, not source fidelity. **Only this
-> gap is closed.** Promotion is still blocked by the lack of a committed real judge run, the gate's
-> reliance on the markdown `pipeline_report.md` (no `pipeline_status.json`), and CI formal-layer
-> under-coverage. The cells/rows below are annotated where `ce5d8f3` changed the status; everything
-> else stands as of the baseline.
+**Ready for Markowitz?** **Yes — Markowitz work may begin now under the guarded audit workflow:** add
+each target as the `AuditHarness/<Target>.lean` public theorem module + `Helpers.lean` proof module
+(CLAUDE.md / §5.1, never weakening the statement), run the **pre-proof source-fidelity review gate**
+before hard proof work, then the formal layers and the promotion gate — with the boundaries below
+held throughout (judge ≠ oracle; judge metrics ≠ theorem truth; the source-review gate never edits
+Lean; no judge PASS overrides a formal failure).
+
+> **Final completion audit (this milestone).** Re-verified against the implementation and milestone
+> history. Since the original baseline snapshot (`8ecb2b9`) these gaps are **closed**: Comparator
+> writeback (`ce5d8f3`); structured pipeline status + gate freshness (`9a42747`); expanded formal CI
+> (`d31c245`); blinding-boundary regression tests (`663fd19`); the first + broadened real judge
+> calibration (`f4e4336`, `598f35f`); and the source-fidelity review decision layer (`73b262b`).
+> Still open / future (see §5, §7): a stronger judge / ensemble where recall < 1.0; real
+> Comparator-in-CI; the closed-loop controller; and the other §20 research items. The per-row
+> annotations below reflect the **current** state.
 
 | Layer | Status |
 |---|---|
@@ -41,7 +56,7 @@ detects defects on real model output.
 | Comparator status writeback (recorded real pass in the ledger) | **Implemented** (all 3 `PASSED_REAL_LANDRUN_BEST_EFFORT`, `ce5d8f3`) |
 | Blinded judge packages / manual import / live opt-in | **Implemented** |
 | Structured-judge pipeline (schema / scoring / gate caps / export / workflow) | **Implemented** |
-| Promotion gate | **Implemented** (but reads markdown report; no target promotable yet) |
+| Promotion gate | **Implemented** (+ fingerprint-checked structured pipeline status; pre-proof source-fidelity gate also added) — no committed PROMOTE, by policy |
 | Empirical judge reliability (real run scored & committed) | **Broadened to all 3 targets** (gpt-4o: aggregate recall 0.875 / FAR 0.0; per-target 0.667 / 0.833 / 1.0; see `JUDGE_EVIDENCE_SUMMARY.md`) — judge is strong but imperfect; vary models/seeds + grow suites next |
 | Closed-loop controller, non-LLM signal, ensemble, vacuity/unused-hyp checks, scaling | **Future research** |
 
@@ -64,7 +79,7 @@ Risk = impact if left as-is on the harness's anti-drift claim.
 | Fidelity reviews | Implemented | 3 reviews with approval frontmatter; `validate_mapping` cross-checks | approvals are coarse (single bool + name) | Med | Per-rubric-axis / signed reviews |
 | Blinded judge package generation | Implemented | `run_mutants --dry-run` → 25 packages; hash provenance; leak checks | — | Low | — |
 | Manual judge import | Implemented | `import_manual_judge_results.py` (blinded, hash-checked) | never exercised end-to-end with real replies | Med | One real manual round |
-| Live judge opt-in path | Implemented | `run_judge.py --execute-api` (opt-in, key from env) | never run / no committed evidence | Med | One real (opt-in) run, score it |
+| Live judge opt-in path | Implemented | `run_judge.py --execute-api`; **run live on all 3 (gpt-4o), scored**, evidence in `JUDGE_EVIDENCE_SUMMARY.md` | raw replies gitignored (not committed) | Low (was Med) | broaden models/seeds |
 | Structured judge schema | Implemented | `validate_judge_schema.py` + tests | — | Low | — |
 | Structured judge scoring | Implemented | `score_judge.py --structured` + tests | only fixture-scored | Med | Score a real run |
 | Structured judge metric gate caps | Implemented | `gate_decision.py --judge-metrics` (cap→HUMAN_REVIEW only) + tests | optional path; gate's primary judge signal is still legacy `scored.yaml` | Med | Unify on the structured summary |
@@ -102,7 +117,8 @@ Legend: ✅ present/passing · ⚠️ present but stale/unrun · ❌ absent.
 | mutant set | ✅ 5 (3 disc / 2 cons) | ✅ 8 (6 / 2) | ✅ 9 (7 / 2) |
 | structured-judge compatibility | ✅ answer-key resolves | ✅ | ✅ |
 | axiom-audit compatibility | ✅ within permitted | ✅ | ✅ |
-| promotion readiness | ❌ blocked: no committed real judge `scored.yaml` (Comparator now recorded) | ❌ same | ❌ same |
+| source-fidelity review (pre-proof gate) | ⚠️ HUMAN_REVIEW (real-run recall 0.667) | ⚠️ HUMAN_REVIEW (recall 0.833) | ✅ SOURCE_REVIEW_PASS (recall 1.0) |
+| committed PROMOTE | ❌ none, by policy (raw judge evidence gitignored; calibration caps PCP/TAM) | ❌ same | ❌ none committed (Gold is the only PASS candidate) |
 
 **Stale/missing evidence to flag:** the only committed judge artifact is `PutCallParity_preview.yaml`
 (a dry-run preview). A local `PutCallParity.yaml`/`_scored.yaml` exists but is **gitignored mock**
@@ -129,12 +145,13 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 ### 4b. Structured-judge evidence pipeline (export → validate → score → workflow)
 - **Does:** un-blinds judge results into `schema_version 0.3.0` records, validates, scores
   reliability metrics, and chains them offline (`run_structured_judge_workflow.py`). Pure, no API.
-- **Does not:** produce anything without an existing `judge_results/<T>.yaml` — and none exists for
-  real targets. It is exercised only on fixtures.
-- **Can fail silently:** if fed an empty/missing results file it (correctly) fails or skips, but
-  there is currently nothing real to feed it, so the layer's value is unproven on real data.
-- **Improve next:** run it on one real (opt-in) judge round; consider making the structured summary
-  the gate's primary judge signal (today the gate's primary signal is the legacy `scored.yaml`).
+- **Does not:** produce anything without an existing `judge_results/<T>.yaml`. The live runs produced
+  one (gitignored) for **all three** targets, so the layer has now been **exercised on real data**
+  (the structured workflow ran per target; export VALID 6/9/10, recall 0.667 / 0.833 / 1.0).
+- **Can fail silently:** if fed an empty/missing results file it (correctly) fails or skips — no
+  longer a concern in practice now that real results exist for all three targets.
+- **Improve next:** consider making the structured summary the gate's primary judge signal (today the
+  gate's primary signal is the legacy `scored.yaml`).
 
 ### 4c. Promotion gate (`gate_decision.py`)
 - **Does:** deterministic, ordered BLOCK/REVISE/HUMAN_REVIEW/PROMOTE; consumes mapping, review,
@@ -146,7 +163,10 @@ written-back real Comparator pass; what is still missing is a committed real *ju
   report (unvalidated fallback).
 - **Can fail silently:** only on the **markdown fallback** (when `--pipeline-status` is not passed) —
   it trusts whatever `pipeline_report.md` says. The structured path detects staleness via input
-  fingerprints. Missing `scored.yaml` ⇒ BLOCK (safe), so no target promotes today.
+  fingerprints. A `scored.yaml` now exists (gitignored) for all three targets from the live runs; a
+  committed PROMOTE is still deliberately **not** produced — raw judge evidence is gitignored by
+  policy, and the pre-proof source-fidelity gate (`source_review_decision.py`) caps the imperfect-
+  calibration targets (PutCallParity, TwoAssetMinVar) to HUMAN_REVIEW.
 - **Improve next:** make `--pipeline-status` the default in promotion runs; optionally extend the
   freshness check to the markdown fallback.
 
@@ -218,8 +238,10 @@ written-back real Comparator pass; what is still missing is a committed real *ju
    sandbox) is not run in CI — its binaries are not installed — so Comparator *acceptance* and
    `comparator_status` writeback remain local/WSL. **(was High → Low; Comparator-in-CI still open)**
 10. **ARCHITECTURE.md post-split stability:** good. The version/diary wording was removed; remaining
-    forward-looking statements (§11.3 "future structured pipeline JSON", §20 future items, §12/§20.1
-    closed loop) are accurately marked future. No material stale "current" claims found. **(Low)**
+    forward-looking statements (§20 future items, §12/§20.1 closed loop) are accurately marked future.
+    (§11.3's structured pipeline status is now **implemented**, `9a42747`.) Re-verified in this final
+    audit: ARCHITECTURE.md needs **no edits** — its "current" claims still hold and the closed-loop
+    controller is correctly future. No material stale "current" claims found. **(Low)**
 
 ---
 
@@ -330,8 +352,14 @@ enabled target:
    reaching PROMOTE on real judge evidence with all formal stages actually run.)*
 5. `validate_mapping` is green and the artifact policy holds (no generated evidence committed).
 
-Criterion 2 is now satisfied for the three current targets (`ce5d8f3`). Until criteria 1, 3, and 4
-hold, the accurate claim is: *"an audit-first harness with a complete formal and structured-judge
-**infrastructure**, demonstrated end-to-end with recorded real Comparator passes, but not yet
-exercised to a recorded PROMOTE on real judge evidence."* The closed-loop controller remains future
-research regardless.
+Criteria **1, 2, and 3 are now satisfied** (CI formal layer `d31c245`; Comparator writeback
+`ce5d8f3`; real judge runs scored across all three targets `f4e4336`/`598f35f`). Criterion 4's
+*structured, fingerprint-checked* input is implemented (`9a42747`); the only unmet part is a
+**committed PROMOTE on real judge evidence**, which is **deliberately not produced** — raw judge
+artifacts are gitignored by policy, and the pre-proof source-fidelity gate correctly holds the
+imperfect-calibration targets (PutCallParity, TwoAssetMinVar) at HUMAN_REVIEW. The accurate claim is
+therefore: *"an audit-first harness with a complete formal and structured-judge layer, exercised
+end-to-end on three targets — recorded real Comparator passes, real judge calibration (aggregate
+recall 0.875, imperfect), and an operational pre-proof source-fidelity gate — but **not** a fully
+agentic closed-loop system, and with no committed PROMOTE by policy."* The closed-loop controller,
+non-LLM signal, and multi-judge ensemble remain future research regardless.

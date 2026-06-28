@@ -129,6 +129,20 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   not theorem truth**: it never calls a model, never edits Lean or mappings, and never overrides the
   formal layers. No Lean changed; the `AuditHarness/<Target>.lean` + helper-module split (CLAUDE.md,
   §5.1) is preserved as the layout for future targets that this gate decides whether to start.
+- **Final architecture completion audit (before Markowitz)** — re-verified `ARCHITECTURE.md`,
+  `docs/GAP_ANALYSIS.md`, `README.md`, `CLAUDE.md`, and the implemented scripts against the milestone
+  history. Refreshed `GAP_ANALYSIS.md`: the executive summary, the live-judge / promotion-gate rows,
+  the §4b/§4c notes, the per-target matrix, Risk #10, and the acceptance criteria no longer claim
+  "no committed real judge run" / "the gate still reads a markdown report" / "no target promotes" —
+  acceptance criteria **1–3 are satisfied** (CI formal layer, Comparator writeback, real judge runs),
+  and the only unmet criterion (a *committed PROMOTE*) is **deliberately** unmet (raw judge evidence
+  gitignored; the pre-proof source-fidelity gate holds PutCallParity/TwoAssetMinVar at HUMAN_REVIEW
+  given recall < 1.0). `ARCHITECTURE.md` stayed stable apart from one accuracy fix (§11.4 now names
+  `source_review_decision.py` as the implemented candidate gate). Honest conclusion: the **audit-first
+  harness exists and is exercised end-to-end**, but it is **not** a fully agentic closed-loop system —
+  the closed-loop controller, non-LLM signal, multi-judge ensemble, vacuity/unused-hypothesis checks,
+  and real Comparator-in-CI remain future/open. No Lean / theorem / Comparator / mapping / mutant /
+  prompt changes.
 
 ---
 

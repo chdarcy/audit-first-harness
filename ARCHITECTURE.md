@@ -769,7 +769,7 @@ The harness has **two** gates, and they must not be conflated:
 - **Candidate fidelity gate (pre-proof).** Decides whether the statement/mapping is faithful enough to be *worth proving*. It runs before any Lean proof, on card / mapping / review / judge evidence. A `REVISE` here means "fix the statement before spending effort on a proof."
 - **Final promotion gate (post-Comparator).** Decides whether an *already proved and Comparator-checked* target may be marked **promoted**. It additionally consumes build / no-sorry / axiom-audit / Comparator results.
 
-`gate_decision.py` (§11.3) can serve both roles; the available inputs differ (the pre-proof call has no build/Comparator results yet). In §4, the `candidate fidelity gate` is the first gate and the `promotion decision` is the second.
+The **candidate fidelity gate is implemented** as `source_review_decision.py` (pre-proof; consumes structured judge evidence + the judge's calibration, emits `SOURCE_REVIEW_PASS / HUMAN_REVIEW / REVISE / BLOCK`, never touches formal status, never edits Lean, never calls a model). The **promotion gate** is `gate_decision.py` (§11.3; post-Comparator, additionally consumes build / no-sorry / axiom-audit / Comparator results). The two are kept as separate scripts precisely because the available inputs differ (the pre-proof call has no build/Comparator results yet). In §4, the `candidate fidelity gate` is the first gate and the `promotion decision` is the second.
 
 ### 11.5 Conservative structured-judge-metric caps
 
