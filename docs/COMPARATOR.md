@@ -65,3 +65,11 @@ records the stage as `SKIPPED_COMPARATOR_TOOL_UNAVAILABLE` (the `comparator.json
 still checked for existence). `landrun` requires a Linux kernel ≥ 5.13 with
 `CONFIG_SECURITY_LANDLOCK=y`; a `fake-landrun.sh` shim (unsandboxed, insecure) can stand in for
 local dev on hosts without Landlock.
+
+The Comparator invokes `landrun` with `--best-effort`, so on a kernel that exposes only an older
+Landlock ABI (e.g. WSL, which commonly reports ABI 3) the sandbox **degrades** to what that ABI
+supports rather than failing. Record the achieved mode honestly in `comparator_status`
+(see [`ARCHITECTURE.md`](../ARCHITECTURE.md) §13.4): one of `PASSED_REAL_LANDRUN`,
+`PASSED_REAL_LANDRUN_BEST_EFFORT`, `PASSED_FAKE_LANDRUN`, `SKIPPED_COMPARATOR_TOOL_UNAVAILABLE`,
+or `FAILED_COMPARATOR`. `PASSED_FAKE_LANDRUN` is **not** a real sandbox and must never be treated
+as a high-confidence pass.

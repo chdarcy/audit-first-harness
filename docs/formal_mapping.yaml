@@ -29,8 +29,10 @@ targets:
       audit_theorem: AuditHarness.StatementAudit.put_call_payoff_parity
     verdict: PASS
     equivalence: null
-    # Set by scripts/rebuild_pipeline.py / a human after a Comparator run. One of:
-    #   PASSED_REAL_LANDRUN | PASSED_FAKE_LANDRUN | NOT_RUN | SKIPPED_COMPARATOR_TOOL_UNAVAILABLE
+    # Set by a human after a Comparator run (automatic writeback is a v0.2 task).
+    # One of (see ARCHITECTURE.md §13.4):
+    #   NOT_RUN | PASSED_REAL_LANDRUN | PASSED_REAL_LANDRUN_BEST_EFFORT |
+    #   PASSED_FAKE_LANDRUN | SKIPPED_COMPARATOR_TOOL_UNAVAILABLE | FAILED_COMPARATOR
     comparator_status: NOT_RUN
     review: docs/fidelity_reviews/PutCallParity.md
     state: HUMAN_APPROVED

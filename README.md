@@ -7,6 +7,8 @@ source claim**. It is the extracted, domain-neutral machinery from a Markowitz p
 formalisation, reduced to an MVP and shipped with a single self-contained example
 (put–call payoff parity).
 
+For the design, roadmap, and v0.1 / v0.2 / v0.3 scope, see [`ARCHITECTURE.md`](ARCHITECTURE.md).
+
 ## What this is
 
 The harness supports an *audit-first* workflow: before trusting that a Lean theorem says what a
@@ -63,6 +65,7 @@ examples/put_call_parity/source.tex   the example source document
 | `validate_mapping.py` | Structural consistency of cards ↔ mapping ↔ reviews | No |
 | `check_sorries.py` | Fail if any non-Challenge Lean file contains `sorry`/`admit` | No |
 | `rebuild_pipeline.py` | Orchestrate all stages and write `docs/pipeline_report.md` | No |
+| `test_judge_parsing.py` | Unit tests for judge-output YAML parsing / verdict recovery | No |
 
 The judge is **never** contacted unless you explicitly pass `--execute-api` (OpenAI provider,
 reads `OPENAI_API_KEY` from the environment).

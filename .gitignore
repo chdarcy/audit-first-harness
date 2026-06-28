@@ -21,3 +21,9 @@ venv/
 .env
 *.key
 .oai_key
+
+# Generated judge results / run evidence — keep out of generic commits (ARCHITECTURE.md §15).
+# The committed *_preview.yaml fixture is the exception.
+docs/judge_results/*.yaml
+!docs/judge_results/*_preview.yaml
+/evidence/
