@@ -49,6 +49,7 @@ def base_sig() -> dict:
         "recovered_verdict_count": 0,
         "build_status": "PASS",
         "no_sorry_status": "PASS",
+        "axiom_audit_status": "PASS",
         "comparator_pipeline": "PASS",
         "comparator_status": "PASSED_REAL_LANDRUN",
         "human_override": False,
@@ -126,6 +127,17 @@ def test_human_override_promotes_despite_caveat() -> None:
     check("override: confidence medium", d["confidence"] == "medium", d["confidence"])
 
 
+def test_axiom_audit_fail_blocks() -> None:
+    d = gd.decide({**base_sig(), "axiom_audit_status": "FAIL"})
+    check("axiom-audit FAIL: BLOCK", d["status"] == gd.BLOCK, d["status"])
+
+
+def test_axiom_audit_unverified_human_review() -> None:
+    d = gd.decide({**base_sig(), "axiom_audit_status": "SKIPPED"})
+    check("axiom-audit SKIPPED: not PROMOTE", d["status"] != gd.PROMOTE, d["status"])
+    check("axiom-audit SKIPPED: HUMAN_REVIEW", d["status"] == gd.HUMAN_REVIEW, d["status"])
+
+
 def test_pipeline_report_parser() -> None:
     md = (
         "| # | stage | status | detail |\n"
@@ -157,6 +169,8 @@ def main() -> int:
         test_fake_landrun_not_high_confidence_promote,
         test_unverified_comparator_human_review,
         test_human_override_promotes_despite_caveat,
+        test_axiom_audit_fail_blocks,
+        test_axiom_audit_unverified_human_review,
         test_pipeline_report_parser,
     ]
     for t in tests:

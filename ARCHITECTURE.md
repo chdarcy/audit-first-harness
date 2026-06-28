@@ -763,7 +763,7 @@ The Comparator runs the Challenge build and `lean4export` inside a `landrun` (La
 
 ```text
 PASSED_REAL_LANDRUN              # full Landlock sandbox
-PASSED_REAL_LANDRUN_BEST_EFFORT  # real landrun, degraded ABI (e.g. WSL ABI 3)
+PASSED_REAL_LANDRUN_BEST_EFFORT  # real landrun, degraded or unverified ABI / best-effort mode
 PASSED_FAKE_LANDRUN              # scripts/fake-landrun.sh shim — NOT sandboxed
 SKIPPED_COMPARATOR_TOOL_UNAVAILABLE
 FAILED_COMPARATOR

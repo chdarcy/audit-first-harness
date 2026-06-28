@@ -89,8 +89,8 @@ def decide(sig: dict, thr: dict | None = None) -> dict:
     real row: real_row_present (bool), real_verdict (str|None)
     calibration: discriminative_recall, consistency_false_alarm_rate, malformed_yaml_rate
                  (float|None), recovered_verdict_count (int)
-    formal: build_status, no_sorry_status, comparator_pipeline (PASS/FAIL/SKIPPED/UNKNOWN),
-            comparator_status (mapping field, str)
+    formal: build_status, no_sorry_status, axiom_audit_status, comparator_pipeline
+            (PASS/FAIL/SKIPPED/UNKNOWN), comparator_status (mapping field, str)
     misc: human_override (bool)
     """
     thr = thr or DEFAULT_THRESHOLDS
@@ -117,6 +117,8 @@ def decide(sig: dict, thr: dict | None = None) -> dict:
         blocks.append("Lean build failed (pipeline report).")
     if sig.get("no_sorry_status") == "FAIL":
         blocks.append("No-sorry check failed (pipeline report).")
+    if sig.get("axiom_audit_status") == "FAIL":
+        blocks.append("Axiom audit failed: unexpected axioms or sorryAx (pipeline report).")
     if comp_failed:
         blocks.append(f"Comparator failed (status {cs!r}, pipeline {comp_pipeline!r}).")
     missing_scored = not sig.get("scored_present")
@@ -191,6 +193,9 @@ def decide(sig: dict, thr: dict | None = None) -> dict:
                        "recorded PASS); the formal proof is not verified for unattended promotion.")
     if sig.get("no_sorry_status") != "PASS":
         unknown.append(f"No-sorry status is {sig.get('no_sorry_status') or 'UNKNOWN'!r} "
+                       "(not a recorded PASS).")
+    if sig.get("axiom_audit_status") != "PASS":
+        unknown.append(f"Axiom-audit status is {sig.get('axiom_audit_status') or 'UNKNOWN'!r} "
                        "(not a recorded PASS).")
     if not comp_real and not comp_fake:
         unknown.append(f"Comparator is not verified (status {cs!r}, pipeline {comp_pipeline!r}).")
@@ -334,6 +339,7 @@ def gather(target: str, root: Path = ROOT) -> dict:
         "recovered_verdict_count": pf.get("recovered_verdict_count") or 0,
         "build_status": formal.get("build", "UNKNOWN"),
         "no_sorry_status": formal.get("no_sorry", "UNKNOWN"),
+        "axiom_audit_status": formal.get("axiom_audit", "UNKNOWN"),
         "comparator_pipeline": formal.get("comparator", "UNKNOWN"),
         "comparator_status": comparator_status,
         "human_override": bool(tmap.get("human_override")) or bool((fm or {}).get("human_override")),

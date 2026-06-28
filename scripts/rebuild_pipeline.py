@@ -7,8 +7,9 @@ Stages, in order:
   2. judge_packages     — run_mutants.py --dry-run: assemble blinded judge packages (no model)
   3. build              — lake build the library (proof/build stage)        [human-gated]
   4. no_sorry           — check_sorries.py: no incomplete proofs in the library
-  5. comparator         — Lean FRO Comparator per target (statement + kernel audit) [human-gated]
-  6. report             — write docs/pipeline_report.md
+  5. axiom_audit        — check_axioms.py: mapped declarations within permitted axioms [human-gated]
+  6. comparator         — Lean FRO Comparator per target (statement + kernel audit) [human-gated]
+  7. report             — write docs/pipeline_report.md
 
 This is an MVP harness (v0.1, experimental). It does NOT translate LaTeX to Lean and does NOT
 guarantee autonomous proof generation: the proofs it builds and audits are authored by a
@@ -18,9 +19,9 @@ The two heavy/environment-specific stages — `build` and `comparator` — are *
 they run only when you pass --with-build / --with-comparator. Otherwise they are recorded as
 SKIPPED (gated) so the fast default still produces a full report.
 
-Pass `--target <T>` to scope the per-target `comparator` stage to a single mapping target.
-`build` and `no_sorry` remain whole-library, and judge-package assembly stays repo-wide
-(per-target judging is done downstream by `run_judge`/`score_judge --target`).
+Pass `--target <T>` to scope the per-target `comparator` and `axiom_audit` stages to a single
+mapping target. `build` and `no_sorry` remain whole-library, and judge-package assembly stays
+repo-wide (per-target judging is done downstream by `run_judge`/`score_judge --target`).
 
 With `--with-comparator --writeback-comparator-status` (and `--target`), the resulting Comparator
 status is written back to that target's `comparator_status` in docs/formal_mapping.yaml via a
@@ -228,6 +229,16 @@ def stage_no_sorry() -> Stage:
     return s.record(PASS if rc == 0 else FAIL, last_line(out), " ".join(cmd))
 
 
+def stage_axiom_audit(with_axiom_audit: bool, target: str | None = None) -> Stage:
+    s = Stage("axiom_audit")
+    if not with_axiom_audit:
+        return s.record(SKIPPED, "gated: pass --with-axiom-audit to run `check_axioms.py` "
+                        "(needs Lean/Lake + built oleans)")
+    cmd = py("check_axioms.py", *(["--target", target] if target else []))
+    rc, out = run_cmd(cmd)
+    return s.record(PASS if rc == 0 else FAIL, last_line(out), " ".join(cmd))
+
+
 def comparator_env() -> dict | None:
     """Return the Comparator env config if all three pieces are present, else None."""
     binp = os.environ.get("COMPARATOR_BIN") or os.environ.get("COMPARATOR")
@@ -311,8 +322,8 @@ def render_report(stages: list[Stage], now: str, overall: str, target: str | Non
         f"**Comparator-status writeback:** {wb_line}",
         "",
         "Stage order: source/card → mapping → judge package → proof/build → no-sorry → "
-        "comparator → report. `build` and `comparator` are human-gated (run with "
-        "`--with-build` / `--with-comparator`).",
+        "axiom-audit → comparator → report. `build`, `axiom_audit`, and `comparator` are "
+        "human-gated (run with `--with-build` / `--with-axiom-audit` / `--with-comparator`).",
         "",
         "| # | stage | status | detail |",
         "|---|---|---|---|",
@@ -333,7 +344,8 @@ def render_report(stages: list[Stage], now: str, overall: str, target: str | Non
         "- `card_and_mapping` (`validate_mapping.py`) and `judge_packages` "
         "(`run_mutants.py --dry-run`) operate over the **whole repo / all targets**; per-target "
         "judging is done downstream by `run_judge` / `score_judge --target`.",
-        "- Only the `comparator` stage is target-scoped when `--target` is given.",
+        "- Only the `comparator` and `axiom_audit` stages are target-scoped when `--target` is "
+        "given.",
         "- Promotion decisions are produced separately by "
         "`python scripts/gate_decision.py --target <Target>`.",
         "",
@@ -359,6 +371,8 @@ def main() -> int:
                     help="run the `lake build` proof/build stage (may be slow)")
     ap.add_argument("--with-comparator", action="store_true",
                     help="run the Comparator stage (Linux + built binaries required)")
+    ap.add_argument("--with-axiom-audit", action="store_true",
+                    help="run the kernel/axiom audit stage (`check_axioms.py`; needs Lean/Lake)")
     ap.add_argument("--writeback-comparator-status", action="store_true",
                     help="after the Comparator run, write the resulting status back to the "
                          "selected target's comparator_status in docs/formal_mapping.yaml "
@@ -381,6 +395,7 @@ def main() -> int:
         stage_judge_packages(),
         stage_build(args.with_build),
         stage_no_sorry(),
+        stage_axiom_audit(args.with_axiom_audit, target),
         stage_comparator(args.with_comparator, target),
     ]
     comparator_stage = stages[-1]
