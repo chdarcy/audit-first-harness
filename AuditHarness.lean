@@ -4,3 +4,4 @@
 -- to give the pipeline a real, buildable target to operate on (the put–call payoff parity
 -- smoke-test theorem). It is NOT a mathematics library; add your own modules here.
 import AuditHarness.PutCallParity
+import AuditHarness.TwoAssetMinVar

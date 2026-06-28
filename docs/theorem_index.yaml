@@ -38,3 +38,31 @@ entries:
       notes: >-
         Smoke-test source claim for the example target. max(S - K, 0) is the call payoff and
         max(K - S, 0) is the put payoff; their difference is the forward payoff S - K.
+
+  thm:two_asset_minvar:
+    auto:
+      source_file: examples/two_asset_minvar/source.tex
+      env: theorem
+      title: "Two-asset minimum-variance portfolio"
+      equation_labels: []
+      body_tex: |
+        V(w) = w^2 \sigma_1^2 + (1-w)^2 \sigma_2^2 + 2 w (1-w) \sigma_{12},\quad
+        w^\ast = \frac{\sigma_2^2 - \sigma_{12}}{\sigma_1^2 + \sigma_2^2 - 2\sigma_{12}},\quad
+        \sigma_1^2 + \sigma_2^2 - 2\sigma_{12} > 0
+        \;\Rightarrow\; \forall w \in \mathbb{R},\ V(w^\ast) \le V(w).
+    curated:
+      paraphrase: >-
+        For two risky assets with variance parameters sigma1Sq, sigma2Sq and covariance sigma12,
+        the portfolio variance V(w) = w^2 sigma1Sq + (1-w)^2 sigma2Sq + 2 w (1-w) sigma12 is
+        minimized over ALL real weights w at w* = (sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq -
+        2 sigma12), provided the quadratic coefficient sigma1Sq + sigma2Sq - 2 sigma12 is
+        positive. The conclusion is the non-strict global inequality V(w*) <= V(w) for every real
+        w; uniqueness is not claimed.
+      informal_assumptions:
+        - "sigma1Sq, sigma2Sq, sigma12 are real parameters"
+        - "the quadratic coefficient sigma1Sq + sigma2Sq - 2 sigma12 is strictly positive (the only hypothesis)"
+        - "no separate sigma1Sq > 0 / sigma2Sq > 0 positivity is required for the inequality"
+        - "the minimisation domain is ALL real weights w, not a long-only 0 <= w <= 1 constraint"
+      notes: >-
+        Second worked target. w* is the unconstrained (real-weight) minimum-variance weight; the
+        claim is non-strict global minimality (<=), not strict minimality and not uniqueness.

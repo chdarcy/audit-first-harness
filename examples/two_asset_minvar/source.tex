@@ -1,0 +1,45 @@
+\documentclass{article}
+\usepackage{amsmath}
+
+\begin{document}
+
+\section*{Two-asset minimum-variance portfolio}
+
+Let two risky assets have variance parameters \(\sigma_1^2\) and \(\sigma_2^2\), and covariance
+parameter \(\sigma_{12}\). Consider a portfolio that invests weight \(w \in \mathbb{R}\) in
+asset~1 and weight \(1-w\) in asset~2. Its variance is
+\[
+V(w)
+=
+w^2 \sigma_1^2
++
+(1-w)^2 \sigma_2^2
++
+2 w (1-w) \sigma_{12}.
+\]
+
+Assume the quadratic coefficient is positive:
+\[
+\sigma_1^2 + \sigma_2^2 - 2\sigma_{12} > 0.
+\]
+
+Define
+\[
+w^\ast
+=
+\frac{\sigma_2^2 - \sigma_{12}}
+{\sigma_1^2 + \sigma_2^2 - 2\sigma_{12}}.
+\]
+
+Then \(w^\ast\) minimizes \(V\) over all real weights \(w \in \mathbb{R}\) (this is a global
+minimum over the whole real line, not a long-only \(0 \le w \le 1\) constraint). Equivalently,
+for every \(w \in \mathbb{R}\),
+\[
+V(w^\ast) \leq V(w).
+\]
+
+No separate positivity of \(\sigma_1^2\) or \(\sigma_2^2\) is required; the only hypothesis is
+that the quadratic coefficient \(\sigma_1^2 + \sigma_2^2 - 2\sigma_{12}\) is positive. The claim
+is non-strict global minimality and asserts no uniqueness.
+
+\end{document}

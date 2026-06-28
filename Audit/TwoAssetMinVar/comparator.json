@@ -1,0 +1,7 @@
+{
+    "challenge_module": "Audit.TwoAssetMinVar.Challenge",
+    "solution_module": "Audit.TwoAssetMinVar.Solution",
+    "theorem_names": ["AuditHarness.StatementAudit.two_asset_min_variance_weight"],
+    "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+    "enable_nanoda": false
+}

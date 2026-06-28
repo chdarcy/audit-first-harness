@@ -1,0 +1,143 @@
+# Mutation test cases for the TwoAssetMinVar target.
+#
+# Textual judge test cases; not compiled. Expected labels are fixed before any judge run.
+#   discriminative -> judge must REJECT (FAIL or WARN)
+#   consistency    -> judge must ACCEPT (PASS / PASS_EQUIV / PASS_PROVABLE_EQUIV)
+#
+# `lean_ambient` carries the shared `twoAssetVariance` definition the judge should assume; the
+# real statement and most mutants are phrased in terms of it.
+
+target: TwoAssetMinVar
+real_statement_ref: two_asset_min_variance_weight
+
+lean_ambient: |
+  def twoAssetVariance (sigma1Sq sigma2Sq sigma12 w : ℝ) : ℝ :=
+    w ^ 2 * sigma1Sq + (1 - w) ^ 2 * sigma2Sq + 2 * w * (1 - w) * sigma12
+
+formalisation_choices:
+  - "portfolio variance V(w) = twoAssetVariance sigma1Sq sigma2Sq sigma12 w (see lean_ambient)"
+  - "the minimiser is the closed form w* = (sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq - 2*sigma12)"
+  - "domain is all real weights w : ℝ (no long-only constraint)"
+  - "conclusion is non-strict global minimality V(w*) ≤ V(w); the only hypothesis is denom > 0"
+
+real_statement: |
+  theorem two_asset_min_variance_weight
+      (sigma1Sq sigma2Sq sigma12 : ℝ)
+      (hdenom : 0 < sigma1Sq + sigma2Sq - 2 * sigma12) :
+      ∀ w : ℝ,
+        twoAssetVariance sigma1Sq sigma2Sq sigma12
+            ((sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq - 2 * sigma12))
+          ≤ twoAssetVariance sigma1Sq sigma2Sq sigma12 w
+
+mutants:
+  # ---------------- Discriminative (judge must REJECT) ----------------
+  - id: TAM-D1
+    class: discriminative
+    operator: drop-hypothesis
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement
+          (sigma1Sq sigma2Sq sigma12 : ℝ) :
+          ∀ w : ℝ,
+            twoAssetVariance sigma1Sq sigma2Sq sigma12
+                ((sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq - 2 * sigma12))
+              ≤ twoAssetVariance sigma1Sq sigma2Sq sigma12 w
+    note: "the denominator/convexity hypothesis 0 < sigma1Sq + sigma2Sq - 2*sigma12 is dropped; without it w* need not minimise (and the denominator may vanish)"
+
+  - id: TAM-D2
+    class: discriminative
+    operator: alter-formula
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement
+          (sigma1Sq sigma2Sq sigma12 : ℝ)
+          (hdenom : 0 < sigma1Sq + sigma2Sq + 2 * sigma12) :
+          ∀ w : ℝ,
+            twoAssetVariance sigma1Sq sigma2Sq sigma12
+                ((sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq + 2 * sigma12))
+              ≤ twoAssetVariance sigma1Sq sigma2Sq sigma12 w
+    note: "covariance sign flipped in the quadratic coefficient (denominator): + 2*sigma12 instead of - 2*sigma12, so both the convexity hypothesis and the minimiser are for the wrong quadratic"
+
+  - id: TAM-D3
+    class: discriminative
+    operator: narrow-domain
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement
+          (sigma1Sq sigma2Sq sigma12 : ℝ)
+          (hdenom : 0 < sigma1Sq + sigma2Sq - 2 * sigma12) :
+          ∀ w : ℝ, 0 ≤ w → w ≤ 1 →
+            twoAssetVariance sigma1Sq sigma2Sq sigma12
+                ((sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq - 2 * sigma12))
+              ≤ twoAssetVariance sigma1Sq sigma2Sq sigma12 w
+    note: "domain narrowed from all real weights to the long-only interval 0 ≤ w ≤ 1; the source claims minimality over ALL real weights"
+
+  - id: TAM-D4
+    class: discriminative
+    operator: strengthen-conclusion
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement
+          (sigma1Sq sigma2Sq sigma12 : ℝ)
+          (hdenom : 0 < sigma1Sq + sigma2Sq - 2 * sigma12) :
+          ∀ w : ℝ,
+            twoAssetVariance sigma1Sq sigma2Sq sigma12
+                ((sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq - 2 * sigma12))
+              < twoAssetVariance sigma1Sq sigma2Sq sigma12 w
+    note: "conclusion strengthened from non-strict ≤ to strict <, which is false at w = w* (and amounts to claiming a unique strict minimiser)"
+
+  - id: TAM-D5
+    class: discriminative
+    operator: alter-formula
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement
+          (sigma1Sq sigma2Sq sigma12 : ℝ)
+          (hdenom : 0 < sigma1Sq + sigma2Sq - 2 * sigma12) :
+          ∀ w : ℝ,
+            (let wstar := (sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq - 2 * sigma12);
+             wstar ^ 2 * sigma1Sq + (1 - wstar) ^ 2 * sigma2Sq)
+              ≤ w ^ 2 * sigma1Sq + (1 - w) ^ 2 * sigma2Sq
+    note: "the portfolio variance drops the covariance cross-term 2*w*(1-w)*sigma12; the variance used is no longer V"
+
+  - id: TAM-D6
+    class: discriminative
+    operator: swap-variable
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement
+          (sigma1Sq sigma2Sq sigma12 : ℝ)
+          (hdenom : 0 < sigma1Sq + sigma2Sq - 2 * sigma12) :
+          ∀ w : ℝ,
+            twoAssetVariance sigma1Sq sigma2Sq sigma12
+                ((sigma1Sq - sigma12) / (sigma1Sq + sigma2Sq - 2 * sigma12))
+              ≤ twoAssetVariance sigma1Sq sigma2Sq sigma12 w
+    note: "minimiser numerator uses sigma1Sq instead of sigma2Sq, i.e. the wrong asset's variance; w* is no longer the minimiser"
+
+  # ---------------- Consistency (judge must ACCEPT) ----------------
+  - id: TAM-C1
+    class: consistency
+    operator: rename-variables
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement
+          (a b c : ℝ)
+          (hpos : 0 < a + b - 2 * c) :
+          ∀ x : ℝ,
+            twoAssetVariance a b c ((b - c) / (a + b - 2 * c))
+              ≤ twoAssetVariance a b c x
+    note: "sigma1Sq -> a, sigma2Sq -> b, sigma12 -> c, w -> x; identical statement up to renaming"
+
+  - id: TAM-C2
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement
+          (sigma1Sq sigma2Sq sigma12 : ℝ)
+          (hdenom : 0 < sigma2Sq + sigma1Sq - 2 * sigma12) :
+          ∀ w : ℝ,
+            twoAssetVariance sigma1Sq sigma2Sq sigma12
+                ((sigma2Sq - sigma12) / (sigma2Sq + sigma1Sq - 2 * sigma12))
+              ≤ twoAssetVariance sigma1Sq sigma2Sq sigma12 w
+    note: "denominator written as sigma2Sq + sigma1Sq - 2*sigma12 (summands reordered by commutativity); the statement is unchanged"

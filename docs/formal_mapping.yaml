@@ -46,3 +46,24 @@ targets:
     review: docs/fidelity_reviews/PutCallParity.md
     state: HUMAN_APPROVED
     human_approved: true
+
+  TwoAssetMinVar:
+    source_refs: ["thm:two_asset_minvar"]
+    lean:
+      declaration: two_asset_min_variance_weight
+      module: AuditHarness.TwoAssetMinVar
+      fully_qualified: AuditHarness.two_asset_min_variance_weight
+    comparator:
+      dir: Audit/TwoAssetMinVar
+      config: Audit/TwoAssetMinVar/comparator.json
+      challenge_module: Audit.TwoAssetMinVar.Challenge
+      solution_module: Audit.TwoAssetMinVar.Solution
+      audit_theorem: AuditHarness.StatementAudit.two_asset_min_variance_weight
+    # Direct PASS: the Lean statement matches the source claim term-for-term (equivalence
+    # null / kind=direct). comparator_status stays NOT_RUN until a real Comparator writeback.
+    verdict: PASS
+    equivalence: null
+    comparator_status: NOT_RUN
+    review: docs/fidelity_reviews/TwoAssetMinVar.md
+    state: HUMAN_APPROVED
+    human_approved: true
