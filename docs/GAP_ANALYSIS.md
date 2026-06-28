@@ -198,10 +198,13 @@ written-back real Comparator pass; what is still missing is a committed real *ju
    a benchmark; no inter-rater design and limited operator diversity. **(Med)**
 7. **Vacuity / unused-hypothesis risks uncovered.** §1 and §20.4/§20.5 name these drift modes, but
    nothing checks for them; a vacuous or hypothesis-padded statement could pass today. **(Med)**
-8. **Blinding boundary is convention-enforced, not test-enforced.** This session verified that
-   `run_judge.py`/`import_manual_judge_results.py` read `_targets.yaml` only and never `_manifest`,
-   while `score_judge`/`export` read `_manifest`. But there is no automated guard asserting the
-   runner/importer never reference the answer key; a future edit could leak it. **(Low–Med)**
+8. **Blinding boundary is convention-enforced, not test-enforced. — CLOSED.** `test_blinding_boundary.py`
+   (in CI) now enforces it: a static guard asserts `run_judge.py`/`import_manual_judge_results.py`
+   contain no code-level `_manifest` reference (docstrings excepted) and reference `_targets.yaml`;
+   a hermetic runtime test assembles fresh packages and proves the blinded `--dry-run` output is
+   identical whether `_manifest.yaml` is valid, poisoned with contradictory labels, or removed; and
+   a positive check confirms `score_judge`/`export` still read `_manifest`. A future edit that leaks
+   the answer key into the runner/importer now fails CI. **(was Low–Med → resolved)**
 9. **CI under-covers the formal layer. — REDUCED.** CI now builds every theorem module and all six
    Challenge/Solution modules for all three targets and runs `check_axioms` + `check_equivalence`, so
    a broken triple or an axiom regression is caught. Residual: the **real Comparator** (landrun
@@ -246,7 +249,8 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 **Should do before scaling targets:**
 - Strengthen human approval (per-axis / signed) and grow mutation suites.
 - Decide the canonical judge representation (legacy vs structured) and converge the gate on it.
-- Add a test that enforces the blinding boundary (no `_manifest` access in runner/importer).
+- ~~Add a test that enforces the blinding boundary (no `_manifest` access in runner/importer).~~ —
+  **done** (`scripts/test_blinding_boundary.py`, static + runtime/poison, in CI).
 
 **Future research (as ARCHITECTURE.md states):**
 - Closed-loop controller; non-LLM (FormalAlign-style) signal; multi-judge ensemble;
@@ -273,8 +277,8 @@ written-back real Comparator pass; what is still missing is a committed real *ju
 4. **One real judge round, scored and recorded.** *Why:* first empirical evidence the judge detects
    defects. *Files:* gitignored judge artifacts + a committed summary/metric snapshot doc. *Risk:*
    Med (opt-in API). *Type:* run + docs.
-5. **Blinding-boundary regression test.** *Why:* turn the answer-key separation from convention into
-   an enforced invariant. *Files:* a new `scripts/test_*` + CI line. *Risk:* Low. *Type:* Python.
+5. **Blinding-boundary regression test. — DONE.** `scripts/test_blinding_boundary.py` (static guard +
+   hermetic runtime/poison test) turns the answer-key separation into a CI-enforced invariant.
 6. **Converge the gate on one judge representation.** *Why:* remove the legacy/structured fork.
    *Files:* `gate_decision.py`, `score_judge.py`, tests. *Risk:* Med. *Type:* Python
    (behaviour-affecting — needs its own alignment pass).

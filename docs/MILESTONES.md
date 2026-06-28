@@ -90,6 +90,14 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   in CI — its binaries are not installed — so Comparator *acceptance* and `comparator_status`
   writeback stay local/WSL; CI proves the triples *build*, which is formal evidence only, not source
   fidelity. Reduces the GAP_ANALYSIS CI-undercoverage risk.
+- **Blinding-boundary regression tests** — `scripts/test_blinding_boundary.py` (in CI) enforces the
+  answer-key separation (ARCHITECTURE §9): a **static** guard asserts `run_judge.py` and
+  `import_manual_judge_results.py` carry no code-level `_manifest` reference (docstrings excepted) and
+  read the membership sidecar `_targets.yaml`; a **hermetic runtime/poison** test assembles fresh
+  packages and proves the blinded `--dry-run` output is identical whether `_manifest.yaml` is valid,
+  poisoned with contradictory labels, or removed; and a positive check confirms `score_judge.py` /
+  `export_structured_judge_results.py` still read `_manifest.yaml` (un-blinding stays scoring/export
+  side). Closes the "convention-enforced, not test-enforced" risk before any real judge round.
 
 ---
 

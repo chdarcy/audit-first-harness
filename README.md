@@ -76,6 +76,7 @@ examples/put_call_parity/source.tex   the example source document
 | `test_judge_parsing.py` | Unit tests for judge-output YAML parsing / verdict recovery | No |
 | `test_gate_decision.py` | Unit tests for the promotion-decision policy | No |
 | `test_pipeline_status.py` | Unit tests for structured pipeline status + gate freshness/fingerprint check | No |
+| `test_blinding_boundary.py` | Regression tests that the judge runner/importer stay blinded (no `_manifest` access) | No |
 | `test_rebuild_pipeline.py` | Unit tests for the pipeline `--target` plumbing | No |
 | `test_check_axioms.py` | Unit tests for the axiom-audit parser/classifier | No |
 | `test_check_equivalence.py` | Unit tests for the provable-equivalence validator | No |
