@@ -733,6 +733,25 @@ The harness has **two** gates, and they must not be conflated:
 
 `gate_decision.py` (§11.3) can serve both roles; the available inputs differ (the pre-proof call has no build/Comparator results yet). In §4, the `candidate fidelity gate` is the first gate and the `promotion decision` is the second.
 
+### 11.5 Conservative structured-judge-metric caps (v0.3 milestone 1c)
+
+`gate_decision.py` optionally consumes a **structured judge-scoring summary**
+(`score_judge.py --structured`, §10.3) via `--judge-metrics <summary.json>`. This is a *global*
+judge-reliability signal and is treated exactly as §11.1 requires: it may **only cap an otherwise-
+promotable target to HUMAN_REVIEW**. It never produces BLOCK, never PROMOTE, and never upgrades a
+non-PROMOTE formal decision — a formal-layer failure (build / no-sorry / axiom audit / Comparator /
+equivalence) stays authoritative regardless of perfect judge metrics.
+
+`judge_metrics_status` is one of `NOT_RUN` (default — no summary supplied, behaviour identical to
+before), `PRESENT`, or `INVALID`. With conservative defaults the gate caps an otherwise-PROMOTE
+decision to HUMAN_REVIEW when, **for the target**, `schema_valid_rate < 1.0`, `invalid_rate > 0`,
+`unparseable_rate > 0`, `discriminative_recall < 1.0`, `false_acceptance_rate_discriminative > 0`,
+`false_rejection_rate_consistency > 0`, or the high/critical concern count is positive; an `INVALID`
+summary also caps. A metric that is `None` (not measured) never caps. The decision records
+`judge_metrics_status`, a `judge_metric_cap` object (`applied`, `capped_from`, `capped_to`,
+`reasons`), and a disclaimer that these are source-fidelity reliability evidence, **not** proof
+about the theorem — the judge is not a theorem oracle.
+
 ---
 
 ## 12. Closed-loop agentic workflow

@@ -67,7 +67,7 @@ examples/put_call_parity/source.tex   the example source document
 | `check_axioms.py` | Kernel/axiom audit: mapped declarations within `permitted_axioms` (needs Lean) | No |
 | `check_equivalence.py` | Verify in-Lean equivalence lemmas for `PASS_PROVABLE_EQUIV` targets (needs Lean) | No |
 | `rebuild_pipeline.py` | Orchestrate all stages and write `docs/pipeline_report.md` | No |
-| `gate_decision.py` | Offline promotion decision (PROMOTE/BLOCK/REVISE/HUMAN_REVIEW) → `docs/promotion/<Target>.yaml` | No |
+| `gate_decision.py` | Offline promotion decision (PROMOTE/BLOCK/REVISE/HUMAN_REVIEW); optional `--judge-metrics` caps an otherwise-promotable target to HUMAN_REVIEW | No |
 | `validate_judge_schema.py` | Validate one structured judge-evidence record (VALID/PARTIAL_RECOVERED/INVALID) | No |
 | `test_judge_parsing.py` | Unit tests for judge-output YAML parsing / verdict recovery | No |
 | `test_gate_decision.py` | Unit tests for the promotion-decision policy | No |

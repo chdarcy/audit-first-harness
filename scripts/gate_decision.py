@@ -30,6 +30,9 @@ Inputs (all optional except the mapping; missing critical inputs are reported, n
   docs/judge_results/<Target>_scored.yaml      fidelity + parse-format metrics, real-row verdict
   docs/judge_inputs_dryrun/_manifest.yaml      prompt_sha256 / mutants_sha256 for provenance match
   docs/pipeline_status.json (preferred) OR docs/pipeline_report.md  build / no_sorry / comparator
+  --judge-metrics <summary.json> (optional)    structured judge-scoring summary (v0.3 1c, §10.3);
+                                               conservative-only: may cap an otherwise-promotable
+                                               target to HUMAN_REVIEW, never BLOCK or PROMOTE
 """
 from __future__ import annotations
 
@@ -64,6 +67,24 @@ DEFAULT_THRESHOLDS = {
     "max_malformed": 0.0,
 }
 
+# Judge-metric status for the optional structured-scoring summary (v0.3 milestone 1c).
+JM_NOT_RUN, JM_PRESENT, JM_INVALID = "NOT_RUN", "PRESENT", "INVALID"
+
+# Conservative thresholds for the optional *structured* judge-scoring summary
+# (scripts/score_judge.py --structured, schema v0.3 §10.3). These mirror the strict legacy
+# thresholds above: any imperfection in judge reliability caps an otherwise-promotable target to
+# HUMAN_REVIEW. They never BLOCK and never PROMOTE on their own (ARCHITECTURE.md §11.1, §11.5).
+# A metric that is `None` (not measured — e.g. no consistency variants) never triggers a cap.
+DEFAULT_JUDGE_METRIC_THRESHOLDS = {
+    "min_schema_valid_rate": 1.0,
+    "max_invalid_rate": 0.0,
+    "max_unparseable_rate": 0.0,
+    "min_discriminative_recall": 1.0,
+    "max_false_acceptance_rate_discriminative": 0.0,
+    "max_false_rejection_rate_consistency": 0.0,
+    "max_high_critical_concerns": 0,
+}
+
 
 # ---------------------------------------------------------------------------
 # Decision core (pure: no file I/O, fully unit-testable)
@@ -80,8 +101,8 @@ def _next_steps(status: str, *, missing_scored: bool = False) -> list[str]:
     return ["fix_blocking_issue", "rerun_pipeline"]
 
 
-def decide(sig: dict, thr: dict | None = None) -> dict:
-    """Map gathered signals to a decision. `sig` uses these keys (None = unknown):
+def _decide_formal(sig: dict, thr: dict | None = None) -> dict:
+    """Map gathered signals to a *formal* decision (rules 1-4). `sig` keys (None = unknown):
 
     presence: mapping_present, card_present, review_present, human_approved,
               declaration_present, scored_present, scored_path_hint
@@ -92,6 +113,9 @@ def decide(sig: dict, thr: dict | None = None) -> dict:
     formal: build_status, no_sorry_status, axiom_audit_status, equivalence_check_status,
             comparator_pipeline (PASS/FAIL/SKIPPED/UNKNOWN), comparator_status (mapping field, str)
     misc: human_override (bool), mapping_verdict (str, the recorded mapping verdict)
+
+    The optional structured-judge-metric cap (v0.3 1c) is applied by the public `decide`
+    wrapper, not here; this function is the authoritative formal core.
     """
     thr = thr or DEFAULT_THRESHOLDS
     cs = sig.get("comparator_status") or "UNKNOWN"
@@ -234,6 +258,116 @@ def decide(sig: dict, thr: dict | None = None) -> dict:
 
 
 # ---------------------------------------------------------------------------
+# Conservative structured-judge-metric cap (v0.3 milestone 1c)
+#
+# The optional structured-scoring summary (score_judge.py --structured, §10.3) is a *global*
+# judge-reliability signal. Per ARCHITECTURE.md §11.1 / §11.5 it may only **cap an otherwise-
+# promotable target to HUMAN_REVIEW**: it never produces BLOCK, never PROMOTE, and never upgrades a
+# non-PROMOTE formal decision. A `None` metric (not measured) never triggers a cap. The judge is a
+# calibrated source-fidelity reviewer, not a theorem oracle.
+# ---------------------------------------------------------------------------
+_JM_DISCLAIMER = (
+    "These structured judge metrics cap promotion to HUMAN_REVIEW; they are source-fidelity "
+    "reliability evidence, not proof about the theorem (the judge is not a theorem oracle)."
+)
+
+
+def extract_target_metrics(summary: dict, target: str | None) -> dict:
+    """Pull the cap-relevant metrics out of a structured-scoring summary, preferring the
+    per-target node (`summary['per_target'][target]`) and falling back to the top-level summary."""
+    node = summary
+    per_target = summary.get("per_target") if isinstance(summary, dict) else None
+    if isinstance(per_target, dict) and target in per_target and isinstance(per_target[target], dict):
+        node = per_target[target]
+    totals = node.get("totals") or {}
+    rel = node.get("reliability") or {}
+    return {
+        "schema_valid_rate": totals.get("schema_valid_rate"),
+        "invalid_rate": totals.get("invalid_rate"),
+        "unparseable_rate": totals.get("unparseable_rate"),
+        "discriminative_recall": rel.get("discriminative_recall"),
+        "false_acceptance_rate_discriminative": rel.get("false_acceptance_rate_discriminative"),
+        "false_rejection_rate_consistency": rel.get("false_rejection_rate_consistency"),
+        "high_critical_concern_count": node.get("high_critical_concern_count"),
+    }
+
+
+def judge_metric_caps(target: str | None, status: str, summary, jm_thr: dict) -> list[str]:
+    """Reasons (possibly empty) why structured judge metrics should cap promotion to review."""
+    if status == JM_INVALID:
+        return ["Structured judge metrics were supplied but are invalid/unparseable; a human must "
+                "review (the metrics cannot be relied upon)."]
+    if status != JM_PRESENT or not isinstance(summary, dict):
+        return []
+    m = extract_target_metrics(summary, target)
+    reasons: list[str] = []
+    svr = m["schema_valid_rate"]
+    if svr is not None and svr < jm_thr["min_schema_valid_rate"]:
+        reasons.append(f"Structured judge schema_valid_rate {svr} is below "
+                       f"{jm_thr['min_schema_valid_rate']}; some judge records were not well-formed.")
+    ir = m["invalid_rate"]
+    if ir is not None and ir > jm_thr["max_invalid_rate"]:
+        reasons.append(f"Structured judge invalid_rate {ir} exceeds {jm_thr['max_invalid_rate']}.")
+    ur = m["unparseable_rate"]
+    if ur is not None and ur > jm_thr["max_unparseable_rate"]:
+        reasons.append(f"Structured judge unparseable_rate {ur} exceeds "
+                       f"{jm_thr['max_unparseable_rate']}.")
+    rec = m["discriminative_recall"]
+    if rec is not None and rec < jm_thr["min_discriminative_recall"]:
+        reasons.append(f"Structured discriminative_recall {rec} is below "
+                       f"{jm_thr['min_discriminative_recall']}; the judge missed planted defect(s).")
+    fa = m["false_acceptance_rate_discriminative"]
+    if fa is not None and fa > jm_thr["max_false_acceptance_rate_discriminative"]:
+        reasons.append(f"Structured false_acceptance_rate_discriminative {fa} exceeds "
+                       f"{jm_thr['max_false_acceptance_rate_discriminative']}; the judge accepted a "
+                       "discriminative mutant.")
+    fr = m["false_rejection_rate_consistency"]
+    if fr is not None and fr > jm_thr["max_false_rejection_rate_consistency"]:
+        reasons.append(f"Structured false_rejection_rate_consistency {fr} exceeds "
+                       f"{jm_thr['max_false_rejection_rate_consistency']}; the judge rejected a "
+                       "meaning-preserving variant.")
+    hc = m["high_critical_concern_count"]
+    if hc is not None and hc > jm_thr["max_high_critical_concerns"]:
+        reasons.append(f"Structured judge raised {hc} high/critical fidelity concern(s) for "
+                       f"{target}; a human must review whether the mapping needs revision.")
+    return reasons
+
+
+def decide(sig: dict, thr: dict | None = None, jm_thr: dict | None = None) -> dict:
+    """Public decision: the authoritative formal decision (`_decide_formal`), then an optional,
+    conservative structured-judge-metric cap (v0.3 1c).
+
+    Reads two extra `sig` keys (both optional; default behaviour is unchanged when absent):
+      judge_metrics_status: NOT_RUN | PRESENT | INVALID   (default NOT_RUN)
+      judge_metrics:        the structured-scoring summary dict, or None
+
+    The cap can only turn a PROMOTE into HUMAN_REVIEW; it never BLOCKs, never PROMOTEs, and never
+    upgrades a non-PROMOTE decision."""
+    jm_thr = jm_thr or DEFAULT_JUDGE_METRIC_THRESHOLDS
+    base = _decide_formal(sig, thr)
+
+    jms = sig.get("judge_metrics_status") or JM_NOT_RUN
+    cap_reasons = judge_metric_caps(sig.get("target"), jms, sig.get("judge_metrics"), jm_thr)
+
+    result = dict(base)
+    capped = base["status"] == PROMOTE and bool(cap_reasons)
+    if capped:
+        result["status"] = HUMAN_REVIEW
+        result["confidence"] = "low"
+        result["reasons"] = list(base["reasons"]) + cap_reasons + [_JM_DISCLAIMER]
+        result["allowed_next_steps"] = _next_steps(HUMAN_REVIEW)
+
+    result["judge_metrics_status"] = jms
+    result["judge_metric_cap"] = None if jms == JM_NOT_RUN else {
+        "applied": capped,
+        "capped_from": base["status"],
+        "capped_to": result["status"],
+        "reasons": cap_reasons,
+    }
+    return result
+
+
+# ---------------------------------------------------------------------------
 # I/O gathering layer
 # ---------------------------------------------------------------------------
 def _load_yaml(path: Path):
@@ -283,7 +417,23 @@ def read_formal_status(root: Path) -> dict:
     return out
 
 
-def gather(target: str, root: Path = ROOT) -> dict:
+def load_judge_metrics(path: str | None) -> tuple[str, dict | None]:
+    """Load an optional structured-scoring summary (v0.3 1c). Returns (status, summary):
+      - no path                                  -> (NOT_RUN, None)   [default; behaviour unchanged]
+      - a readable JSON dict that looks like a summary -> (PRESENT, summary)
+      - anything else (unreadable / bad JSON / not a summary) -> (INVALID, None)."""
+    if not path:
+        return JM_NOT_RUN, None
+    try:
+        raw = json.loads(Path(path).read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return JM_INVALID, None
+    if isinstance(raw, dict) and any(k in raw for k in ("totals", "reliability", "per_target")):
+        return JM_PRESENT, raw
+    return JM_INVALID, None
+
+
+def gather(target: str, root: Path = ROOT, judge_metrics_path: str | None = None) -> dict:
     """Read all artifacts and build the signals + provenance dicts for `decide`."""
     mapping_doc = _load_yaml(root / "docs" / "formal_mapping.yaml") or {}
     targets = (mapping_doc.get("targets") or {}) if isinstance(mapping_doc, dict) else {}
@@ -328,8 +478,13 @@ def gather(target: str, root: Path = ROOT) -> dict:
 
     formal = read_formal_status(root)
 
+    # Optional structured judge-scoring summary (v0.3 1c). Absent -> NOT_RUN (no effect).
+    jm_status, jm_summary = load_judge_metrics(judge_metrics_path)
+
     sig = {
         "target": target,
+        "judge_metrics_status": jm_status,
+        "judge_metrics": jm_summary,
         "mapping_present": mapping_present,
         "card_present": card_present,
         "review_present": review_present,
@@ -364,6 +519,15 @@ def gather(target: str, root: Path = ROOT) -> dict:
     return {"sig": sig, "provenance": provenance}
 
 
+def display_path(path: Path) -> str:
+    """Repo-relative display string when possible, else the path as-is. Never raises — `--output`
+    is a testing override that may legitimately point outside the repo."""
+    try:
+        return str(path.relative_to(ROOT))
+    except ValueError:
+        return str(path)
+
+
 def build_output(target: str, decision: dict, provenance: dict) -> dict:
     return {
         "promotion_decision": {
@@ -372,6 +536,8 @@ def build_output(target: str, decision: dict, provenance: dict) -> dict:
             "confidence": decision["confidence"],
             "reasons": decision["reasons"],
             "allowed_next_steps": decision["allowed_next_steps"],
+            "judge_metrics_status": decision.get("judge_metrics_status", JM_NOT_RUN),
+            "judge_metric_cap": decision.get("judge_metric_cap"),
             "provenance": provenance,
             "decided_utc": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
         }
@@ -389,6 +555,10 @@ def main() -> int:
     ap.add_argument("--max-consistency-far", type=float, default=DEFAULT_THRESHOLDS["max_far"])
     ap.add_argument("--max-malformed-yaml-rate", type=float,
                     default=DEFAULT_THRESHOLDS["max_malformed"])
+    ap.add_argument("--judge-metrics", metavar="PATH",
+                    help="optional structured judge-scoring summary JSON (score_judge.py "
+                         "--structured); conservative-only: it may cap an otherwise-promotable "
+                         "target to HUMAN_REVIEW, never BLOCK or PROMOTE (ARCHITECTURE.md §11.5)")
     args = ap.parse_args()
 
     out_path = Path(args.output) if args.output else ROOT / "docs" / "promotion" / f"{args.target}.yaml"
@@ -401,7 +571,7 @@ def main() -> int:
         "max_far": args.max_consistency_far,
         "max_malformed": args.max_malformed_yaml_rate,
     }
-    gathered = gather(args.target)
+    gathered = gather(args.target, judge_metrics_path=args.judge_metrics)
     decision = decide(gathered["sig"], thr)
     out_doc = build_output(args.target, decision, gathered["provenance"])
 
@@ -412,7 +582,12 @@ def main() -> int:
 
     pd = out_doc["promotion_decision"]
     print(f"GATE DECISION [{pd['status']}] (confidence: {pd['confidence']}) -> "
-          f"{out_path.relative_to(ROOT)}")
+          f"{display_path(out_path)}")
+    cap = pd.get("judge_metric_cap")
+    if pd.get("judge_metrics_status", JM_NOT_RUN) != JM_NOT_RUN:
+        capped = bool(cap and cap.get("applied"))
+        print(f"  judge_metrics_status: {pd['judge_metrics_status']} "
+              f"(capped to HUMAN_REVIEW: {capped})")
     for r in pd["reasons"]:
         print(f"  - {r}")
     return 0
