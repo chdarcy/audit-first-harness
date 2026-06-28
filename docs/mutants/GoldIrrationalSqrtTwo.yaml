@@ -1,0 +1,94 @@
+# Mutation test cases for the GoldIrrationalSqrtTwo reference target.
+#
+# Textual judge test cases; not compiled. Expected labels are fixed before any judge run.
+#   discriminative -> judge must REJECT (FAIL or WARN)
+#   consistency    -> judge must ACCEPT (PASS / PASS_EQUIV / PASS_PROVABLE_EQUIV)
+#
+# `Irrational` and the `√` notation are standard Mathlib; the source claim is `√2 ∉ ℚ`.
+
+target: GoldIrrationalSqrtTwo
+real_statement_ref: gold_irrational_sqrt_two
+lean_ambient: ""
+
+formalisation_choices:
+  - "irrationality modelled by Mathlib's `Irrational x` (x ∉ Set.range ((↑) : ℚ → ℝ))"
+  - "√2 is `Real.sqrt 2`; the claim is the irrationality of the real number √2"
+  - "unconditional statement (no hypotheses); not an approximation and not √2 ≠ 2"
+
+real_statement: |
+  theorem gold_irrational_sqrt_two : Irrational (√2)
+
+mutants:
+  # ---------------- Discriminative (judge must REJECT) ----------------
+  - id: GIST-D1
+    class: discriminative
+    operator: negate-claim
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement : ¬ Irrational (√2)
+    note: "claims √2 is rational (the negation of the source); false and opposite of the source claim"
+
+  - id: GIST-D2
+    class: discriminative
+    operator: alter-constant
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement : Irrational (√3)
+    note: "constant changed from √2 to √3; a different theorem (about a different number) than the source"
+
+  - id: GIST-D3
+    class: discriminative
+    operator: weaken-conclusion
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement : (√2 : ℝ) ≠ 2
+    note: "weakened from irrationality to the much weaker inequality √2 ≠ 2"
+
+  - id: GIST-D4
+    class: discriminative
+    operator: replace-property
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement : 0 < (√2 : ℝ)
+    note: "irrationality replaced by positivity 0 < √2; a different (and much weaker) property"
+
+  - id: GIST-D5
+    class: discriminative
+    operator: add-hypothesis
+    expected_verdict: WARN
+    mutated_statement: |
+      theorem candidate_statement (h : (2 : ℝ) ≠ 0) : Irrational (√2)
+    note: "an unnecessary hypothesis 2 ≠ 0 is added; the source statement is unconditional"
+
+  - id: GIST-D6
+    class: discriminative
+    operator: alter-formula
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement : (1.414 : ℝ) < √2
+    note: "irrationality replaced by a numerical approximation/bound 1.414 < √2; not the source claim"
+
+  - id: GIST-D7
+    class: discriminative
+    operator: alter-constant
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement : Irrational (1.41421356 : ℝ)
+    note: "the real √2 is confused with a rational decimal literal 1.41421356 (which is rational, so the claim is false)"
+
+  # ---------------- Consistency (judge must ACCEPT) ----------------
+  - id: GIST-C1
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement : Irrational (Real.sqrt 2)
+    note: "√2 written as `Real.sqrt 2` (the notation it abbreviates); identical statement"
+
+  - id: GIST-C2
+    class: consistency
+    operator: definition-unfold
+    expected_verdict: PASS_EQUIV
+    mutated_statement: |
+      theorem candidate_statement : ¬ ∃ q : ℚ, (q : ℝ) = √2
+    note: "the definitional unfolding of `Irrational (√2)`: √2 is not equal to any rational; equivalent restatement"

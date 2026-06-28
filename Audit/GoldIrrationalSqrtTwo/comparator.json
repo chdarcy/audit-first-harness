@@ -1,0 +1,7 @@
+{
+    "challenge_module": "Audit.GoldIrrationalSqrtTwo.Challenge",
+    "solution_module": "Audit.GoldIrrationalSqrtTwo.Solution",
+    "theorem_names": ["AuditHarness.StatementAudit.gold_irrational_sqrt_two"],
+    "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+    "enable_nanoda": false
+}

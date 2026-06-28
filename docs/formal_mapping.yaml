@@ -67,3 +67,24 @@ targets:
     review: docs/fidelity_reviews/TwoAssetMinVar.md
     state: HUMAN_APPROVED
     human_approved: true
+
+  GoldIrrationalSqrtTwo:
+    source_refs: ["thm:gold_irrational_sqrt_two"]
+    lean:
+      declaration: gold_irrational_sqrt_two
+      module: AuditHarness.GoldIrrationalSqrtTwo
+      fully_qualified: AuditHarness.gold_irrational_sqrt_two
+    comparator:
+      dir: Audit/GoldIrrationalSqrtTwo
+      config: Audit/GoldIrrationalSqrtTwo/comparator.json
+      challenge_module: Audit.GoldIrrationalSqrtTwo.Challenge
+      solution_module: Audit.GoldIrrationalSqrtTwo.Solution
+      audit_theorem: AuditHarness.StatementAudit.gold_irrational_sqrt_two
+    # Public gold-reference target: a thin wrapper around Mathlib's `irrational_sqrt_two`.
+    # Direct PASS (Lean statement = source claim). comparator_status stays NOT_RUN until a real run.
+    verdict: PASS
+    equivalence: null
+    comparator_status: NOT_RUN
+    review: docs/fidelity_reviews/GoldIrrationalSqrtTwo.md
+    state: HUMAN_APPROVED
+    human_approved: true

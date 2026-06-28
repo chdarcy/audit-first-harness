@@ -1,0 +1,22 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+\begin{document}
+
+\section*{Irrationality of the square root of 2}
+
+The square root of $2$ is irrational:
+\[
+\sqrt{2} \notin \mathbb{Q}.
+\]
+
+This is a classic public theorem --- item~1 on Freek Wiedijk's ``Formalizing 100 Theorems'' list
+--- included here purely as a known-correct \emph{gold-reference} fixture for the audit harness. It
+is \textbf{not} an original finance theorem and contains no new proof; the corresponding Lean
+statement is a thin wrapper around an existing Mathlib theorem.
+
+The statement asserts the \emph{irrationality} of $\sqrt{2}$ as a real number. It is not a rational
+approximation such as $1.414 < \sqrt{2}$, and it is not the weaker fact $\sqrt{2} \neq 2$.
+
+\end{document}

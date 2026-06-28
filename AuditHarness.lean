@@ -5,3 +5,4 @@
 -- smoke-test theorem). It is NOT a mathematics library; add your own modules here.
 import AuditHarness.PutCallParity
 import AuditHarness.TwoAssetMinVar
+import AuditHarness.GoldIrrationalSqrtTwo

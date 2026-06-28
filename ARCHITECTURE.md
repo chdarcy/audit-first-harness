@@ -1026,6 +1026,18 @@ Possible mutants:
 - portfolio variance drops covariance term;
 - `w*` changed to its complement.
 
+### 19.1 Pre-v0.3 gold-reference target: GoldIrrationalSqrtTwo
+
+A **public gold-reference fixture** (not a new finance theorem): the irrationality of √2,
+`√2 ∉ ℚ`. The mapped Lean statement `AuditHarness.gold_irrational_sqrt_two : Irrational (√2)` is a
+thin wrapper that delegates to Mathlib's **existing** `irrational_sqrt_two`
+(`Mathlib/NumberTheory/Real/Irrational.lean`) — a known-correct public theorem with an existing
+Lean proof. It is included so the harness's source-to-Lean fidelity machinery (and, later, the
+v0.3 judgement layer) can be exercised against a public, known-correct reference rather than only
+bespoke examples. It follows all the usual conventions (theorem card, mapping, fidelity review,
+mutants, Comparator triple) and remains `comparator_status: NOT_RUN` until a real Comparator
+writeback run.
+
 ---
 
 ## 20. Future improvements

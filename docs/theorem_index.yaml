@@ -66,3 +66,26 @@ entries:
       notes: >-
         Second worked target. w* is the unconstrained (real-weight) minimum-variance weight; the
         claim is non-strict global minimality (<=), not strict minimality and not uniqueness.
+
+  thm:gold_irrational_sqrt_two:
+    auto:
+      source_file: examples/gold_irrational_sqrt_two/source.tex
+      env: theorem
+      title: "Irrationality of the square root of 2"
+      equation_labels: []
+      body_tex: |
+        \sqrt{2} \notin \mathbb{Q}.
+    curated:
+      paraphrase: >-
+        The real number sqrt(2) is irrational: it is not equal to any rational number
+        (sqrt(2) is not in Q). This is the irrationality statement itself, about the real number
+        sqrt(2) -- NOT a numerical approximation (e.g. 1.414 < sqrt(2)) and NOT the weaker fact
+        sqrt(2) != 2.
+      informal_assumptions:
+        - "no hypotheses: an unconditional statement about the real number sqrt(2)"
+      notes: >-
+        Public gold-reference theorem (item 1 of Freek Wiedijk's Formalizing 100 Theorems),
+        known-correct with an existing Mathlib proof `irrational_sqrt_two`
+        (Mathlib/NumberTheory/Real/Irrational.lean). Mapped local declaration:
+        AuditHarness.gold_irrational_sqrt_two (a thin wrapper). Not an original finance theorem;
+        a reference fixture for source-to-Lean fidelity testing.
