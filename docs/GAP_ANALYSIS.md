@@ -1,7 +1,16 @@
-# GAP_ANALYSIS — architecture audit
+# GAP_ANALYSIS — archived audit snapshot
 
-**Type:** audit snapshot (documentation only). **Baseline commit:** `90ae0b5` (Separate architecture
-from milestone history). **Against:** [`../ARCHITECTURE.md`](../ARCHITECTURE.md);
+> **Status: archived as an active roadmap after `1b3b6a2`.**
+> This document is retained for **provenance/history** and is **no longer the authoritative
+> current-state roadmap**. For current project status see [`../README.md`](../README.md) and
+> [`../ARCHITECTURE.md`](../ARCHITECTURE.md); for active next steps see [`ROADMAP.md`](ROADMAP.md);
+> for the dated build history see [`MILESTONES.md`](MILESTONES.md). The assessments below were
+> accurate at the time of writing (and were updated through the final completion audit, `c519dc5`);
+> later work — the Markowitz source intake (`1b3b6a2`) and this doc refresh — is reflected in
+> README/ARCHITECTURE/MILESTONES, not here.
+
+**Type:** audit snapshot (documentation only), now archived. **Baseline commit:** `90ae0b5` (Separate
+architecture from milestone history). **Against:** [`../ARCHITECTURE.md`](../ARCHITECTURE.md);
 history in [`MILESTONES.md`](MILESTONES.md).
 
 This document audits the repository against the goals in `ARCHITECTURE.md`. It changes no code,

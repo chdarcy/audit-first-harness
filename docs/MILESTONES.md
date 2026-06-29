@@ -167,8 +167,19 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   central recorded decision is the **probabilistic↔algebraic abstraction boundary**. This is a
   source-reading artifact only — **nothing is proved, mapped, or verified**; no Lean, theorem card,
   mapping, mutant, or Comparator file was created, and the generic source-agnostic
-  `docs/source_formalizations/` layer was left untouched. The source TeX itself was **not** copied into
-  the repo (a copy to `examples/markowitz_lecture_notes/source.tex` is proposed, pending approval).
+  `docs/source_formalizations/` layer was left untouched. The source TeX is committed at
+  `examples/markowitz_lecture_notes/source.tex` and the inventory at
+  `docs/source_inventories/markowitz_lecture_notes.yaml` (commit `1b3b6a2`); this was **source intake
+  only** (the working-tree root copy `markowitz_lecture_notes.tex` is intentionally left untracked).
+- **Refresh docs after Markowitz source intake** — brought the front-matter docs back in sync with the
+  repo. Rewrote `README.md` as the current front door (status, the four-layer pipeline, Markowitz
+  intake state, how to run checks, how to add a source); updated `ARCHITECTURE.md` §4 to include
+  `docs/source_inventories/` before `docs/source_formalizations/` and to distinguish inventory vs
+  source-formalisation record vs theorem card vs formal mapping, recording that Markowitz is at the
+  source-inventory stage only with `MK-000`/`MK-003` the next (not-yet-created) promoted records;
+  added `docs/ROADMAP.md` for the active next steps; and **archived** `docs/GAP_ANALYSIS.md` as a
+  historical snapshot (no longer the active roadmap). Docs-only: no Lean, theorem card, mapping,
+  mutant, Comparator, script, or source-content change.
 
 ---
 

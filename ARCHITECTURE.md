@@ -160,7 +160,9 @@ The intended architecture is:
 ```text
 source.tex
   ↓
-source_formalizations/<id>.yaml   (optional, for hard multi-step sources)
+source_inventories/<id>.yaml      (triage a whole source; content-bearing, source-specific)
+  ↓
+source_formalizations/<id>.yaml   (per-target semantic alignment; for hard multi-step sources)
   ↓
 theorem_index.yaml
   ↓
@@ -197,7 +199,35 @@ promotion decision
 
 The current MVP implements most of this path. The missing piece is the **closed-loop controller** that turns judge/gate results into required revisions.
 
-For **hard, multi-step sources**, an optional **source-formalisation record** (`docs/source_formalizations/`, validated structurally by `scripts/validate_source_formalization.py`) may sit between the raw source and the theorem card: it documents how an informal claim becomes a proposed formal target (symbols, assumptions, conclusion shape, abstraction choices, ambiguities, proof decomposition) so the semantic alignment is explicit before any Lean. It is source-fidelity infrastructure only — structural completeness, never mathematical truth — and runs no model and edits no Lean.
+For **hard, multi-step sources** the front of the pipeline has two source-intake layers, distinct
+from the ledger that follows them:
+
+- **Source theorem inventory** (`docs/source_inventories/<id>.yaml`, `record_type:
+  source_theorem_inventory`) — the **first reading/triage pass over a whole source**. It is
+  *content-bearing and source-specific*: it enumerates candidate targets with dependencies,
+  difficulty, separated source-fidelity vs proof risks, a recommended order, and what to defer. It is
+  intentionally **not** validated by `validate_source_formalization.py` (kept in a separate
+  directory so the generic layer below stays source-agnostic). Nothing in it is proved or verified.
+- **Source-formalisation record** (`docs/source_formalizations/<target_id>.yaml`, `record_type:
+  source_formalization`, validated by `scripts/validate_source_formalization.py`) — a **per-target
+  semantic-alignment record**: how one informal claim becomes a proposed formal target (symbols,
+  assumptions, conclusion shape, abstraction choices, ambiguities, proof decomposition). It is
+  *generic, source-agnostic infrastructure*.
+- **Theorem card** (`docs/theorem_index.yaml`) is the source-side ledger entry; the **formal
+  mapping** (`docs/formal_mapping.yaml`) is the source-to-Lean bridge and gate/audit state. These
+  come *after* a candidate has been worked up into a source-formalisation record.
+
+All of these are **source-fidelity infrastructure only** — structural completeness, never
+mathematical truth — and run no model and edit no Lean.
+
+**Current intake status (Markowitz).** The first content-bearing intake has been done: the source is
+committed at `examples/markowitz_lecture_notes/source.tex` and triaged in
+`docs/source_inventories/markowitz_lecture_notes.yaml` (12 candidate targets). Markowitz is at the
+**source-inventory stage only** — there is no theorem card, formal mapping, Lean proof, mutant, or
+Comparator artifact for it, and nothing in the inventory is proved, mapped, or verified. The next
+intended step is to promote `MK-000` (algebraic scaffolding) and `MK-003` (the `D = BC − A² > 0`
+Cauchy–Schwarz lemma) into per-target **source-formalisation records** (then card → mapping → Lean);
+they are **not yet created**. See [`docs/ROADMAP.md`](docs/ROADMAP.md) for the active next steps.
 
 ---
 

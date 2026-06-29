@@ -1,60 +1,120 @@
-# Audit-First Formalisation Harness
+# audit-first-harness
 
-**v0.1 — experimental.**
+An **audit-first Lean formalisation harness**. It keeps two things separate and makes both auditable:
 
-A small, human-driven harness for **checking the fidelity of a Lean formalisation against its
-source claim**. It is the extracted, domain-neutral machinery from a Markowitz portfolio-theory
-formalisation, reduced to an MVP and shipped with a single self-contained example
-(put–call payoff parity).
+- **source fidelity** — does the Lean *statement* actually mean what the source claims? (theorem
+  cards, mappings, fidelity reviews, mutation + a blinded LLM judge, calibration, a pre-proof
+  source-fidelity review gate); and
+- **formal correctness** — does the proof actually hold? (`lake build`, a no-sorry scan, a
+  kernel/axiom audit, the Lean FRO Comparator's Challenge/Solution equality, and a promotion gate).
 
-For the stable design, boundaries, and current architecture, see [`ARCHITECTURE.md`](ARCHITECTURE.md).
-For the dated, milestone-by-milestone implementation history, see
+These are never conflated: *formal correctness ≠ source fidelity*, and *judge metrics ≠ theorem
+truth*. The judge is a calibrated source-fidelity reviewer, **not** a theorem oracle.
+
+For the stable design and boundaries see [`ARCHITECTURE.md`](ARCHITECTURE.md); for active next steps
+see [`docs/ROADMAP.md`](docs/ROADMAP.md); for the dated build history see
 [`docs/MILESTONES.md`](docs/MILESTONES.md).
 
-## What this is
+## Current status
 
-The harness supports an *audit-first* workflow: before trusting that a Lean theorem says what a
-source document claims, you assemble a paper trail and stress-test it.
+- **Harness implemented and exercised** on three worked targets — `PutCallParity`,
+  `TwoAssetMinVar`, `GoldIrrationalSqrtTwo` (each: built, no-sorry, axiom-audited, real Comparator
+  pass recorded, human-approved).
+- **Judge calibrated** on those targets (gpt-4o, opt-in): aggregate discriminative recall 0.875,
+  false-alarm rate 0.0 — strong but imperfect; see [`docs/JUDGE_EVIDENCE_SUMMARY.md`](docs/JUDGE_EVIDENCE_SUMMARY.md).
+- **Generic source-formalisation records** implemented (`docs/source_formalizations/`).
+- **First content-bearing source intake done for Markowitz.** It is at the **inventory stage only**:
+  a committed source + a candidate-target triage. **No theorem card, formal mapping, Lean proof,
+  mutant, or Comparator artifact exists for Markowitz yet, and nothing in the inventory is proved,
+  mapped, or verified.**
+- **Not** a fully agentic system: the closed-loop controller that would let judge output drive
+  statement revision and proof attempts is future research.
 
-1. **Theorem card** — transcribe a source claim into `docs/theorem_index.yaml` (source side only).
-2. **Mapping** — link the claim to a Lean declaration and its Comparator triple in
-   `docs/formal_mapping.yaml`, with a lifecycle state and a human-approval gate.
-3. **Fidelity review** — a human writes and signs off a structured review in
-   `docs/fidelity_reviews/<Target>.md`.
-4. **Mutation + blinded judge** — `docs/mutants/<Target>.yaml` defines meaning-preserving and
-   defect-injecting variants; the harness assembles **blinded** packages that an adversarial
-   LLM "fidelity judge" can score, with the answer key held back. Discriminative-recall and
-   consistency-false-alarm metrics tell you whether the judge can actually catch defects.
-5. **Comparator audit** — the [Lean FRO Comparator](https://github.com/leanprover/comparator)
-   independently re-elaborates a *Mathlib-only* statement of the theorem and has the Lean kernel
-   confirm a delegating proof closes exactly that statement under a permitted axiom set.
+## Pipeline
 
-## What this is NOT
-
-- ❌ **Not a general automatic LaTeX → Lean translator or solver.** Nothing here converts a
-  source document into Lean. A human (optionally assisted by a model) writes the Lean.
-- ❌ **It does not guarantee autonomous proof generation.** Proof attempts are driven by a
-  human/model agent and **checked by Lean** (and, optionally, by the Comparator). The harness
-  audits and stress-tests an existing formalisation; it does not promise to produce one.
-- ❌ **Not autonomous fidelity certification.** Every mapping passes through an explicit
-  human-approval gate before any judge or mutation run; the LLM judge is **opt-in and off by
-  default**.
-
-## Layout
-
+```text
+source document
+  → source theorem inventory        (docs/source_inventories/ — triage a whole source)
+  → per-target source-formalisation record  (docs/source_formalizations/ — one candidate's semantic alignment)
+  → theorem card                    (docs/theorem_index.yaml — source-side ledger entry)
+  → formal mapping                  (docs/formal_mapping.yaml — source↔Lean bridge + gate/audit state)
+  → source-fidelity review / judge evidence   (fidelity_reviews + mutants + blinded judge + source-review gate)
+  → Lean proof
+  → lake build → no-sorry → axiom audit
+  → Comparator (Challenge vs Solution equality)
+  → promotion gate
 ```
-AuditHarness/            minimal Lean library (the put–call parity smoke-test theorem)
-Audit/Template/          Challenge/Solution/comparator.json templates (*.template; not built)
-Audit/PutCallParity/     a real, buildable Comparator triple for the example
-scripts/                 the harness (see below)
-docs/judge_prompts/      judge_v1.md — the frozen, hashed fidelity-judge system prompt
-docs/templates/          theorem-card / mapping / review / mutants templates
-docs/theorem_index.yaml  source ledger (example: thm:putcall)
-docs/formal_mapping.yaml source <-> Lean bridge (example: PutCallParity)
-docs/fidelity_reviews/   per-target reviews (example: PutCallParity.md)
-docs/mutants/            per-target mutation test cases (example: PutCallParity.yaml)
-examples/put_call_parity/source.tex   the example source document
+
+The four ledger layers, distinguished:
+
+- **`docs/source_inventories/`** — source-level **triage**, *content-bearing* and *source-specific*:
+  one YAML per source listing candidate targets, dependencies, difficulty, and risks, with a
+  recommended order. Nothing here is verified.
+- **`docs/source_formalizations/`** — per-target **semantic-alignment records** (*generic,
+  source-agnostic infrastructure*): how one informal claim becomes a proposed formal target
+  (symbols, assumptions, conclusion shape, abstraction choices, ambiguities, proof decomposition).
+- **`docs/theorem_index.yaml`** — the **theorem-card ledger** (the source claim, source side only).
+- **`docs/formal_mapping.yaml`** — the **source-to-Lean mapping** and its lifecycle/audit state
+  (lean declaration, Comparator triple, verdict, `comparator_status`, human approval).
+
+## Markowitz source intake
+
+- **Source:** [`examples/markowitz_lecture_notes/source.tex`](examples/markowitz_lecture_notes/source.tex).
+- **Inventory:** [`docs/source_inventories/markowitz_lecture_notes.yaml`](docs/source_inventories/markowitz_lecture_notes.yaml)
+  — **12 candidate targets** with separated source-fidelity vs proof risks.
+- **Recommended first formal path:** `MK-000` (algebraic scaffolding) then `MK-003`
+  (the `D = BC − A² > 0` Cauchy–Schwarz lemma).
+- **Deferred:** the probabilistic foundations (L² returns, Cov→PSD bridge) and the CAPM result
+  (relies on unstated equilibrium economics). The central recorded decision is the
+  probabilistic↔algebraic **abstraction boundary**.
+- **No Lean, theorem card, formal mapping, proof, mutant, or Comparator artifact yet.** The next
+  proof-facing step is to promote `MK-000` and `MK-003` into per-target source-formalisation records
+  (see [`docs/ROADMAP.md`](docs/ROADMAP.md)).
+
+## Running the core checks
+
+All Python checks are offline and call no model:
+
+```bash
+python scripts/validate_mapping.py                     # cards ↔ mapping ↔ reviews consistent
+python scripts/validate_source_formalization.py        # generic source-formalisation records (structure)
+python scripts/test_validate_source_formalization.py   # validator unit tests
+python scripts/test_blinding_boundary.py               # judge runner/importer stay blinded
+python scripts/test_source_review_decision.py          # pre-proof source-fidelity review decision
+python scripts/rebuild_pipeline.py                     # run every non-gated stage, write a report
 ```
+
+- **Lean build** (`lake build`) is run in CI for all theorem modules and Challenge/Solution triples.
+- The **real Comparator** (landrun sandbox + binaries) is **local/WSL and human-gated — not run in
+  CI**; CI proves the triples *build*, which is formal evidence only, not source fidelity. See
+  [`docs/COMPARATOR.md`](docs/COMPARATOR.md).
+- The **judge** is contacted **only** with the explicit opt-in `python scripts/run_judge.py
+  --execute-api` (OpenAI; reads `OPENAI_API_KEY` from the environment).
+
+## Adding a new source / target
+
+1. **Add the source** under `examples/<source_id>/source.tex`.
+2. **Triage it:** create `docs/source_inventories/<source_id>.yaml` (candidate targets, risks,
+   recommended order) — a source-reading artifact, nothing verified.
+3. **Promote one candidate** into a per-target record `docs/source_formalizations/<target_id>.yaml`
+   (validated by `validate_source_formalization.py`).
+4. **Only then** create the theorem card (`docs/theorem_index.yaml`), the formal mapping
+   (`docs/formal_mapping.yaml`), the Lean proof (`AuditHarness/<Target>.lean` + a `Helpers.lean`
+   proof module, per [`CLAUDE.md`](CLAUDE.md) §5.1 — never weakening the statement), the fidelity
+   review, mutants, and the Comparator `Audit/<Target>/` triple. `run_mutants.py` refuses to
+   assemble judge packages until the human-approval gate is satisfied.
+
+## What this repo does **not** claim
+
+- ❌ Not automatic theorem extraction — a human transcribes the source claim; no LaTeX auto-parsing.
+- ❌ Not automatic proof generation — proofs are written by a human/model agent and **checked by
+  Lean** (and optionally the Comparator).
+- ❌ The judge is **not** a theorem oracle — its metrics measure judge reliability, not truth, and a
+  judge PASS never overrides a formal failure.
+- ❌ An inventory (or a source-formalisation record) is **not** verification — it records intent and
+  structure, not correctness.
+- ❌ The Comparator checks **Challenge vs Solution** statement equality, **not** source-`.tex` vs Lean
+  fidelity.
 
 ## Scripts
 
@@ -75,55 +135,25 @@ examples/put_call_parity/source.tex   the example source document
 | `gate_decision.py` | Offline promotion decision (PROMOTE/BLOCK/REVISE/HUMAN_REVIEW); optional `--judge-metrics` caps to HUMAN_REVIEW; `--pipeline-status` consumes a fingerprint-checked formal status (fail-closed) | No |
 | `source_review_decision.py` | Pre-proof source-fidelity review decision (SOURCE_REVIEW_PASS/HUMAN_REVIEW/REVISE/BLOCK) from structured judge evidence + calibration | No |
 | `validate_judge_schema.py` | Validate one structured judge-evidence record (VALID/PARTIAL_RECOVERED/INVALID) | No |
-| `test_judge_parsing.py` | Unit tests for judge-output YAML parsing / verdict recovery | No |
-| `test_gate_decision.py` | Unit tests for the promotion-decision policy | No |
-| `test_pipeline_status.py` | Unit tests for structured pipeline status + gate freshness/fingerprint check | No |
-| `test_blinding_boundary.py` | Regression tests that the judge runner/importer stay blinded (no `_manifest` access) | No |
-| `test_source_review_decision.py` | Unit tests for the pre-proof source-fidelity review decision | No |
-| `test_validate_source_formalization.py` | Unit tests for the source-formalisation record validator | No |
-| `test_rebuild_pipeline.py` | Unit tests for the pipeline `--target` plumbing | No |
-| `test_check_axioms.py` | Unit tests for the axiom-audit parser/classifier | No |
-| `test_check_equivalence.py` | Unit tests for the provable-equivalence validator | No |
-| `test_validate_judge_schema.py` | Unit tests for the structured judge-schema validator | No |
-| `test_score_judge.py` | Unit tests for structured judge-reliability scoring | No |
-| `test_structured_judge_output.py` | Unit tests for structured judge-output export | No |
-| `test_structured_judge_workflow.py` | Unit tests for the offline structured-judge workflow runner | No |
 
-The judge is **never** contacted unless you explicitly pass `--execute-api` (OpenAI provider,
-reads `OPENAI_API_KEY` from the environment).
-
-## Quick start
-
-```bash
-lake exe cache get          # fetch Mathlib oleans (first time)
-lake build                  # build the example library (proves put_call_payoff_parity)
-
-python scripts/validate_mapping.py        # cards <-> mapping <-> reviews consistent
-python scripts/run_mutants.py --dry-run   # assemble blinded judge packages (no model)
-python scripts/check_sorries.py           # no incomplete proofs in the library
-python scripts/rebuild_pipeline.py        # run every (non-gated) stage, write a report
-```
-
-The Comparator stage is human-gated; see [`docs/COMPARATOR.md`](docs/COMPARATOR.md) and run
-`python scripts/rebuild_pipeline.py --with-build --with-comparator` once the Comparator
-binaries are built (Linux/WSL).
-
-## Adding your own target
-
-1. **Add the source.** Put your `.tex` source under `examples/<target>/source.tex` (or
-   `docs/source/<target>.tex`).
-2. **Transcribe a theorem card.** Manually transcribe/extract the relevant theorem into
-   `docs/theorem_index.yaml` using `docs/templates/theorem_card.template.yaml` (the harness does
-   not auto-parse LaTeX — a human copies the claim across, source side only).
-3. **Continue the pipeline.** Add the mapping, fidelity review, mutants, the Lean proof, and the
-   Comparator `Audit/<Target>/` triple by copying the templates in `docs/templates/` and
-   `Audit/Template/`; set the mapping's `state: HUMAN_APPROVED` and `human_approved: true` (and
-   the matching review frontmatter), then re-run the quick-start checks. `run_mutants.py` refuses
-   to assemble packages until the human-approval gate is satisfied.
+Plus unit tests: `test_judge_parsing.py`, `test_gate_decision.py`, `test_pipeline_status.py`,
+`test_blinding_boundary.py`, `test_source_review_decision.py`, `test_validate_source_formalization.py`,
+`test_rebuild_pipeline.py`, `test_check_axioms.py`, `test_check_equivalence.py`,
+`test_validate_judge_schema.py`, `test_score_judge.py`, `test_structured_judge_output.py`,
+`test_structured_judge_workflow.py` (all offline, in CI).
 
 ## Requirements
 
-- Lean toolchain `leanprover/lean4:v4.31.0` (via `elan`; pinned in `lean-toolchain`).
+- Lean toolchain `leanprover/lean4:v4.31.0` (via `elan`; pinned in `lean-toolchain`), Mathlib.
 - Python 3.10+ with `PyYAML`. `openai` only if you use `run_judge.py --execute-api`.
 - The Comparator stage additionally needs the Comparator + `lean4export` + `landrun` binaries
-  (Linux/WSL) — see `docs/COMPARATOR.md`.
+  (Linux/WSL) — see [`docs/COMPARATOR.md`](docs/COMPARATOR.md).
+
+## Docs to read next
+
+- [`ARCHITECTURE.md`](ARCHITECTURE.md) — stable design, boundaries, the pipeline and its gates.
+- [`docs/ROADMAP.md`](docs/ROADMAP.md) — the active next steps.
+- [`docs/MILESTONES.md`](docs/MILESTONES.md) — dated build history.
+- [`docs/JUDGE_EVIDENCE_SUMMARY.md`](docs/JUDGE_EVIDENCE_SUMMARY.md) — recorded judge-reliability evidence.
+- [`docs/GAP_ANALYSIS.md`](docs/GAP_ANALYSIS.md) — archived audit snapshot (provenance; no longer the active roadmap).
+- [`CLAUDE.md`](CLAUDE.md) — agent instructions and the Lean theorem/helper split convention.
