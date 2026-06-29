@@ -139,16 +139,34 @@ def test_error_paths_clear() -> None:
         check("error names the field", any("review.status" in x for x in e), str(e))
 
 
-# 12/13 — no model/API, no Lean reads/edits
+# 12/13 — the validator is offline (no model/API) and entirely Lean/repo-example agnostic.
+# These checks are deliberately source-agnostic: they assert what the validator must NOT contain or
+# touch, and they do not depend on any existing Lean target file existing in this repo.
 def test_no_api_no_lean() -> None:
     src = (ROOT / "scripts" / "validate_source_formalization.py").read_text(encoding="utf-8")
     for tok in ("openai", "execute-api", "requests.", "http", "urllib", "socket"):
         check(f"validator has no '{tok}'", tok not in src)
-    check("validator does not open .lean files", ".lean" not in src)
-    # the theorem/helper split files are untouched and still present
-    for f in ["AuditHarness/PutCallParity.lean", "AuditHarness/PutCallParity/Helpers.lean",
-              "AuditHarness/TwoAssetMinVar.lean", "AuditHarness/GoldIrrationalSqrtTwo.lean"]:
-        check(f"Lean file still present (untouched): {f}", (ROOT / f).is_file())
+    # the validator neither reads nor edits Lean, and is not coupled to any repo example:
+    check("validator source does not mention '.lean'", ".lean" not in src)
+    check("validator source does not mention 'AuditHarness/'", "AuditHarness/" not in src)
+    check("validator source does not walk the Lean/Audit/examples trees",
+          not any(tok in src for tok in ("AuditHarness", "/Audit/", "examples/", "rglob", "glob('*.lean')")))
+
+
+# 12b — regression: the validator is independent of repository theorem examples. It validates a temp
+# directory of synthetic YAML and never requires any existing Lean target / Audit / examples path.
+def test_independent_of_repo_examples() -> None:
+    import yaml
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td)
+        (d / "synthetic.yaml").write_text(yaml.safe_dump(minimal_real()), encoding="utf-8")
+        e, _, n_real, n_template = vsf.validate_dir(d)
+        check("validates a temp dir of synthetic YAML (no repo coupling)", e == [], str(e))
+        check("counts the synthetic record as one real record, zero templates",
+              n_real == 1 and n_template == 0, f"{n_real}/{n_template}")
+    # the validator's only default scope is docs/source_formalizations — never a Lean/Audit/examples tree
+    check("validator default scope is docs/source_formalizations",
+          vsf.RECORDS_DIR.name == "source_formalizations" and vsf.RECORDS_DIR.parent.name == "docs")
 
 
 # Generic, fake sentinels — NOT real domain/source terms. Used to exercise the genericity property
@@ -188,7 +206,7 @@ def main() -> int:
         test_invalid_ambiguity_status_fails, test_invalid_review_status_fails,
         test_blank_target_links_allowed, test_template_checked_structurally,
         test_dir_only_template_passes, test_error_paths_clear, test_no_api_no_lean,
-        test_generic_source_agnostic,
+        test_independent_of_repo_examples, test_generic_source_agnostic,
     ]
     for t in tests:
         print(t.__name__)
