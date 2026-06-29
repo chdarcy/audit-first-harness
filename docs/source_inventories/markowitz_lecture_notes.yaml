@@ -1,0 +1,345 @@
+# Source theorem inventory — Markowitz mean–variance portfolio theory.
+#
+# Content-bearing source-intake artifact (first reading pass). This is a TRIAGE document: it lists
+# candidate formalisation targets, their dependencies, difficulty, and risks, and a recommended
+# order. NOTHING here is proved, mapped, or verified — recording a result does not assert it is true
+# or correctly formalised. No Lean / theorem card / mapping / mutant is created by this file.
+
+schema_version: "0.1.0"
+record_type: "source_theorem_inventory"
+
+source:
+  source_id: "markowitz_lecture_notes"
+  source_file: "examples/markowitz_lecture_notes/source.tex"
+  source_kind: "lecture_notes"
+  source_title: "Markowitz Mean–Variance Portfolio Theory (Lecture Notes for an MSc in Mathematics)"
+  notes: >-
+    The source TeX has been copied to the canonical path examples/markowitz_lecture_notes/source.tex
+    (byte-identical to the working-tree file markowitz_lecture_notes.tex, which remains untracked at
+    the repo root and is not committed). 632 lines, definition–theorem–proof style.
+
+global_context:
+  mathematical_domain: >-
+    Mean–variance portfolio optimisation. The core results are linear algebra over a real symmetric
+    positive-definite matrix (quadratic-form minimisation under affine constraints); §1 sits in
+    multivariate L^2 probability, and §7 (CAPM) sits in equilibrium economics. The probabilistic and
+    algebraic layers meet at one explicit ABSTRACTION BOUNDARY (see standing_assumptions + Prop psd).
+  main_objects:
+    - "covariance matrix Sigma in R^{n x n}, symmetric positive definite (the central object)"
+    - "mean/return vector mu in R^n; ones vector 1 = (1,...,1)^T"
+    - "portfolio weight vector w in R^n with budget constraint w^T 1 = 1 (short selling allowed)"
+    - "scalars A = 1^T Sigma^{-1} mu, B = mu^T Sigma^{-1} mu, C = 1^T Sigma^{-1} 1, D = BC - A^2"
+    - "target expected return m in R; risk-free rate r_f in R; excess-return vector e = mu - r_f 1"
+    - "frontier portfolio w*(m); GMVP w_g; tangency portfolio w_T; market portfolio w_M"
+  standing_assumptions:
+    - "n finite, single-period model (finite-dimensional throughout)"
+    - "non-degeneracy (Assumption ass:nondeg): Sigma is positive definite (hence invertible)"
+    - "non-degeneracy: mu is NOT proportional to the ones vector 1 (needed for D > 0 and feasibility)"
+    - "budget constraint w^T 1 = 1; short selling allowed (w_i may be negative)"
+    - "ABSTRACTION BOUNDARY: §1 defines Sigma probabilistically (Sigma = Cov of L^2 returns); §2-§6 use
+       Sigma only as a given symmetric positive-definite matrix. The recommended first pass formalises
+       the ALGEBRAIC layer (Sigma a given SPD matrix) and treats the probabilistic layer as a separate,
+       deferred bridge — this choice is recorded explicitly, not made silently."
+  notation:
+    - symbol: "Sigma"
+      meaning: "covariance matrix (§1, probabilistic) / a given symmetric positive-definite matrix (§2+, algebraic)"
+      ambiguity: "OVERLOADED across the abstraction boundary: same symbol, two readings. Sigma^{-1} used freely (relies on positive definiteness)."
+    - symbol: "1 (ones vector) vs 1 (scalar)"
+      meaning: "ones vector (1,...,1)^T; the RHS scalar 1 in the budget/linear system"
+      ambiguity: "the budget constraint w^T 1 = 1 mixes the ones vector and the scalar 1; must be disambiguated in any formalisation"
+    - symbol: "A, B, C, D"
+      meaning: "scalars A = 1^T Sigma^{-1} mu, B = mu^T Sigma^{-1} mu, C = 1^T Sigma^{-1} 1, D = BC - A^2"
+      ambiguity: "single-letter scalars; A also appears as a matrix block in the dual 2x2 system (Thm frontier) — same letter, different role"
+    - symbol: "<x,y>_{Sigma^{-1}} := x^T Sigma^{-1} y"
+      meaning: "the Sigma^{-1}-weighted inner product (genuine inner product because Sigma^{-1} is SPD)"
+      ambiguity: "implicit; the Cauchy–Schwarz argument for Lemma D depends on this being a genuine inner product"
+    - symbol: "sigma^2(m)"
+      meaning: "the OPTIMAL value of the minimisation problem at target m (a function of m), not an arbitrary variance"
+      ambiguity: "couples an algebraic identity to the optimisation theorem; sigma is also the std-dev coordinate of the (sigma, m) plane"
+    - symbol: "e = mu - r_f 1"
+      meaning: "excess-return vector (§5+)"
+      ambiguity: "introduced mid-document; r_f is a scalar broadcast against the ones vector"
+
+candidate_targets:
+  - id: "MK-000-setup-algebraic"
+    source_ref: "§1 (def Portfolio, def Portfolio return/mean/variance), §2 (def markowitz)"
+    title: "Algebraic scaffolding: portfolio, portfolio mean/variance, the Markowitz problem"
+    role: "definition"
+    informal_statement: >-
+      Over a given symmetric positive-definite Sigma in R^{n x n} and mu, 1 in R^n: a portfolio is
+      w in R^n with w^T 1 = 1; its mean is mu_w = w^T mu and variance sigma_w^2 = w^T Sigma w; the
+      Markowitz problem with target m minimises (1/2) w^T Sigma w subject to w^T mu = m, w^T 1 = 1.
+    depends_on: []
+    likely_formalization_level: "direct"
+    difficulty: "low"
+    source_fidelity_risks:
+      - "must take Sigma as a GIVEN SPD matrix (algebraic side of the boundary), not as a Cov matrix"
+      - "budget constraint and short-selling (w unconstrained in sign) must be stated, not assumed away"
+      - "the 1/2 normalisation in the objective is harmless but must be carried consistently"
+    proof_risks:
+      - "none (definitions only)"
+    recommended_status: "first_target"
+    notes: "Prerequisite scaffolding for every algebraic target below; no theorem content of its own."
+
+  - id: "MK-001-setup-probabilistic"
+    source_ref: "§1 (def Return vector, def Mean vector and covariance matrix)"
+    title: "Probabilistic setup: L^2 returns, mu = E[R], Sigma = Cov(R)"
+    role: "definition"
+    informal_statement: >-
+      Returns R_i are square-integrable random variables; mu_i = E[R_i], Sigma_ij = Cov(R_i, R_j),
+      with mu = E[R], Sigma = E[(R-mu)(R-mu)^T].
+    depends_on: []
+    likely_formalization_level: "requires_prior_library"
+    difficulty: "high"
+    source_fidelity_risks:
+      - "crosses the abstraction boundary: requires Mathlib L^2 / probability machinery (random vectors, covariance)"
+      - "only needed if the probabilistic origin of Sigma is to be formalised faithfully; otherwise deferred"
+    proof_risks:
+      - "none (definitions), but the supporting library surface is large"
+    recommended_status: "defer"
+    notes: "Defer unless/until a probabilistic->algebraic bridge (MK-002) is explicitly in scope."
+
+  - id: "MK-002-cov-psd"
+    source_ref: "prop:psd (§1)"
+    title: "Covariance matrix is symmetric PSD; positive definite under non-degeneracy"
+    role: "lemma"
+    informal_statement: >-
+      Sigma is symmetric and positive semidefinite; if no non-trivial linear combination of the
+      returns is almost surely constant, Sigma is positive definite.
+    depends_on:
+      - "MK-001-setup-probabilistic"
+    likely_formalization_level: "requires_prior_library"
+    difficulty: "high"
+    source_fidelity_risks:
+      - "HIGH: this IS the abstraction boundary — x^T Sigma x = Var(x^T R) >= 0 ties PSD to probability"
+      - "the PD hypothesis 'no non-trivial combination is a.s. constant' is a probabilistic statement; easy to mis-state as a purely algebraic full-rank condition"
+      - "non-degeneracy (Assumption ass:nondeg) is later ASSUMED algebraically; this prop is the only place it is justified probabilistically"
+    proof_risks:
+      - "needs Var(x^T R) >= 0 and the a.s.-constant characterisation of Var = 0 (L^2 machinery)"
+    recommended_status: "split"
+    notes: >-
+      Split: (a) an algebraic version 'Sigma SPD => the quadratic form is nonneg' is trivial and not
+      worth a target; (b) the faithful probabilistic version is the real content and is deferred.
+      Recommended first pass: ASSUME Sigma SPD (Assumption ass:nondeg) and skip this bridge.
+
+  - id: "MK-003-lemma-D-positive"
+    source_ref: "lem:D (§2)"
+    title: "Discriminant positivity: C > 0, B > 0 and D = BC - A^2 > 0"
+    role: "lemma"
+    informal_statement: >-
+      For SPD Sigma and mu not proportional to 1, with A = 1^T Sigma^{-1} mu, B = mu^T Sigma^{-1} mu,
+      C = 1^T Sigma^{-1} 1: C > 0, B > 0, and D := BC - A^2 > 0 (strict). Hence the dual 2x2 system
+      has a unique solution lambda = (Cm - A)/D, gamma = (B - Am)/D.
+    depends_on:
+      - "MK-000-setup-algebraic"
+    likely_formalization_level: "algebraic_abstraction"
+    difficulty: "medium"
+    source_fidelity_risks:
+      - "the strict inequality D > 0 depends critically on 'mu not proportional to 1' (the Cauchy–Schwarz equality case); dropping this hypothesis makes the claim false / the system singular"
+      - "C > 0, B > 0 rely on Sigma^{-1} being SPD (i.e. Sigma SPD)"
+      - "uses the Sigma^{-1}-weighted inner product; must be set up as a genuine inner product"
+    proof_risks:
+      - "Cauchy–Schwarz STRICTNESS / equality condition (Mathlib: inner_mul_le_norm_mul_norm + the equality characterisation) — the strict case is the delicate part"
+      - "relating A^2 < BC to linear independence of mu and 1 in the weighted inner product"
+    recommended_status: "first_target"
+    notes: >-
+      RECOMMENDED FIRST PROOF TARGET. Small, purely algebraic (no probability, no optimisation),
+      self-contained over R^n with Sigma SPD, and high reuse value (it underpins invertibility of the
+      dual system and the frontier being a genuine hyperbola). Well within Mathlib's PD-matrix and
+      Cauchy–Schwarz support.
+
+  - id: "MK-004-frontier-solution"
+    source_ref: "thm:frontier (eq:wsol) (§2)"
+    title: "Frontier portfolio: existence, uniqueness, and closed form via KKT"
+    role: "theorem"
+    informal_statement: >-
+      Under non-degeneracy the Markowitz problem has a unique solution for every m, given by
+      w*(m) = lambda Sigma^{-1} mu + gamma Sigma^{-1} 1 with (lambda, gamma) solving the dual system.
+    depends_on:
+      - "MK-000-setup-algebraic"
+      - "MK-003-lemma-D-positive"
+    likely_formalization_level: "requires_prior_library"
+    difficulty: "very_high"
+    source_fidelity_risks:
+      - "EXISTENCE+UNIQUENESS claim: feasible set non-empty for every m requires mu not proportional to 1 (else the two affine constraints can be inconsistent)"
+      - "the source uses KKT necessity+sufficiency for affine constraints; faithful capture needs the right optimality conditions, not just the stationarity algebra"
+    proof_risks:
+      - "convex-optimisation / KKT machinery is thin in Mathlib; strict convexity + coercivity + unique-minimiser-on-closed-affine-set is nontrivial to assemble"
+    recommended_status: "split"
+    notes: >-
+      Split into (a) DEFINE w*(m) by the closed-form expression and prove it is FEASIBLE and
+      STATIONARY (pure algebra, tractable), and (b) prove it is the UNIQUE GLOBAL MINIMISER (the hard
+      optimisation half). Many downstream targets only need (a).
+
+  - id: "MK-005-frontier-parabola"
+    source_ref: "thm:parabola (eq:parabola) (§3)"
+    title: "Minimum-variance frontier equation: sigma^2(m) = (Cm^2 - 2Am + B)/D (hyperbola)"
+    role: "theorem"
+    informal_statement: >-
+      The optimal variance is sigma^2(m) = (C m^2 - 2 A m + B)/D = 1/C + (C/D)(m - A/C)^2, so the
+      frontier is the right branch of a hyperbola in the (sigma, m) plane.
+    depends_on:
+      - "MK-004-frontier-solution"
+      - "MK-003-lemma-D-positive"
+    likely_formalization_level: "algebraic_abstraction"
+    difficulty: "medium"
+    source_fidelity_risks:
+      - "sigma^2(m) is the OPTIMAL value (ties this identity to MK-004); stating it about an arbitrary w would be unfaithful"
+      - "the hyperbola rearrangement needs D > 0 and C > 0 (from MK-003)"
+    proof_risks:
+      - "completing the square (algebraic, low) once the closed form and lambda,gamma are available"
+    recommended_status: "later"
+    notes: "Clean algebraic identity once MK-004(a) (closed form) and MK-003 are in place."
+
+  - id: "MK-006-gmvp"
+    source_ref: "cor:gmvp (§3)"
+    title: "Global minimum-variance portfolio: m_g = A/C, sigma_g^2 = 1/C, w_g = (1/C) Sigma^{-1} 1"
+    role: "corollary"
+    informal_statement: >-
+      The GMVP has expected return A/C, variance 1/C, and weights w_g = Sigma^{-1} 1 / (1^T Sigma^{-1} 1).
+    depends_on:
+      - "MK-005-frontier-parabola"
+    likely_formalization_level: "algebraic_abstraction"
+    difficulty: "medium"
+    source_fidelity_risks:
+      - "'minimiser of m -> sigma^2(m)' must be the frontier-variance function from MK-005"
+      - "n-asset generalisation of the existing two-asset minimum-variance result (do NOT conflate; this inventory does not touch existing targets)"
+    proof_risks:
+      - "minimise a strictly convex scalar quadratic (low)"
+    recommended_status: "later"
+    notes: "The general GMVP; a strict generalisation of the already-worked two-asset minimum-variance case."
+
+  - id: "MK-007-two-fund-separation"
+    source_ref: "thm:twofund (§4)"
+    title: "Two-fund separation: every frontier portfolio is an affine combination of two"
+    role: "theorem"
+    informal_statement: >-
+      For m1 != m2, w*(m) = alpha w*(m1) + (1-alpha) w*(m2) with alpha = (m - m2)/(m1 - m2); i.e.
+      m -> w*(m) is affine, so two frontier funds generate the whole frontier.
+    depends_on:
+      - "MK-004-frontier-solution"
+      - "MK-003-lemma-D-positive"
+    likely_formalization_level: "algebraic_abstraction"
+    difficulty: "medium"
+    source_fidelity_risks:
+      - "needs the closed form w*(m) = a*m + b (affine in m); only MK-004(a) is required, not the optimisation half"
+      - "the affine-combination weights must sum to 1 (still a valid portfolio)"
+    proof_risks:
+      - "pure linear algebra (affineness); low — possibly the second-easiest proof target after MK-003"
+    recommended_status: "later"
+    notes: >-
+      Could be promoted to an EARLY target: if w*(m) is taken as a DEFINITION (the closed form), the
+      separation theorem is a short affineness argument independent of the optimisation proof.
+
+  - id: "MK-008-risk-free-frontier-cml"
+    source_ref: "thm:rf (eq:cml) (§5)"
+    title: "Frontier with a risk-free asset; the Capital Market Line"
+    role: "theorem"
+    informal_statement: >-
+      With a riskless asset r_f and excess returns e = mu - r_f 1, the optimal risky weights are
+      w* = (m - r_f) Sigma^{-1} e / (e^T Sigma^{-1} e), and the frontier is the pair of half-lines
+      m = r_f +/- sigma sqrt(e^T Sigma^{-1} e) (the CML is the upper one).
+    depends_on:
+      - "MK-000-setup-algebraic"
+    likely_formalization_level: "requires_prior_library"
+    difficulty: "high"
+    source_fidelity_risks:
+      - "reformulation to a SINGLE affine constraint (excess return); the risk-free weight w_0 = 1 - w^T 1 is implicit"
+      - "the +/- half-lines and selecting the upper (CML) branch (sigma >= 0)"
+      - "needs e^T Sigma^{-1} e > 0, i.e. mu != r_f 1"
+    proof_risks:
+      - "single-constraint Lagrangian + uniqueness (same optimisation gap as MK-004)"
+    recommended_status: "later"
+
+  - id: "MK-009-one-fund-tangency"
+    source_ref: "thm:onefund (§6), def Tangency portfolio"
+    title: "One-fund separation and the tangency portfolio"
+    role: "theorem"
+    informal_statement: >-
+      If A != C r_f, the tangency portfolio is w_T = Sigma^{-1}(mu - r_f 1)/(A - C r_f), and every
+      efficient portfolio is a combination of the risk-free asset and w_T alone.
+    depends_on:
+      - "MK-008-risk-free-frontier-cml"
+    likely_formalization_level: "requires_prior_library"
+    difficulty: "high"
+    source_fidelity_risks:
+      - "the hypothesis A != C r_f (normalisation well-defined)"
+      - "'tangency' is defined geometrically (CML touches the risky hyperbola); the algebraic w_T must be shown to match that geometric definition"
+    proof_risks:
+      - "depends on MK-008; normalisation algebra is low once the direction Sigma^{-1} e is fixed"
+    recommended_status: "later"
+
+  - id: "MK-010-tangency-max-sharpe"
+    source_ref: "cor (Tangency maximises Sharpe ratio) (§6)"
+    title: "Tangency portfolio maximises the Sharpe ratio"
+    role: "corollary"
+    informal_statement: >-
+      Among fully invested risky portfolios, w_T maximises S(w) = (w^T mu - r_f)/sqrt(w^T Sigma w).
+    depends_on:
+      - "MK-009-one-fund-tangency"
+    likely_formalization_level: "requires_prior_library"
+    difficulty: "high"
+    source_fidelity_risks:
+      - "scale-invariance of S and reduction from {w^T 1 = 1} to all w != 0"
+      - "equality case of the (generalised Cauchy–Schwarz / Kantorovich) bound identifies w_T"
+    proof_risks:
+      - "Kantorovich / generalised Cauchy–Schwarz inequality with its equality condition (delicate in Mathlib)"
+    recommended_status: "defer"
+
+  - id: "MK-011-capm-sml"
+    source_ref: "thm:capm (§7)"
+    title: "Security market line (CAPM): mu_i - r_f = beta_i (mu_M - r_f)"
+    role: "theorem"
+    informal_statement: >-
+      In equilibrium the tangency portfolio equals the market portfolio, and every asset satisfies
+      mu_i - r_f = beta_i (mu_M - r_f) with beta_i = Cov(R_i, R_M)/Var(R_M).
+    depends_on:
+      - "MK-009-one-fund-tangency"
+      - "MK-001-setup-probabilistic"
+    likely_formalization_level: "defer"
+    difficulty: "very_high"
+    source_fidelity_risks:
+      - "HIGHEST: the statement RELIES ON SURROUNDING NARRATIVE — economic equilibrium assumptions ('all investors share beliefs', 'market clearing') that are NOT mathematically stated in the source"
+      - "the key step w_T = w_M (tangency = market portfolio) is an ECONOMIC POSTULATE, not a derived mathematical fact"
+      - "mixes probabilistic (Cov/Var, beta) and algebraic content; the source gives only a 'proof sketch'"
+    proof_risks:
+      - "the source proof is explicitly a SKETCH; equilibrium/market-clearing is not formalised"
+    recommended_status: "defer"
+    notes: "Out of scope: requires formalising an economics equilibrium model the source does not state."
+
+recommended_sequence:
+  - target_id: "MK-000-setup-algebraic"
+    reason: "Algebraic scaffolding (Sigma SPD, mu, 1, A/B/C/D, portfolio, mean/variance) needed to state everything else; no probability."
+  - target_id: "MK-003-lemma-D-positive"
+    reason: "Recommended first proof target: small, self-contained Cauchy–Schwarz lemma (D > 0), high reuse, no optimisation or probability."
+  - target_id: "MK-007-two-fund-separation"
+    reason: "Short affineness argument if the closed-form w*(m) is taken as a definition; exercises the frontier algebra without the optimisation proof."
+  - target_id: "MK-004-frontier-solution"
+    reason: "The optimisation core; do part (a) feasibility+stationarity first, defer (b) global-uniqueness until convex-optimisation support is in place."
+  - target_id: "MK-005-frontier-parabola"
+    reason: "Algebraic frontier-variance identity (complete the square) once MK-003 and MK-004(a) hold."
+  - target_id: "MK-006-gmvp"
+    reason: "GMVP closed form follows from MK-005; the n-asset generalisation of the existing two-asset case."
+  - target_id: "MK-008-risk-free-frontier-cml"
+    reason: "Begins the risk-free thread (CML); reuses the single-constraint optimisation pattern."
+  - target_id: "MK-009-one-fund-tangency"
+    reason: "Tangency portfolio / one-fund separation, building on MK-008."
+
+out_of_scope_for_first_pass:
+  - "MK-011 CAPM / security market line (relies on unstated equilibrium economics; source proof is a sketch)"
+  - "MK-010 tangency-maximises-Sharpe (Kantorovich equality condition)"
+  - "MK-002 / MK-001 probabilistic foundations (L^2 returns, Cov->PSD bridge) unless a probabilistic bridge is explicitly scoped"
+  - "MK-004(b) global existence+uniqueness via full KKT/convex-optimisation machinery"
+  - "the §8 TikZ worked-picture figure (illustration, not a theorem)"
+  - "any Lean, theorem card, formal mapping, mutant, or Comparator artifact (this is intake only)"
+
+audit:
+  created_by: "audit-first-harness source intake (this milestone; human-reviewed before any promotion)"
+  created_date: "2026-06-29"
+  content_bearing: true
+  notes: >-
+    Triage only — no result here is proved, mapped, or verified. The central source-fidelity decision
+    is the probabilistic/algebraic ABSTRACTION BOUNDARY: the recommended first pass formalises the
+    algebraic layer (Sigma a given SPD matrix) and defers the probabilistic layer (MK-001/MK-002) and
+    the equilibrium layer (MK-011). Promoting any candidate into a source-formalisation record /
+    theorem card / mapping / Lean proof is a separate, explicitly-approved step.

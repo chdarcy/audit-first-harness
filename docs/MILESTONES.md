@@ -156,6 +156,19 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   theorem card and formal mapping and does not replace them, the fidelity review, or the
   source-fidelity review gate. **Generic infrastructure only: no real source-specific record was
   added (template only), and no external/uploaded source content was read, imported, or encoded.**
+- **First content-bearing source intake (Markowitz inventory)** — the first use of the intake layer on
+  a real source. Added `docs/source_inventories/` (a generic `README.md` + the content-bearing
+  `markowitz_lecture_notes.yaml`, `record_type: source_theorem_inventory`). The inventory triages the
+  source into **12 candidate targets** with dependencies, difficulty, and **separately recorded
+  source-fidelity vs proof risks**; it recommends a conservative first pass on the **algebraic** layer
+  (`MK-000` scaffolding, then `MK-003` — the `D = BC − A² > 0` Cauchy–Schwarz lemma — as the first
+  proof target) and explicitly **defers** the probabilistic foundations (`MK-001/002`), the full
+  KKT/optimisation uniqueness, and the **CAPM** result (relies on unstated equilibrium economics). The
+  central recorded decision is the **probabilistic↔algebraic abstraction boundary**. This is a
+  source-reading artifact only — **nothing is proved, mapped, or verified**; no Lean, theorem card,
+  mapping, mutant, or Comparator file was created, and the generic source-agnostic
+  `docs/source_formalizations/` layer was left untouched. The source TeX itself was **not** copied into
+  the repo (a copy to `examples/markowitz_lecture_notes/source.tex` is proposed, pending approval).
 
 ---
 
