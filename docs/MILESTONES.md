@@ -180,6 +180,18 @@ closed-loop controller (ARCHITECTURE §12, §20.1) remains future research.
   added `docs/ROADMAP.md` for the active next steps; and **archived** `docs/GAP_ANALYSIS.md` as a
   historical snapshot (no longer the active roadmap). Docs-only: no Lean, theorem card, mapping,
   mutant, Comparator, script, or source-content change.
+- **Markowitz MK-003 theorem-card metadata** — promoted the first Markowitz proof target from its
+  `ready_for_card` source-formalisation record into a source-side **theorem card**:
+  `docs/theorem_index.yaml` entry `thm:markowitz_lemma_d_positive` (Lemma D positivity — `C>0`,
+  `B>0`, `D=BC−A²>0` under SPD `Sigma` and `mu` not proportional to the ones vector). Source-side
+  only, following the `auto`/`curated` convention (judge-visible fields kept to clean source maths;
+  planning/status in non-judge-visible `notes`). **No `formal_mapping.yaml` entry was added**: a
+  draft/unimplemented mapping cannot pass `validate_mapping.py` (which requires an existing Lean
+  declaration, Comparator config, and review file, with no draft state). Recorded the proposed —
+  **not created** — future target `MarkowitzLemmaDPositive`. No Lean, proof, Comparator, judge
+  package, or promotion gate exists for this target; the concrete Lean encoding remains open;
+  MK-002 / probabilistic covariance deferred; dual-system uniqueness split off. The smallest
+  follow-up (a draft-mapping lifecycle in `validate_mapping.py`) is recorded in `docs/ROADMAP.md`.
 
 ---
 

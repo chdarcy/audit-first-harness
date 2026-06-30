@@ -89,3 +89,51 @@ entries:
         (Mathlib/NumberTheory/Real/Irrational.lean). Mapped local declaration:
         AuditHarness.gold_irrational_sqrt_two (a thin wrapper). Not an original finance theorem;
         a reference fixture for source-to-Lean fidelity testing.
+
+  thm:markowitz_lemma_d_positive:
+    auto:
+      source_file: examples/markowitz_lecture_notes/source.tex
+      env: lemma
+      title: "Invertibility of the dual system"
+      line_start: 240
+      line_end: 245
+      equation_labels: []
+      cross_refs: []
+      body_tex: |
+        Let $D := BC - A^2$. Under Assumption~\ref{ass:nondeg} we have $C > 0$ and
+        $D > 0$. In particular the linear system in Theorem~\ref{thm:frontier} has a
+        unique solution
+        \[
+        \lambda = \frac{Cm - A}{D}, \qquad \gamma = \frac{B - Am}{D}.
+        \]
+    curated:
+      paraphrase: >-
+        For a real symmetric positive-definite matrix Sigma in R^{n x n} (with n finite and n > 0)
+        and vectors mu, 1 in R^n where mu is not a scalar multiple of the ones vector 1, the source
+        defines A = 1^T Sigma^{-1} mu, B = mu^T Sigma^{-1} mu, C = 1^T Sigma^{-1} 1, and D = BC - A^2.
+        For the planned MK-003 target we surface C > 0, B > 0, and D > 0 (all strict). The source
+        Lemma D statement advertises C > 0 and D > 0; B > 0 appears in the proof and is recorded as a
+        proof subclaim / reusable positivity fact in the source-formalisation record.
+      informal_assumptions:
+        - "Sigma is a real symmetric positive-definite n x n matrix (n finite, n > 0)"
+        - "mu is not proportional to the ones vector 1 (since 0 is proportional to every vector, this gives mu != 0)"
+        - "the ones vector 1 is nonzero (a consequence of n > 0)"
+        - "scalars are real; Sigma^{-1} exists and is symmetric positive definite"
+      notes: >-
+        [NOT judge-visible] First Markowitz proof target (source-formalisation entry
+        MK-003-lemma-D-positive). Source-formalisation record:
+        docs/source_formalizations/markowitz_mk003_lemma_D_positive.yaml; intake/triage:
+        docs/source_inventories/markowitz_lecture_notes.yaml. Planning status: SOURCE CARD ONLY.
+        There is NO Lean declaration, NO formal proof, NO formal_mapping.yaml entry, NO Comparator
+        artifact, NO source-fidelity judge package, and NO promotion gate has run for this target.
+        Proposed (NOT created) future formal-mapping target name MarkowitzLemmaDPositive (proposed Lean
+        module AuditHarness.MarkowitzLemmaDPositive / declaration markowitz_lemma_D_positive) -- a
+        formal_mapping entry is deferred because validate_mapping.py requires an existing Lean
+        declaration, Comparator config, and review file (no draft/unimplemented mapping state exists
+        yet). Preserved decisions: the public source-facing theorem stays Markowitz-shaped
+        (finite-dim real vectors + Sigma + mu + ones + A/B/C/D); the abstract real-inner-product /
+        Gram-determinant lemma is only a PROPOSED proof helper, not the public statement; the concrete
+        Lean encoding / Mathlib API choice remains OPEN. MK-002 and the probabilistic covariance
+        construction remain deferred; the 2x2 dual-system uniqueness is split off from this target
+        (positivity only). Source-fidelity caveat: the source's Lemma D STATEMENT advertises only
+        C > 0 and D > 0; B > 0 is established within its proof and is surfaced explicitly here.

@@ -20,8 +20,13 @@ inventory is proved, mapped, or verified.**
      scalars `A, B, C, D`; portfolio with budget `wᵀ1 = 1`; mean/variance).
    - `MK-003` — the `D = BC − A² > 0` (and `C > 0`, `B > 0`) Cauchy–Schwarz lemma; the recommended
      first proof target (small, purely algebraic, high reuse).
-2. **Create the theorem card + formal mapping for `MK-003`** (`docs/theorem_index.yaml`,
-   `docs/formal_mapping.yaml`), source side first, then the source↔Lean bridge.
+2. **Theorem card for `MK-003`: done.** `docs/theorem_index.yaml` entry
+   `thm:markowitz_lemma_d_positive` (source-side, unmapped). The **formal mapping is deferred**: a
+   draft `docs/formal_mapping.yaml` entry cannot pass `validate_mapping.py` yet — it requires an
+   existing Lean declaration, Comparator config, and review file, and there is no draft/unimplemented
+   mapping state. Smallest follow-up: add a draft-mapping lifecycle to `validate_mapping.py` that
+   skips the Lean/Comparator/review checks for a target explicitly marked draft, then add the
+   source↔Lean bridge for `MarkowitzLemmaDPositive`.
 3. **Write the Lean scaffolding / theorem statement** — `AuditHarness/<Target>.lean` (readable
    public statement) + a `Helpers.lean` proof module, per [`../CLAUDE.md`](../CLAUDE.md) §5.1. Do not
    weaken the statement to ease the proof.
