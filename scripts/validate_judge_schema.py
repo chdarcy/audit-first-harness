@@ -5,7 +5,7 @@ This is a **pure, offline** validator for a single structured judge result. It c
 reads no answer key, and makes no promotion decision. It only answers: *is this judge output a
 well-formed structured source-fidelity record?*
 
-Non-drift rule (see ARCHITECTURE.md §0, §9.1): the judge is a **calibrated source-fidelity
+Non-drift rule (see PROJECT_CONTEXT.md): the judge is a **calibrated source-fidelity
 reviewer, not a theorem oracle**. A `verdict: PASS` here is *source-fidelity evidence only*; it can
 never override Lean build / no-sorry / axiom audit / Comparator / guarded-equivalence results. This
 script validates the *shape* of that evidence; it does not act on it.

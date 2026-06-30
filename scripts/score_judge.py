@@ -181,7 +181,7 @@ def update_report(report_path: Path, target: str, section_md: str) -> None:
 
 
 # ===================================================================================
-# Structured judge scoring (v0.3 milestone 1b) — see ARCHITECTURE.md §10.3.
+# Structured judge scoring (v0.3 milestone 1b) — see PROJECT_CONTEXT.md
 #
 # Scores stored *structured* judge-result JSON files (schema_version 0.3.0, §9.1) against the
 # existing real/mutant answer key. It REUSES validate_judge_schema.py for schema validation and
@@ -357,7 +357,7 @@ def run_structured(args) -> int:
     summary = score_structured_records(records, answer_key)
     summary["scored_utc"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     summary["note"] = ("judge-reliability metrics only; not theorem truth and not a promotion "
-                       "decision (see ARCHITECTURE.md §10.3)")
+                       "decision (see PROJECT_CONTEXT.md)")
     text = json.dumps(summary, indent=2, sort_keys=True)
     if args.structured_out:
         outp = Path(args.structured_out)

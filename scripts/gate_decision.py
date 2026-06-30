@@ -12,12 +12,12 @@ This script is **pure and offline**:
   - it only *reads* existing local artifacts and *writes* under `docs/promotion/`;
   - it never mutates mappings, reviews, mutants, or judge results.
 
-Core principle (see ARCHITECTURE.md §10, §11): **mutation recall and the consistency
+Core principle (see PROJECT_CONTEXT.md): **mutation recall and the consistency
 false-alarm rate measure judge reliability, not theorem truth.** A missed discriminative
 mutant is calibration evidence about the judge — it caps confidence and forces HUMAN_REVIEW;
 it is not, by itself, an infrastructure failure nor proof that the real mapping is wrong.
 
-Decision policy (deterministic, ordered — see ARCHITECTURE.md §11.2):
+Decision policy (deterministic, ordered — see PROJECT_CONTEXT.md):
   1. hard formal/integrity failure            -> BLOCK
   2. real-mapping FAIL / WARN / not-accepted  -> REVISE (FAIL) or HUMAN_REVIEW (WARN/other)
   3. weak judge calibration OR unverified formal status -> HUMAN_REVIEW (confidence capped)
@@ -61,7 +61,7 @@ PROMOTE, BLOCK, REVISE, HUMAN_REVIEW = "PROMOTE", "BLOCK", "REVISE", "HUMAN_REVI
 # Verdict buckets (kept in sync with score_judge.py).
 ACCEPT = {"PASS", "PASS_EQUIV", "PASS_PROVABLE_EQUIV"}
 
-# Comparator statuses recorded in formal_mapping.yaml (see ARCHITECTURE.md §13.4).
+# Comparator statuses recorded in formal_mapping.yaml (see PROJECT_CONTEXT.md).
 COMPARATOR_REAL = {"PASSED_REAL_LANDRUN", "PASSED_REAL_LANDRUN_BEST_EFFORT"}
 COMPARATOR_BEST_EFFORT = "PASSED_REAL_LANDRUN_BEST_EFFORT"
 COMPARATOR_FAKE = "PASSED_FAKE_LANDRUN"
@@ -79,7 +79,7 @@ JM_NOT_RUN, JM_PRESENT, JM_INVALID = "NOT_RUN", "PRESENT", "INVALID"
 # Conservative thresholds for the optional *structured* judge-scoring summary
 # (scripts/score_judge.py --structured, schema v0.3 §10.3). These mirror the strict legacy
 # thresholds above: any imperfection in judge reliability caps an otherwise-promotable target to
-# HUMAN_REVIEW. They never BLOCK and never PROMOTE on their own (ARCHITECTURE.md §11.1, §11.5).
+# HUMAN_REVIEW. They never BLOCK and never PROMOTE on their own (PROJECT_CONTEXT.md).
 # A metric that is `None` (not measured — e.g. no consistency variants) never triggers a cap.
 DEFAULT_JUDGE_METRIC_THRESHOLDS = {
     "min_schema_valid_rate": 1.0,
@@ -221,7 +221,7 @@ def _decide_formal(sig: dict, thr: dict | None = None) -> dict:
                    "this is not a high-confidence pass.")
     if rv == "PASS_EQUIV":
         cal.append("The real mapping was judged PASS_EQUIV without a built equivalence lemma; "
-                   "needs review (see ARCHITECTURE.md §20.6).")
+                   "needs review (see PROJECT_CONTEXT.md).")
     if ((rv == "PASS_PROVABLE_EQUIV" or sig.get("mapping_verdict") == "PASS_PROVABLE_EQUIV")
             and sig.get("equivalence_check_status") != "PASS"):
         cal.append("PASS_PROVABLE_EQUIV is claimed but the equivalence check is not a recorded "
@@ -270,7 +270,7 @@ def _decide_formal(sig: dict, thr: dict | None = None) -> dict:
 # Conservative structured-judge-metric cap (v0.3 milestone 1c)
 #
 # The optional structured-scoring summary (score_judge.py --structured, §10.3) is a *global*
-# judge-reliability signal. Per ARCHITECTURE.md §11.1 / §11.5 it may only **cap an otherwise-
+# judge-reliability signal. Per PROJECT_CONTEXT.md it may only **cap an otherwise-
 # promotable target to HUMAN_REVIEW**: it never produces BLOCK, never PROMOTE, and never upgrades a
 # non-PROMOTE formal decision. A `None` metric (not measured) never triggers a cap. The judge is a
 # calibrated source-fidelity reviewer, not a theorem oracle.
@@ -642,7 +642,7 @@ def main() -> int:
     ap.add_argument("--judge-metrics", metavar="PATH",
                     help="optional structured judge-scoring summary JSON (score_judge.py "
                          "--structured); conservative-only: it may cap an otherwise-promotable "
-                         "target to HUMAN_REVIEW, never BLOCK or PROMOTE (ARCHITECTURE.md §11.5)")
+                         "target to HUMAN_REVIEW, never BLOCK or PROMOTE (PROJECT_CONTEXT.md)")
     ap.add_argument("--pipeline-status", metavar="PATH",
                     help="explicit structured pipeline_status.json (rebuild_pipeline.py "
                          "--pipeline-status-out). Preferred over the markdown report: it is "

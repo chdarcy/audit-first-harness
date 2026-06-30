@@ -12,7 +12,7 @@ model/API call** and **no API key**:
 
 It only *transforms and evaluates* existing artifacts; it does **not** run the judge. Live judging
 stays opt-in in `run_judge.py --execute-api`. The structured records are **source-fidelity
-evidence, not theorem truth** (ARCHITECTURE.md §0): via the existing conservative gate they may only
+evidence, not theorem truth** (PROJECT_CONTEXT.md): via the existing conservative gate they may only
 cap promotion to HUMAN_REVIEW (§11.5); they never override the Lean build, no-sorry, axiom audit,
 Comparator, or guarded-equivalence results.
 
@@ -52,9 +52,9 @@ RESULTS_DIR = ROOT / "docs" / "judge_results"
 PROMOTION_DIR = ROOT / "docs" / "promotion"
 
 NOTE_EVIDENCE = ("Source-fidelity evidence only; not theorem truth and not a promotion decision "
-                 "(ARCHITECTURE.md §10.4/§10.5). No model/API was called.")
+                 "(PROJECT_CONTEXT.md). No model/API was called.")
 NOTE_RELIABILITY = ("judge-reliability metrics only; not theorem truth and not a promotion decision "
-                    "(ARCHITECTURE.md §10.3).")
+                    "(PROJECT_CONTEXT.md).")
 
 
 class WorkflowError(Exception):

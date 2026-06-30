@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Source-fidelity review decision layer — the *candidate* gate (ARCHITECTURE.md §11.4).
+"""Source-fidelity review decision layer — the *candidate* gate (PROJECT_CONTEXT.md).
 
 This is the **pre-proof** gate: given the structured judge evidence for a target (the real
 candidate's verdict + concerns, plus the judge's calibration over that target's mutants), it decides
@@ -7,7 +7,7 @@ whether a proposed source-to-Lean mapping is faithful enough to be **worth provi
 hard Lean proof work. It is distinct from the **promotion** gate (`gate_decision.py`, §11.3, post-
 Comparator), which consumes formal build/axiom/Comparator status.
 
-Hard boundaries (ARCHITECTURE.md §0):
+Hard boundaries (PROJECT_CONTEXT.md):
   - This is **source-fidelity review evidence, not theorem truth** and not a formal-correctness
     result. It answers "does the Lean statement match the source claim, and how much do we trust the
     judge here?" — never "is the theorem true?".

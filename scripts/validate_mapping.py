@@ -83,7 +83,7 @@ ACCEPT_VERDICTS = {"PASS", "PASS_EQUIV", "PASS_PROVABLE_EQUIV"}
 def equivalence_evidence_error(equivalence) -> str | None:
     """None if `equivalence` is structurally valid PASS_PROVABLE_EQUIV evidence, else an error.
 
-    Required shape (see ARCHITECTURE.md §20.6): {kind: provable_equiv, lemma: <fqn>,
+    Required shape (see PROJECT_CONTEXT.md): {kind: provable_equiv, lemma: <fqn>,
     module: <module>} (notes optional). That the lemma actually *builds* is verified separately
     by scripts/check_equivalence.py; here we only check that the fields are present."""
     if not isinstance(equivalence, dict):

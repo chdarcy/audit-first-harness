@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Blinding-boundary regression tests (ARCHITECTURE.md §9).
+"""Blinding-boundary regression tests (PROJECT_CONTEXT.md).
 
 Enforces that the **judge-facing path stays blinded**: `run_judge.py` and
 `import_manual_judge_results.py` read only the membership sidecar `_targets.yaml` and must **never**

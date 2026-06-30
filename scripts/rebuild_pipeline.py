@@ -113,7 +113,7 @@ def select_targets(available: dict, target: str | None) -> dict:
 # ---------------------------------------------------------------------------
 # Structured pipeline-status output (machine-readable; consumed by gate_decision.py
 # --pipeline-status with a freshness/fingerprint check). Formal evidence only — NOT
-# source-fidelity evidence. See ARCHITECTURE.md §11.3.
+# source-fidelity evidence. See PROJECT_CONTEXT.md
 # ---------------------------------------------------------------------------
 PIPELINE_STATUS_SCHEMA = "pipeline_status.v0.1"
 
@@ -176,7 +176,7 @@ def write_pipeline_status(path: Path, doc: dict) -> None:
 
 
 # ---------------------------------------------------------------------------
-# Comparator-status writeback (opt-in; see ARCHITECTURE.md §13.4)
+# Comparator-status writeback (opt-in; see PROJECT_CONTEXT.md)
 # ---------------------------------------------------------------------------
 def writeback_precondition_error(writeback: bool, target: str | None,
                                  with_comparator: bool) -> str | None:
@@ -357,7 +357,7 @@ def stage_comparator(with_comparator: bool, target: str | None = None) -> Stage:
         return s.record(
             SKIPPED,
             "SKIPPED_COMPARATOR_TOOL_UNAVAILABLE: set COMPARATOR_BIN, COMPARATOR_LANDRUN, and "
-            "COMPARATOR_LEAN4EXPORT to the built binaries (see README / docs/COMPARATOR.md).",
+            "COMPARATOR_LEAN4EXPORT to the built binaries (see README / PROJECT_CONTEXT.md §15.3).",
         )
 
     runenv = dict(os.environ)

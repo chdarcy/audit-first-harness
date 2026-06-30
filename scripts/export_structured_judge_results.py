@@ -15,9 +15,9 @@ It calls **no model/API** and needs **no API key**. Live judging stays opt-in in
 `run_judge.py --execute-api`; this script only converts already-collected replies (a manual import,
 an API run, or a fixture). Because un-blinding requires the answer key, this lives here and **not**
 in `run_judge.py` / `import_manual_judge_results.py`, which must never read `_manifest.yaml`
-(see ARCHITECTURE.md §9, §10.4).
+(see PROJECT_CONTEXT.md).
 
-Non-drift rule (ARCHITECTURE.md §0): the judge is a calibrated source-fidelity reviewer, **not a
+Non-drift rule (PROJECT_CONTEXT.md): the judge is a calibrated source-fidelity reviewer, **not a
 theorem oracle**. These records are source-fidelity evidence only; they never override the Lean
 build / no-sorry / axiom audit / Comparator / guarded-equivalence results.
 
@@ -290,7 +290,7 @@ def main() -> int:
         out_path.parent.mkdir(parents=True, exist_ok=True)
         doc = {"schema_version": SCHEMA_VERSION, "target": args.target, "exported_utc": now,
                "note": "Source-fidelity evidence only; not theorem truth and not a promotion "
-                       "decision (ARCHITECTURE.md §10.4). No model/API was called.",
+                       "decision (PROJECT_CONTEXT.md). No model/API was called.",
                "results": records}
         out_path.write_text(json.dumps(doc, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print(f"STRUCTURED_EXPORT: wrote {len(records)} record(s) to {out_path}")
