@@ -582,12 +582,15 @@ future controller.**
   / HUMAN_REVIEW.
 - **Theorem dependency graph** (blueprint-style nodes/`depends_on`) for large projects (Markowitz).
 - **Multi-judge ensemble** — gate on consensus/disagreement when a single judge has low recall.
-- **External tooling (LeanArchitect / LeanMarathon) — evaluated, not adopted.** The LeanArchitect spike
-  was **structurally promising but not enough to justify an immediate dependency** (Mathlib coexistence
-  unproven); **LeanArchitect is not adopted yet** and **LeanMarathon is deferred / not duplicated**.
-  This project **remains an audit layer**; front-pipeline simplification means reducing duplicated
-  structural fields, **not deleting source-fidelity evidence**. The closed-loop controller remains
-  future research (§24).
+- **Blueprint/orchestration exploration note.** We ran a bounded design/mockup and scratch-spike
+  exploration of LeanArchitect and LeanMarathon. LeanArchitect was structurally promising as a
+  Lean-side declaration/DAG/status extractor, but the expected near-term reduction was modest,
+  Mathlib/toolchain coexistence was not yet proven for this repo, and it does not supply
+  source-fidelity evidence. LeanMarathon overlaps with the closed-loop orchestration problem (§24) but
+  is intentionally not duplicated or adopted here: it is heavier operational infrastructure and does
+  not replace this repo's audit layer. Current policy: use the ideas where helpful, keep
+  source-fidelity and audit evidence in this harness, and do not add either dependency unless a later
+  targeted spike justifies it.
 
 ## 26. Milestone history (condensed; short commit hashes)
 
