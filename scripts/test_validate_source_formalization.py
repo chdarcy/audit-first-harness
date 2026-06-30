@@ -109,6 +109,16 @@ def test_blank_target_links_allowed() -> None:
         check(f"blank target_links allowed for {status}", errs(d) == [], str(errs(d)))
 
 
+# 8b — a pre-Lean, source-fidelity-only record (NO target_links, NO Lean structure) validates.
+#      target_links is now OPTIONAL: a record may omit it entirely and still pass.
+def test_pre_lean_no_target_links_validates() -> None:
+    d = minimal_real(); del d["target_links"]
+    d["proof_decomposition"]["subtargets"][0].pop("depends_on", None)
+    check("pre-Lean record omitting target_links validates", errs(d) == [], str(errs(d)))
+    d2 = minimal_real(); d2["target_links"] = "nope"
+    check("non-dict target_links still rejected", any("target_links" in x for x in errs(d2)))
+
+
 # 9 — template file checked structurally (passes as template; would fail the content checks as "real")
 def test_template_checked_structurally() -> None:
     import yaml
@@ -219,7 +229,8 @@ def main() -> int:
         test_valid_minimal_passes, test_missing_top_level_fails, test_missing_source_metadata_fails,
         test_missing_symbols_fails, test_missing_assumptions_and_conclusion_fails,
         test_invalid_ambiguity_status_fails, test_invalid_review_status_fails,
-        test_blank_target_links_allowed, test_template_checked_structurally,
+        test_blank_target_links_allowed, test_pre_lean_no_target_links_validates,
+        test_template_checked_structurally,
         test_template_only_dir_passes_hermetic, test_live_dir_validates_clean,
         test_error_paths_clear, test_no_api_no_lean,
         test_independent_of_repo_examples, test_generic_source_agnostic,

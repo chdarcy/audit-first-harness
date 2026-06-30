@@ -52,9 +52,12 @@ KNOWN_SOURCE_KINDS = {"paper", "lecture_notes", "textbook", "note", "problem_she
 # Required top-level keys (must be present on every record, including the template skeleton).
 TOP_LEVEL = [
     "schema_version", "record_type", "source", "informal_claim", "symbols", "assumptions",
-    "conclusion", "formalization_choices", "ambiguities", "proof_decomposition", "target_links",
+    "conclusion", "formalization_choices", "ambiguities", "proof_decomposition",
     "review", "audit",
 ]
+# `target_links` is intentionally NOT required: it holds post-Lean structural cross-references
+# (lean module/declaration, theorem-card / formal-mapping ids, review path). A pre-Lean record may
+# OMIT it entirely — a source-formalisation record guards source fidelity, not Lean structure.
 
 
 def _nonempty(value) -> bool:
@@ -192,9 +195,10 @@ def validate_record(doc, label: str, *, real: bool):
         elif not any(isinstance(s, dict) and _nonempty(s.get("id")) and _nonempty(s.get("informal_goal")) for s in subs):
             err("at least one proof subtarget must have an 'id' and an 'informal_goal'")
 
-    # 12. target_links — present as a mapping, but may be blank during early stages
-    if not isinstance(doc.get("target_links"), dict):
-        err("target_links must be a mapping (it may be left blank during the early source-formalisation stage)")
+    # 12. target_links — OPTIONAL (a pre-Lean record may omit it); if present it must be a mapping.
+    if "target_links" in doc and not isinstance(doc.get("target_links"), dict):
+        err("target_links, if present, must be a mapping (it is optional in the early "
+            "source-formalisation stage and may be omitted pre-Lean)")
 
     # 13. review block — must carry a status
     rev = doc.get("review")

@@ -7,6 +7,10 @@
 # `auto:` blocks would be extracted from the source (env, title, line range, verbatim
 # body). `curated:` blocks are written by hand (paraphrase, informal assumptions, notes).
 # In this MVP the card is hand-written; see docs/templates/theorem_card.template.yaml.
+#
+# POLICY: this ledger is for ACTIVE / selected targets — an entry is created when a target enters
+# Lean formalisation and is referenced by docs/formal_mapping.yaml. It is NOT required for every
+# pre-Lean record; the canonical pre-Lean source-fidelity card is docs/source_formalizations/<id>.yaml.
 
 source_file: examples/put_call_parity/source.tex
 source_title: "Put–call payoff parity (smoke-test source)"

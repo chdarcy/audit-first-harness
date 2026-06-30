@@ -237,14 +237,19 @@ the ledger that follows:
 
 Then the ledger:
 
-- **`docs/theorem_index.yaml`** — the **source-side theorem ledger**. Each entry (`thm:<key>`) has an
+- **`docs/theorem_index.yaml`** — the **source-side theorem ledger for active / selected targets**
+  (an entry is created when a target enters formalisation and is referenced by a `formal_mapping`).
+  It is **not** mandatory for every pre-Lean record — **the canonical pre-Lean source-fidelity card is
+  the source-formalisation record** above. Each entry (`thm:<key>`) has an
   `auto` block (source-extracted / verbatim-style: `env`, `title`, `line_start/line_end`,
   `equation_labels`, `body_tex`, optional per-entry `source_file`) and a `curated` block (hand-written
   `paraphrase`, `informal_assumptions`, `notes`). Only `auto.body_tex`, `curated.paraphrase`, and
   `curated.informal_assumptions` are judge-visible — keep answer-key language (verdicts,
   "discriminative"/"consistency", approvals) **out** of those three. No Lean names, proof status,
   Comparator configs, judge verdicts, or mutation labels here.
-- **`docs/formal_mapping.yaml`** — the **source-to-Lean bridge**: which source claim → which Lean
+- **`docs/formal_mapping.yaml`** — the **post-Lean source-to-Lean bridge** for implemented /
+  near-implemented targets only (created once a Lean declaration exists or is stable — **not** pre-Lean
+  planning, and **no** draft formal-mapping lifecycle): which source claim → which Lean
   declaration/module; the Comparator triple; `verdict`; `equivalence` (null / provable_equiv lemma);
   `comparator_status`; `review` path; `state`; `human_approved`. `permitted_axioms`:
   `{propext, Quot.sound, Classical.choice}`. No full mathematics or prose review here.

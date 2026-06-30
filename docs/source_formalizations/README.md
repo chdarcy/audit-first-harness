@@ -53,7 +53,8 @@ validator). It verifies the required top-level and nested fields, the allowed en
 real records — that there is at least one symbol, one assumption, a conclusion, a formalisation
 choice, an ambiguity or risk, and a proof subtarget. It deliberately does **not** check mathematical
 correctness, the truth of the source, or whether the proposed formalisation is the *right* one.
-`target_links` may be left blank while a record is still `draft` / `ready_for_card`.
+`target_links` is **optional**: a pre-Lean record may **omit it entirely** (the validator no longer
+requires it; if present it must still be a mapping), and it is filled only once the Lean exists.
 
 These records **guard source fidelity, not Lean structure**: the structural fields (`target_links`'
 Lean module/declaration/mapping id, and a subtarget's `depends_on` / `proposed_lean_declaration`) are

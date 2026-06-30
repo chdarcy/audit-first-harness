@@ -65,18 +65,18 @@ proof_decomposition:
   subtargets:              # at least one well-formed subtarget for real records
     - id: ""               # local id for the subtarget (required: source-fidelity content)
       informal_goal: ""    # what this step must establish (required)
-      depends_on: []       # OPTIONAL structural hint — leave []; do not invent a Lean dependency DAG pre-Lean
-      proposed_lean_declaration: ""  # OPTIONAL — leave ""; do not invent Lean declaration names pre-Lean
+      # OPTIONAL post-Lean hints — OMIT pre-Lean (add `depends_on: []` / `proposed_lean_declaration: ""`
+      # only once the Lean exists; do not invent a dependency DAG or declaration names pre-Lean).
 
-# target_links are OPTIONAL structural cross-references. Leave them blank until the corresponding
-# Lean module/declaration, theorem card, or formal_mapping actually exist — do NOT invent Lean
-# structure here pre-Lean. A source-formalisation record guards source fidelity, not Lean structure.
-target_links:              # may be left blank during the early source-formalisation stage
-  theorem_card_id: ""      # docs/theorem_index.yaml entry, once created
-  formal_mapping_id: ""    # docs/formal_mapping.yaml target, once created
-  lean_module: ""          # AuditHarness/<Target>.lean, once it exists
-  lean_declaration: ""     # the public theorem declaration name, once it exists
-  fidelity_review: ""      # docs/fidelity_reviews/<Target>.md, once written
+# ---- OPTIONAL post-Lean appendix — OMIT pre-Lean; NOT required by the validator ----
+# A source-formalisation record guards source fidelity, not Lean structure, so `target_links` is
+# OPTIONAL and is normally omitted until the Lean actually exists. Add it only once the artifacts do:
+#   target_links:
+#     theorem_card_id: ""    # docs/theorem_index.yaml entry, once created
+#     formal_mapping_id: ""  # docs/formal_mapping.yaml target, once created (post-Lean)
+#     lean_module: ""        # AuditHarness/<Target>.lean, once it exists
+#     lean_declaration: ""   # the public theorem declaration name, once it exists
+#     fidelity_review: ""    # docs/fidelity_reviews/<Target>.md, once written
 
 review:
   status: ""               # draft | ready_for_card | needs_human_review | approved (required)
