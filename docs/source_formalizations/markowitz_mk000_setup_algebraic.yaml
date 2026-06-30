@@ -14,7 +14,28 @@ source:
   source_ref: "MK-000-setup-algebraic"
   source_span: "Sec.1-Sec.2 (def Portfolio; def Portfolio return/mean/variance; def Markowitz problem)"
   source_kind: "lecture_notes"
-  raw_excerpt: ""   # deferred; the canonical source is committed at the source_file path above
+  # raw_excerpt holds ONLY verbatim spans copied from examples/markowitz_lecture_notes/source.tex
+  # (source line breaks preserved; blank lines separate spans). Spans, in order, are source lines
+  # 136-139 (Portfolio/budget/short-selling), 146-147 (mean/variance), 173-175 (Markowitz problem),
+  # 197-199 (A,B,C definitions), and the sentence "Let $D := BC - A^2$." from line 240 (D definition).
+  raw_excerpt: |
+    A \emph{portfolio} is a vector of weights $\bw = (w_1,\dots,w_n)\T \in \R^n$
+    satisfying the budget constraint $\bw\T \one = \sum_{i=1}^n w_i = 1$, where
+    $w_i$ is the fraction of wealth invested in asset $i$. We allow $w_i < 0$
+    (short selling).
+
+    \mu_{\bw} := \E[R_{\bw}] = \bw\T \bmu, \qquad
+    \sigma_{\bw}^2 := \Var(R_{\bw}) = \bw\T \bSigma \bw .
+
+    \min_{\bw \in \R^n} \ \tfrac{1}{2}\, \bw\T \bSigma \bw
+    \quad \text{subject to} \quad
+    \bw\T \bmu = m, \quad \bw\T \one = 1 .
+
+    A &:= \one\T \bSigma^{-1} \bmu, \\
+    B &:= \bmu\T \bSigma^{-1} \bmu, \\
+    C &:= \one\T \bSigma^{-1} \one .
+
+    Let $D := BC - A^2$.
 
 informal_claim:
   title: "Algebraic scaffolding for mean-variance portfolio optimisation"
@@ -157,13 +178,19 @@ review:
   reviewer: ""
   date: "2026-06-30"
   notes: >-
-    Scaffolding record. No Lean declaration, theorem card, formal mapping, or proof exists. The Lean
-    representation (Mathlib Matrix/vector vs an abstract inner-product / PD bilinear form) is recorded
-    as an open ambiguity to be settled together with MK-003 before any theorem card.
+    Human review completed: changes requested. This revision addresses the first review comments by
+    adding raw source excerpts and clarifying the source-facing theorem vs proof-helper boundary. Final
+    approval for theorem-card promotion is still pending. Scaffolding record: no Lean declaration,
+    theorem card, formal mapping, or proof exists. The concrete Lean representation remains an open
+    ambiguity to be settled together with MK-003 before any theorem card.
 
 audit:
   created_by: "audit-first-harness source intake (this milestone)"
   created_date: "2026-06-30"
+  notes: >-
+    This is a clean audit-first rebuild from the source-intake records. Existing related Lean, if any,
+    is not authoritative for this target until reconciled through theorem card, formal mapping, and the
+    normal audit gates.
   source_fidelity_risks:
     - "the abstraction boundary (algebraic Sigma vs probabilistic Cov) must be carried consistently into every downstream target"
     - "short selling / sign-unconstrained weights must not be silently restricted"

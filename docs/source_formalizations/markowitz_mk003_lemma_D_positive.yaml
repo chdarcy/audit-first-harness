@@ -15,7 +15,31 @@ source:
   source_ref: "MK-003-lemma-D-positive"
   source_span: "lem:D (Sec.2, Invertibility of the dual system)"
   source_kind: "lecture_notes"
-  raw_excerpt: ""   # deferred; the canonical source is committed at the source_file path above
+  # raw_excerpt holds ONLY verbatim spans copied from examples/markowitz_lecture_notes/source.tex
+  # (source line breaks preserved; blank lines separate spans). Spans, in order, are source lines
+  # 240-242 (Lemma D statement), 249-250 (C>0 and B>0 positivity), 253-260 (Cauchy-Schwarz step and
+  # the strict conclusion), and 129-132 (Non-degeneracy: mu not proportional to the ones vector).
+  raw_excerpt: |
+    Let $D := BC - A^2$. Under Assumption~\ref{ass:nondeg} we have $C > 0$ and
+    $D > 0$. In particular the linear system in Theorem~\ref{thm:frontier} has a
+    unique solution
+
+    Since $\bSigma \succ 0$ we also have $\bSigma^{-1} \succ 0$, so
+    $C = \one\T \bSigma^{-1}\one > 0$ and $B = \bmu\T\bSigma^{-1}\bmu > 0$.
+
+    By Cauchy--Schwarz,
+    \[
+    A^2 = \inner{\bmu}{\one}_{\bSigma^{-1}}^2
+    \le \inner{\bmu}{\bmu}_{\bSigma^{-1}}\,\inner{\one}{\one}_{\bSigma^{-1}}
+    = B C,
+    \]
+    with equality if and only if $\bmu$ and $\one$ are linearly dependent.
+    Assumption~\ref{ass:nondeg} excludes that case, so $A^2 < BC$, i.e.\ $D > 0$.
+
+    The covariance matrix $\bSigma$ is positive definite (equivalently, the
+    returns are not linearly redundant in the $L^2$ sense). Moreover the assets are
+    not all identical in mean: $\bmu$ is not proportional to the vector of ones
+    $\one = (1,\dots,1)\T$.
 
 informal_claim:
   title: "Discriminant positivity (Lemma D)"
@@ -90,9 +114,9 @@ conclusion:
 formalization_choices:
   abstraction_level: "algebraic / finite-dimensional linear algebra; no probability"
   representation_choices:
-    - "SOURCE-FACING THEOREM (for fidelity): keep it Markowitz-shaped - finite-dimensional real vectors mu, 1 in R^n, a symmetric positive-definite matrix Sigma (and Sigma^{-1}), and the scalars A/B/C/D. The public statement is NOT merely an abstract inner-product inequality."
-    - "POSSIBLE PROOF HELPER (proposed, NOT implemented): a reusable abstract real-inner-product-space lemma - if x and y are linearly independent then <x,x> * <y,y> - <x,y>^2 > 0 - which the Markowitz proof would INSTANTIATE with the Sigma^{-1}-weighted inner product, x = mu, y = 1. This is a proof-engineering decomposition, not the source-facing statement."
-    - "OPEN (needs_human_review): the exact helper-lemma shape and which Mathlib Cauchy-Schwarz / inner-product API it uses, and how Sigma^{-1}-as-inner-product is presented (Mathlib Matrix vs a positive-definite bilinear form)."
+    - "SETTLED (source-fidelity decision): the public/source-facing theorem stays Markowitz-shaped - finite-dimensional real vectors mu, 1 in R^n, a symmetric positive-definite matrix Sigma (and Sigma^{-1}), and the scalars A/B/C/D. The public statement is NOT merely an abstract inner-product inequality."
+    - "SETTLED (proof-engineering permission): the proof MAY use a reusable abstract real-inner-product-space strict Cauchy-Schwarz / Gram-determinant helper - if x and y are linearly independent then <x,x> * <y,y> - <x,y>^2 > 0 - instantiated with the Sigma^{-1}-weighted inner product, x = mu, y = ones. This helper is PROPOSED, not implemented or proved."
+    - "OPEN (needs_human_review) - concrete Lean encoding: whether to implement the public Markowitz-shaped theorem directly with Mathlib Matrix/vector APIs, or through a thin wrapper / positive-definite bilinear-form / inner-product abstraction that STILL EXPOSES the Markowitz-shaped statement. Distinct from, and not resolved by, the now-settled source-facing-vs-helper boundary."
   preserved_from_source:
     - "the Sigma^{-1}-weighted inner product"
     - "the strict Cauchy-Schwarz step and its equality condition"
@@ -110,10 +134,21 @@ ambiguities:
       Markowitz source fidelity; conversely the proof should still be free to reuse an abstract helper
       lemma. The two must be kept distinct.
     resolution: >-
-      Source-facing theorem stays Markowitz-shaped (Sigma / mu / 1 / A / B / C / D over R^n); the
-      abstract '<x,x> <y,y> - <x,y>^2 > 0 for linearly independent x, y' lemma is recorded as a
-      PROPOSED proof helper to instantiate (x = mu, y = 1), not as the public statement. The exact
-      helper shape and Mathlib API still need a human decision.
+      RESOLVED (settled source-fidelity decision): the source-facing theorem stays Markowitz-shaped
+      (Sigma / mu / 1 / A / B / C / D over R^n); the abstract '<x,x> <y,y> - <x,y>^2 > 0 for linearly
+      independent x, y' lemma is a PERMITTED but proposed (not implemented) proof helper, to be
+      instantiated with the Sigma^{-1}-weighted inner product, x = mu, y = ones. This resolves ONLY the
+      source-facing-vs-helper boundary; the concrete Lean encoding remains open (see next ambiguity).
+    status: "resolved"
+  - issue: "concrete Lean encoding of the Markowitz-shaped statement (Mathlib API choice)"
+    risk: >-
+      the public Markowitz-shaped theorem could be implemented directly via Mathlib Matrix/vector APIs,
+      or through a thin wrapper / positive-definite-bilinear-form / inner-product abstraction that still
+      exposes the Markowitz-shaped statement; the choice affects proof effort and reuse but not the
+      shape of the public statement.
+    resolution: >-
+      Deferred to a human decision before the theorem card / formal mapping. Both options keep the
+      source-facing statement Markowitz-shaped, so source fidelity is unaffected by which is chosen.
     status: "needs_human_review"
   - issue: "deriving B > 0 from the non-proportionality hypothesis"
     risk: >-
@@ -126,6 +161,8 @@ ambiguities:
     resolution: >-
       Mathematically settled (non-proportionality => mu != 0 => B > 0). Open only as a Lean-encoding
       check: confirm the chosen formal statement of non-proportionality discharges mu != 0, under n > 0.
+      Note: the source's Lemma D STATEMENT advertises only C > 0 and D > 0; B > 0 is established within
+      the proof and is surfaced explicitly in this record's conclusion (not a deviation from the source).
     status: "needs_human_review"
   - issue: "the exact strict Cauchy-Schwarz equality condition available in Mathlib"
     risk: "strict A^2 < BC depends on the 'equality iff linearly dependent' characterisation; the precise Mathlib lemma form must match the source argument"
@@ -192,13 +229,19 @@ review:
   reviewer: ""
   date: "2026-06-30"
   notes: >-
-    The representation choice (matrix/vector vs abstract inner product) and the B > 0 / mu != 0 point
-    need a human decision before a theorem card is written. No Lean declaration, theorem card, formal
-    mapping, or proof exists; nothing here is verified.
+    Human review completed: changes requested. This revision addresses the first review comments by
+    adding raw source excerpts and clarifying the source-facing theorem vs proof-helper boundary. Final
+    approval for theorem-card promotion is still pending. Remaining open: the concrete Lean encoding
+    (Mathlib API choice) and the strict Cauchy-Schwarz Mathlib route. No Lean declaration, theorem
+    card, formal mapping, or proof exists; nothing here is verified.
 
 audit:
   created_by: "audit-first-harness source intake (this milestone)"
   created_date: "2026-06-30"
+  notes: >-
+    This is a clean audit-first rebuild from the source-intake records. Existing related Lean, if any,
+    is not authoritative for this target until reconciled through theorem card, formal mapping, and the
+    normal audit gates.
   source_fidelity_risks:
     - "dropping the non-proportionality assumption makes the strict D > 0 claim FALSE (Cauchy-Schwarz becomes equality)"
     - "B > 0 may require mu != 0; verify whether 'mu not proportional to 1' (with 1 != 0) implies it"
