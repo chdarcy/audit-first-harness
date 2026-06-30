@@ -1,0 +1,7 @@
+{
+    "challenge_module": "Audit.MarkowitzLemmaDPositive.Challenge",
+    "solution_module": "Audit.MarkowitzLemmaDPositive.Solution",
+    "theorem_names": ["AuditHarness.StatementAudit.markowitz_lemma_D_positive"],
+    "permitted_axioms": ["propext", "Quot.sound", "Classical.choice"],
+    "enable_nanoda": false
+}

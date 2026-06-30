@@ -90,3 +90,30 @@ targets:
     review: docs/fidelity_reviews/GoldIrrationalSqrtTwo.md
     state: HUMAN_APPROVED
     human_approved: true
+
+  MarkowitzLemmaDPositive:
+    source_refs: ["thm:markowitz_lemma_d_positive"]
+    lean:
+      declaration: markowitz_lemma_D_positive
+      module: AuditHarness.MarkowitzLemmaDPositive
+      fully_qualified: AuditHarness.markowitz_lemma_D_positive
+    comparator:
+      dir: Audit/MarkowitzLemmaDPositive
+      config: Audit/MarkowitzLemmaDPositive/comparator.json
+      challenge_module: Audit.MarkowitzLemmaDPositive.Challenge
+      solution_module: Audit.MarkowitzLemmaDPositive.Solution
+      audit_theorem: AuditHarness.StatementAudit.markowitz_lemma_D_positive
+    # CANDIDATE (post-Lean wiring). The Lean theorem is fully PROVED and axiom-audited
+    # ([propext, Quot.sound, Classical.choice]; no sorryAx). But the SOURCE-FIDELITY human review
+    # and the Comparator run are both still PENDING, so this target is NOT promoted. `verdict` is
+    # intentionally `null` — no source-fidelity verdict is asserted yet (Lean correctness done is
+    # NOT source fidelity established). Open fidelity question for the human reviewer: the source
+    # (thm:markowitz_lemma_d_positive) explicitly advertises C > 0 and D > 0, whereas the Lean
+    # conclusion ALSO asserts B > 0 (used implicitly in the source proof) — a reviewer must decide
+    # whether including B > 0 preserves source fidelity. See the draft review.
+    verdict: null
+    equivalence: null
+    comparator_status: NOT_RUN
+    review: docs/fidelity_reviews/MarkowitzLemmaDPositive.md
+    state: MAPPED
+    human_approved: false
