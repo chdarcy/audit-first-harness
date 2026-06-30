@@ -1,0 +1,206 @@
+# Source-formalisation record — MK-003: Lemma D positivity (C > 0, B > 0, D = BC - A^2 > 0).
+#
+# Per-target semantic-alignment record (source-fidelity layer only). It documents HOW the source's
+# Lemma D is to be formalised; it asserts NO mathematical truth and NO proof. There is no Lean
+# declaration, theorem card, formal mapping, mutant, or Comparator artifact for this target yet.
+# Promoted from docs/source_inventories/markowitz_lecture_notes.yaml entry MK-003-lemma-D-positive.
+# This is the recommended FIRST proof target, but nothing here is proved or verified.
+
+schema_version: "0.1.0"
+record_type: "source_formalization"
+
+source:
+  source_id: "markowitz_lecture_notes"
+  source_file: "examples/markowitz_lecture_notes/source.tex"
+  source_ref: "MK-003-lemma-D-positive"
+  source_span: "lem:D (Sec.2, Invertibility of the dual system)"
+  source_kind: "lecture_notes"
+  raw_excerpt: ""   # deferred; the canonical source is committed at the source_file path above
+
+informal_claim:
+  title: "Discriminant positivity (Lemma D)"
+  statement: >-
+    For a real symmetric positive-definite matrix Sigma in R^{n x n} and vectors mu, 1 in R^n with mu
+    NOT a scalar multiple of the ones vector 1, define A = 1^T Sigma^{-1} mu, B = mu^T Sigma^{-1} mu,
+    C = 1^T Sigma^{-1} 1, and D = BC - A^2. Then C > 0, B > 0, and D > 0 (strict).
+  proof_context: >-
+    Uses that Sigma^{-1} is symmetric positive definite, the Sigma^{-1}-weighted inner product
+    <x,y> := x^T Sigma^{-1} y, and the STRICT Cauchy-Schwarz inequality (equality iff mu and 1 are
+    linearly dependent). The source bundles the consequent uniqueness of the 2x2 dual system into the
+    same lemma; here that uniqueness is split off (see ambiguities / proof_decomposition).
+  theorem_role: "lemma"
+
+symbols:
+  - source_symbol: "Sigma"
+    informal_meaning: "given symmetric positive-definite matrix (algebraic reading)"
+    proposed_formal_type: "real n x n SPD matrix (representation TBD: Mathlib Matrix vs PD bilinear form)"
+    scope: "global parameter"
+    notes: "Inherits the algebraic abstraction boundary recorded in MK-000."
+  - source_symbol: "Sigma^{-1}"
+    informal_meaning: "inverse covariance / precision matrix; symmetric positive definite"
+    proposed_formal_type: "real n x n SPD matrix (inverse of Sigma)"
+    scope: "derived"
+    notes: "Existence and SPD-ness follow from Sigma SPD."
+  - source_symbol: "mu"
+    informal_meaning: "mean/return vector"
+    proposed_formal_type: "vector in R^n"
+    scope: "parameter"
+    notes: "Hypothesis: mu not proportional to 1."
+  - source_symbol: "1 (ones vector)"
+    informal_meaning: "all-ones vector"
+    proposed_formal_type: "vector in R^n, nonzero"
+    scope: "constant"
+    notes: ""
+  - source_symbol: "A, B, C, D"
+    informal_meaning: "A = 1^T Sigma^{-1} mu, B = mu^T Sigma^{-1} mu, C = 1^T Sigma^{-1} 1, D = BC - A^2"
+    proposed_formal_type: "real scalars"
+    scope: "defined quantities"
+    notes: "B = <mu,mu>, C = <1,1>, A = <mu,1> in the Sigma^{-1} inner product."
+  - source_symbol: "<x,y>_{Sigma^{-1}} = x^T Sigma^{-1} y"
+    informal_meaning: "the Sigma^{-1}-weighted inner product"
+    proposed_formal_type: "a genuine inner product on R^n (because Sigma^{-1} is SPD)"
+    scope: "derived construction"
+    notes: "Central to the Cauchy-Schwarz argument."
+
+assumptions:
+  explicit:
+    - "Sigma is symmetric positive definite"
+    - "mu is NOT proportional to the ones vector 1"
+  implicit:
+    - "n is finite and n > 0 (nonempty index set); scalars are real"
+    - "the ones vector 1 is nonzero (a consequence of n > 0)"
+  derived_or_standard:
+    - "Sigma^{-1} exists and is symmetric positive definite"
+    - "<x,y> := x^T Sigma^{-1} y is a genuine (positive-definite) inner product"
+    - "mu != 0 (DERIVED from 'mu not proportional to 1', since 0 is proportional to every vector)"
+  intentionally_not_assumed:
+    - "mu != 0 is NOT a separate hypothesis: it is derived from non-proportionality (see the B>0 ambiguity for the Lean-encoding check)"
+    - "uniqueness/invertibility of the 2x2 dual system (split off into a later record)"
+
+conclusion:
+  informal: "C > 0, B > 0, and D = BC - A^2 > 0 (three strict positivity claims)"
+  proposed_formal_shape: >-
+    a Lean lemma of the shape: (Sigma SPD) -> (mu not proportional to 1) -> 0 < C and 0 < B and 0 < D
+    (exact statement shape depends on the unsettled representation choice below)
+  equality_or_inequality_type: "inequality (strict positivity)"
+  existence_uniqueness_claims: >-
+    none in MK-003; the source's uniqueness of (lambda, gamma) for the 2x2 system (via D != 0 and
+    Cramer's rule) is deliberately split into a separate later record.
+
+formalization_choices:
+  abstraction_level: "algebraic / finite-dimensional linear algebra; no probability"
+  representation_choices:
+    - "SOURCE-FACING THEOREM (for fidelity): keep it Markowitz-shaped - finite-dimensional real vectors mu, 1 in R^n, a symmetric positive-definite matrix Sigma (and Sigma^{-1}), and the scalars A/B/C/D. The public statement is NOT merely an abstract inner-product inequality."
+    - "POSSIBLE PROOF HELPER (proposed, NOT implemented): a reusable abstract real-inner-product-space lemma - if x and y are linearly independent then <x,x> * <y,y> - <x,y>^2 > 0 - which the Markowitz proof would INSTANTIATE with the Sigma^{-1}-weighted inner product, x = mu, y = 1. This is a proof-engineering decomposition, not the source-facing statement."
+    - "OPEN (needs_human_review): the exact helper-lemma shape and which Mathlib Cauchy-Schwarz / inner-product API it uses, and how Sigma^{-1}-as-inner-product is presented (Mathlib Matrix vs a positive-definite bilinear form)."
+  preserved_from_source:
+    - "the Sigma^{-1}-weighted inner product"
+    - "the strict Cauchy-Schwarz step and its equality condition"
+    - "the non-proportionality hypothesis on mu and 1"
+  intentionally_abstracted:
+    - "the dual-system / Cramer's-rule uniqueness consequence (split off, not part of MK-003)"
+  out_of_scope:
+    - "the frontier closed form and its optimality (MK-004)"
+    - "uniqueness/invertibility of the 2x2 system as a separate result"
+
+ambiguities:
+  - issue: "boundary between the source-facing Markowitz statement and an abstract proof helper"
+    risk: >-
+      if the public theorem were stated only as an abstract inner-product inequality it would lose
+      Markowitz source fidelity; conversely the proof should still be free to reuse an abstract helper
+      lemma. The two must be kept distinct.
+    resolution: >-
+      Source-facing theorem stays Markowitz-shaped (Sigma / mu / 1 / A / B / C / D over R^n); the
+      abstract '<x,x> <y,y> - <x,y>^2 > 0 for linearly independent x, y' lemma is recorded as a
+      PROPOSED proof helper to instantiate (x = mu, y = 1), not as the public statement. The exact
+      helper shape and Mathlib API still need a human decision.
+    status: "needs_human_review"
+  - issue: "deriving B > 0 from the non-proportionality hypothesis"
+    risk: >-
+      B = mu^T Sigma^{-1} mu > 0 holds iff mu != 0 (Sigma^{-1} positive definite). Mathematically
+      'mu not proportional to the ones vector' ALREADY implies mu != 0, because 0 is proportional to
+      every vector (0 = 0 . 1); so B > 0 follows from non-proportionality plus positive-definiteness
+      of Sigma^{-1}. The remaining risk is purely FORMAL: the Lean rendering of 'not proportional to
+      1' must be strong enough to discharge mu != 0 (e.g. NOT (exists c, mu = c . 1) gives mu != 0 by
+      taking c = 0), and the dimension must be nonempty (n > 0) so the ones vector is itself nonzero.
+    resolution: >-
+      Mathematically settled (non-proportionality => mu != 0 => B > 0). Open only as a Lean-encoding
+      check: confirm the chosen formal statement of non-proportionality discharges mu != 0, under n > 0.
+    status: "needs_human_review"
+  - issue: "the exact strict Cauchy-Schwarz equality condition available in Mathlib"
+    risk: "strict A^2 < BC depends on the 'equality iff linearly dependent' characterisation; the precise Mathlib lemma form must match the source argument"
+    resolution: "use Mathlib's inner-product Cauchy-Schwarz plus its equality case; confirm the exact lemma during formalisation"
+    status: "unresolved"
+  - issue: "whether the 2x2 dual-system uniqueness belongs inside MK-003"
+    risk: "the source states it within Lemma D; including it widens the target beyond positivity"
+    resolution: "split off into a separate later record; MK-003 covers C/B/D positivity only"
+    status: "resolved"
+
+proof_decomposition:
+  strategy: >-
+    Set up the Sigma^{-1}-weighted inner product, derive the three positivity facts, then strengthen
+    Cauchy-Schwarz to a strict inequality using non-proportionality, and conclude D > 0. The strict
+    step may optionally be factored through a reusable ABSTRACT helper lemma ('<x,x> <y,y> - <x,y>^2 >
+    0 for linearly independent x, y') instantiated at x = mu, y = 1 (see formalization_choices). (NOTE:
+    this is a PROPOSED decomposition only - no step is proved or implemented here.)
+  subtargets:
+    - id: "ip-pd"
+      informal_goal: "define <x,y> = x^T Sigma^{-1} y and show it is a positive-definite inner product (from Sigma^{-1} SPD)"
+      depends_on: []
+      proposed_lean_declaration: ""
+    - id: "C-pos"
+      informal_goal: "C = <1,1> > 0 (since the ones vector is nonzero)"
+      depends_on: ["ip-pd"]
+      proposed_lean_declaration: ""
+    - id: "mu-nonzero"
+      informal_goal: "mu != 0, derived from 'mu not proportional to 1' (0 is proportional to every vector)"
+      depends_on: []
+      proposed_lean_declaration: ""
+    - id: "B-pos"
+      informal_goal: "B = <mu,mu> > 0 (from mu != 0 via subtarget mu-nonzero, and Sigma^{-1} positive definite)"
+      depends_on: ["ip-pd", "mu-nonzero"]
+      proposed_lean_declaration: ""
+    - id: "cs-le"
+      informal_goal: "A^2 = <mu,1>^2 <= <mu,mu> <1,1> = BC by Cauchy-Schwarz"
+      depends_on: ["ip-pd"]
+      proposed_lean_declaration: ""
+    - id: "cs-strict"
+      informal_goal: "strengthen to A^2 < BC using non-proportionality (Cauchy-Schwarz equality case)"
+      depends_on: ["cs-le"]
+      proposed_lean_declaration: ""
+    - id: "D-pos"
+      informal_goal: "conclude D = BC - A^2 > 0"
+      depends_on: ["cs-strict"]
+      proposed_lean_declaration: ""
+    - id: "dual-invertibility-consequence"
+      informal_goal: >-
+        NOTE ONLY (NOT part of MK-003): D > 0 implies D != 0, hence the 2x2 dual system is invertible
+        with a unique (lambda, gamma). The uniqueness/invertibility THEOREM itself is a SEPARATE later
+        target, deliberately split off; MK-003 establishes only C > 0, B > 0, D > 0.
+      depends_on: ["D-pos"]
+      proposed_lean_declaration: ""
+
+target_links:
+  theorem_card_id: ""
+  formal_mapping_id: ""
+  lean_module: ""
+  lean_declaration: ""
+  fidelity_review: ""
+
+review:
+  status: "needs_human_review"
+  reviewer: ""
+  date: "2026-06-30"
+  notes: >-
+    The representation choice (matrix/vector vs abstract inner product) and the B > 0 / mu != 0 point
+    need a human decision before a theorem card is written. No Lean declaration, theorem card, formal
+    mapping, or proof exists; nothing here is verified.
+
+audit:
+  created_by: "audit-first-harness source intake (this milestone)"
+  created_date: "2026-06-30"
+  source_fidelity_risks:
+    - "dropping the non-proportionality assumption makes the strict D > 0 claim FALSE (Cauchy-Schwarz becomes equality)"
+    - "B > 0 may require mu != 0; verify whether 'mu not proportional to 1' (with 1 != 0) implies it"
+    - "the strict Cauchy-Schwarz equality condition must match the source's 'equality iff mu and 1 are linearly dependent'"
+    - "the source bundles dual-system uniqueness into Lemma D; MK-003 deliberately covers positivity only (uniqueness split off)"

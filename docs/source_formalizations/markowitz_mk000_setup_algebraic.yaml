@@ -1,0 +1,170 @@
+# Source-formalisation record — MK-000: algebraic scaffolding for Markowitz mean-variance theory.
+#
+# Per-target semantic-alignment record (source-fidelity layer only). It documents HOW the source's
+# algebraic setting is to be formalised; it asserts NO mathematical truth and NO proof. There is no
+# Lean declaration, theorem card, formal mapping, mutant, or Comparator artifact for this target yet.
+# Promoted from docs/source_inventories/markowitz_lecture_notes.yaml entry MK-000-setup-algebraic.
+
+schema_version: "0.1.0"
+record_type: "source_formalization"
+
+source:
+  source_id: "markowitz_lecture_notes"
+  source_file: "examples/markowitz_lecture_notes/source.tex"
+  source_ref: "MK-000-setup-algebraic"
+  source_span: "Sec.1-Sec.2 (def Portfolio; def Portfolio return/mean/variance; def Markowitz problem)"
+  source_kind: "lecture_notes"
+  raw_excerpt: ""   # deferred; the canonical source is committed at the source_file path above
+
+informal_claim:
+  title: "Algebraic scaffolding for mean-variance portfolio optimisation"
+  statement: >-
+    Over a GIVEN real symmetric positive-definite matrix Sigma in R^{n x n} and vectors mu, 1 in R^n:
+    a portfolio is a weight vector w in R^n satisfying the budget constraint w^T 1 = 1 (short selling
+    allowed, i.e. w_i may be negative); its mean is mu_w = w^T mu and its variance is
+    sigma_w^2 = w^T Sigma w; the scalars are A = 1^T Sigma^{-1} mu, B = mu^T Sigma^{-1} mu,
+    C = 1^T Sigma^{-1} 1, D = BC - A^2; and the Markowitz problem with target m minimises
+    (1/2) w^T Sigma w subject to w^T mu = m and w^T 1 = 1.
+  proof_context: >-
+    Sections 1-2 of the source. The probabilistic ORIGIN of Sigma (Sigma = Cov of L^2 returns, Sec.1)
+    is deliberately DEFERRED; this record sits on the algebraic side of the abstraction boundary.
+  theorem_role: "setup"
+
+symbols:
+  - source_symbol: "Sigma"
+    informal_meaning: "covariance matrix in the source; here taken as a GIVEN symmetric positive-definite matrix"
+    proposed_formal_type: "real n x n symmetric positive-definite matrix (Mathlib Matrix, or a PD bilinear form; representation TBD)"
+    scope: "global parameter (fixed for the development)"
+    notes: "Algebraic reading only; probabilistic construction deferred to MK-001/MK-002."
+  - source_symbol: "mu"
+    informal_meaning: "mean/return vector"
+    proposed_formal_type: "vector in R^n (informal)"
+    scope: "global parameter"
+    notes: ""
+  - source_symbol: "1 (ones vector)"
+    informal_meaning: "the all-ones vector (1,...,1)^T used in the budget constraint"
+    proposed_formal_type: "vector in R^n"
+    scope: "global constant"
+    notes: "Distinct from the scalar 1 on the RHS of w^T 1 = 1 (see ambiguities)."
+  - source_symbol: "w"
+    informal_meaning: "portfolio weights"
+    proposed_formal_type: "vector in R^n with w^T 1 = 1"
+    scope: "variable"
+    notes: "Sign-unconstrained (short selling allowed)."
+  - source_symbol: "A, B, C, D"
+    informal_meaning: "A = 1^T Sigma^{-1} mu, B = mu^T Sigma^{-1} mu, C = 1^T Sigma^{-1} 1, D = BC - A^2"
+    proposed_formal_type: "real scalars (defined quantities)"
+    scope: "derived definitions"
+    notes: "Used throughout the frontier results; positivity of C/B/D is MK-003, not asserted here."
+  - source_symbol: "m"
+    informal_meaning: "target expected return for the Markowitz problem"
+    proposed_formal_type: "real scalar (parameter)"
+    scope: "parameter"
+    notes: ""
+
+assumptions:
+  explicit:
+    - "Sigma in R^{n x n} is symmetric positive definite (given)"
+    - "budget constraint w^T 1 = 1"
+    - "short selling allowed: w_i may be negative (w in R^n, sign-unconstrained)"
+  implicit:
+    - "n is finite and n > 0 (nonempty index set), so the ones vector 1 is nonzero"
+    - "Sigma is invertible (consequence of positive definiteness)"
+  derived_or_standard:
+    - "Sigma^{-1} exists and is symmetric positive definite"
+  intentionally_not_assumed:
+    - "the probabilistic construction Sigma = Cov(R) and mu = E[R] (deferred to MK-001/MK-002)"
+    - "any particular value of, or constraint on, the target return m"
+    - "positivity of C, B, D (that is MK-003, not part of the scaffolding)"
+
+conclusion:
+  informal: >-
+    A coherent algebraic setting - a fixed dimension n, a given SPD matrix Sigma, vectors mu and 1, a
+    portfolio with its budget constraint, the mean and variance maps, the scalars A/B/C/D, and the
+    Markowitz target-m problem - in which the frontier results can later be stated and proved.
+  proposed_formal_shape: "Lean definitions / abbreviations over a fixed n and a fixed SPD Sigma (no theorem at this stage)"
+  equality_or_inequality_type: "n/a (definitions / notation only)"
+  existence_uniqueness_claims: "none at this stage (existence/uniqueness of solutions is MK-004)"
+
+formalization_choices:
+  abstraction_level: >-
+    Algebraic: Sigma is a GIVEN real symmetric positive-definite matrix; the probabilistic covariance
+    construction is deferred. This is the central recorded abstraction boundary for the whole source.
+  representation_choices:
+    - "finite-dimensional R^n / R^{n x n} (n fixed)"
+    - "portfolio as a vector with an explicit budget constraint w^T 1 = 1"
+    - "A/B/C/D as defined scalar quantities built from Sigma^{-1}, mu, 1"
+  preserved_from_source:
+    - "the budget constraint w^T 1 = 1"
+    - "short selling allowed (sign-unconstrained weights)"
+    - "mean = w^T mu and variance = w^T Sigma w"
+    - "the (1/2) normalisation in the objective (kept as the source writes it)"
+  intentionally_abstracted:
+    - "Sigma taken as a given SPD matrix rather than constructed from L^2 random returns"
+  out_of_scope:
+    - "probabilistic definitions (R_i, E, Cov)"
+    - "any optimality, existence, or uniqueness claim"
+
+ambiguities:
+  - issue: "the ones vector 1 vs the scalar 1"
+    risk: "the budget constraint w^T 1 = 1 mixes the ones vector (LHS) and the scalar 1 (RHS); conflating them is a fidelity error"
+    resolution: "treat 1 as the all-ones vector in R^n on the LHS and the real number 1 on the RHS"
+    status: "resolved"
+  - issue: "Sigma as probabilistic covariance vs algebraic SPD matrix"
+    risk: "the same symbol carries two readings across the abstraction boundary"
+    resolution: "formalise Sigma as a given SPD matrix here; defer the probabilistic construction (MK-001/MK-002)"
+    status: "resolved"
+  - issue: "transpose / matrix notation vs the Lean representation"
+    risk: "the source uses w^T, Sigma^{-1}, 1^T Sigma^{-1} mu; the Lean choice (Mathlib Matrix/vector vs an abstract inner-product / PD bilinear form) is not settled and affects every downstream statement"
+    resolution: "defer the representation decision to MK-003 (recorded there as needs_human_review)"
+    status: "needs_human_review"
+  - issue: "whether to include the (1/2) objective normalisation"
+    risk: "harmless scaling, but it must be carried consistently into any first-order conditions"
+    resolution: "keep the (1/2) exactly as the source states it"
+    status: "resolved"
+
+proof_decomposition:
+  strategy: >-
+    Definitions / notation / helper scaffolding only. There is NO proof obligation at this stage; this
+    record fixes the objects and notation the later lemmas/theorems will use.
+  subtargets:
+    - id: "def-portfolio"
+      informal_goal: "define a portfolio: w in R^n with w^T 1 = 1 (short selling allowed)"
+      depends_on: []
+      proposed_lean_declaration: ""
+    - id: "def-mean-variance"
+      informal_goal: "define mu_w = w^T mu and sigma_w^2 = w^T Sigma w"
+      depends_on: ["def-portfolio"]
+      proposed_lean_declaration: ""
+    - id: "def-scalars-ABCD"
+      informal_goal: "define A = 1^T Sigma^{-1} mu, B = mu^T Sigma^{-1} mu, C = 1^T Sigma^{-1} 1, D = BC - A^2"
+      depends_on: []
+      proposed_lean_declaration: ""
+    - id: "def-markowitz-problem"
+      informal_goal: "define the target-m problem: minimise (1/2) w^T Sigma w s.t. w^T mu = m, w^T 1 = 1"
+      depends_on: ["def-mean-variance"]
+      proposed_lean_declaration: ""
+
+target_links:
+  theorem_card_id: ""
+  formal_mapping_id: ""
+  lean_module: ""
+  lean_declaration: ""
+  fidelity_review: ""
+
+review:
+  status: "draft"
+  reviewer: ""
+  date: "2026-06-30"
+  notes: >-
+    Scaffolding record. No Lean declaration, theorem card, formal mapping, or proof exists. The Lean
+    representation (Mathlib Matrix/vector vs an abstract inner-product / PD bilinear form) is recorded
+    as an open ambiguity to be settled together with MK-003 before any theorem card.
+
+audit:
+  created_by: "audit-first-harness source intake (this milestone)"
+  created_date: "2026-06-30"
+  source_fidelity_risks:
+    - "the abstraction boundary (algebraic Sigma vs probabilistic Cov) must be carried consistently into every downstream target"
+    - "short selling / sign-unconstrained weights must not be silently restricted"
+    - "the (1/2) normalisation must be consistent between the objective and any first-order conditions"

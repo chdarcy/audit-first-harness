@@ -120,11 +120,26 @@ def test_template_checked_structurally() -> None:
           vsf.validate_record(tmpl, "template.yaml", real=True)[0] != [])
 
 
-# 10 — directory with only template passes (the real docs/source_formalizations dir)
-def test_dir_only_template_passes() -> None:
-    e, w, n_real, n_template = vsf.validate_dir(vsf.RECORDS_DIR)
-    check("real dir (only template) passes", e == [], str(e))
-    check("real dir has 0 real records, 1 template", n_real == 0 and n_template == 1, f"{n_real}/{n_template}")
+# 10a — a directory containing ONLY a template passes (hermetic: temp dir + a copied template).
+#       Uses a temp dir so it stays true regardless of how many real records the live dir accrues.
+def test_template_only_dir_passes_hermetic() -> None:
+    with tempfile.TemporaryDirectory() as td:
+        d = Path(td)
+        (d / "template.yaml").write_text(
+            (vsf.RECORDS_DIR / "template.yaml").read_text(encoding="utf-8"), encoding="utf-8")
+        e, _, n_real, n_template = vsf.validate_dir(d)
+        check("template-only temp dir: no errors", e == [], str(e))
+        check("template-only temp dir: 0 real, 1 template", n_real == 0 and n_template == 1, f"{n_real}/{n_template}")
+
+
+# 10b — the LIVE docs/source_formalizations/ directory validates cleanly. Real records may now exist
+#       (e.g. the Markowitz MK-000/MK-003 records), so this asserts only structural cleanliness and
+#       the single template — NOT that the directory is empty of real records.
+def test_live_dir_validates_clean() -> None:
+    e, _, n_real, n_template = vsf.validate_dir(vsf.RECORDS_DIR)
+    check("live dir validates with no errors", e == [], str(e))
+    check("live dir has exactly one template", n_template == 1, f"n_template={n_template}")
+    check("live dir real-record count is >= 0 (no upper assumption)", n_real >= 0, f"n_real={n_real}")
 
 
 # 11 — validator output includes clear error paths (file + field)
@@ -205,7 +220,8 @@ def main() -> int:
         test_missing_symbols_fails, test_missing_assumptions_and_conclusion_fails,
         test_invalid_ambiguity_status_fails, test_invalid_review_status_fails,
         test_blank_target_links_allowed, test_template_checked_structurally,
-        test_dir_only_template_passes, test_error_paths_clear, test_no_api_no_lean,
+        test_template_only_dir_passes_hermetic, test_live_dir_validates_clean,
+        test_error_paths_clear, test_no_api_no_lean,
         test_independent_of_repo_examples, test_generic_source_agnostic,
     ]
     for t in tests:
