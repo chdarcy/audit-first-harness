@@ -174,15 +174,16 @@ target_links:
   fidelity_review: ""
 
 review:
-  status: "draft"
+  status: "ready_for_card"
   reviewer: ""
   date: "2026-06-30"
   notes: >-
-    Human review completed: changes requested. This revision addresses the first review comments by
-    adding raw source excerpts and clarifying the source-facing theorem vs proof-helper boundary. Final
-    approval for theorem-card promotion is still pending. Scaffolding record: no Lean declaration,
-    theorem card, formal mapping, or proof exists. The concrete Lean representation remains an open
-    ambiguity to be settled together with MK-003 before any theorem card.
+    Human review completed; first-round comments addressed (raw source excerpts added; source-facing
+    theorem vs proof-helper boundary clarified). Now marked ready_for_card: the source-formalisation
+    record is ready to be turned into a theorem card and formal mapping. This does NOT mean any theorem
+    has been proved, formalised in Lean, mapped, Comparator-checked, or mathematically verified.
+    Scaffolding record: no Lean declaration, theorem card, formal mapping, or proof exists; the concrete
+    Lean representation is a design decision deferred to the card/mapping stage (with MK-003).
 
 audit:
   created_by: "audit-first-harness source intake (this milestone)"

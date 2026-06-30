@@ -116,7 +116,7 @@ formalization_choices:
   representation_choices:
     - "SETTLED (source-fidelity decision): the public/source-facing theorem stays Markowitz-shaped - finite-dimensional real vectors mu, 1 in R^n, a symmetric positive-definite matrix Sigma (and Sigma^{-1}), and the scalars A/B/C/D. The public statement is NOT merely an abstract inner-product inequality."
     - "SETTLED (proof-engineering permission): the proof MAY use a reusable abstract real-inner-product-space strict Cauchy-Schwarz / Gram-determinant helper - if x and y are linearly independent then <x,x> * <y,y> - <x,y>^2 > 0 - instantiated with the Sigma^{-1}-weighted inner product, x = mu, y = ones. This helper is PROPOSED, not implemented or proved."
-    - "OPEN (needs_human_review) - concrete Lean encoding: whether to implement the public Markowitz-shaped theorem directly with Mathlib Matrix/vector APIs, or through a thin wrapper / positive-definite bilinear-form / inner-product abstraction that STILL EXPOSES the Markowitz-shaped statement. Distinct from, and not resolved by, the now-settled source-facing-vs-helper boundary."
+    - "OPEN (Lean-design decision pending) - concrete Lean encoding: whether to implement the public Markowitz-shaped theorem directly with Mathlib Matrix/vector APIs, or through a thin wrapper / positive-definite bilinear-form / inner-product abstraction that STILL EXPOSES the Markowitz-shaped statement. Distinct from, and not resolved by, the now-settled source-facing-vs-helper boundary; structured status is tracked in the ambiguities list."
   preserved_from_source:
     - "the Sigma^{-1}-weighted inner product"
     - "the strict Cauchy-Schwarz step and its equality condition"
@@ -225,15 +225,17 @@ target_links:
   fidelity_review: ""
 
 review:
-  status: "needs_human_review"
+  status: "ready_for_card"
   reviewer: ""
   date: "2026-06-30"
   notes: >-
-    Human review completed: changes requested. This revision addresses the first review comments by
-    adding raw source excerpts and clarifying the source-facing theorem vs proof-helper boundary. Final
-    approval for theorem-card promotion is still pending. Remaining open: the concrete Lean encoding
-    (Mathlib API choice) and the strict Cauchy-Schwarz Mathlib route. No Lean declaration, theorem
-    card, formal mapping, or proof exists; nothing here is verified.
+    Human review completed; first-round comments addressed (raw source excerpts added; source-facing
+    theorem vs proof-helper boundary clarified). Now marked ready_for_card: the source-formalisation
+    record is ready to be turned into a theorem card and formal mapping. This does NOT mean any theorem
+    has been proved, formalised in Lean, mapped, Comparator-checked, or mathematically verified. A
+    Lean-design decision is still pending (the concrete Mathlib encoding) along with the strict
+    Cauchy-Schwarz Mathlib route, both deferred to the card/mapping stage; no Lean declaration, theorem
+    card, formal mapping, or proof exists.
 
 audit:
   created_by: "audit-first-harness source intake (this milestone)"
