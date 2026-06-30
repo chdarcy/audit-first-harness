@@ -508,7 +508,9 @@ for its first target:
 - no judge package exists yet;
 - no promotion gate has run;
 - concrete Lean encoding remains open;
-- formal mapping is deferred because `validate_mapping.py` has no draft/unimplemented lifecycle.
+- no `formal_mapping.yaml` entry is created yet **by design**: `formal_mapping.yaml` is for
+  implemented or near-implemented Lean targets, not pre-Lean planning. **No draft formal-mapping
+  lifecycle will be added now**; the mapping entry follows the Lean scaffold.
 
 MK-003 (Lemma D positivity) is the first proof target: for SPD `Σ` (`n > 0`) and `μ` not proportional
 to the ones vector, with `A = 1ᵀΣ⁻¹μ`, `B = μᵀΣ⁻¹μ`, `C = 1ᵀΣ⁻¹1`, `D = BC − A²`, then `C > 0`,
@@ -521,8 +523,11 @@ proof subclaim surfaced explicitly in the records.
 
 ## 22. Roadmap / next steps
 
-1. Add draft/unimplemented formal-mapping lifecycle support (to `validate_mapping.py`).
-2. Add draft `formal_mapping.yaml` entry for `MarkowitzLemmaDPositive`.
+1. **Next Markowitz step: explore a direct Lean representation / scaffold for
+   `MarkowitzLemmaDPositive` — not more YAML.** No draft formal-mapping lifecycle will be added.
+2. Keep structural metadata close to Lean, but do **not** add a `formal_mapping.yaml` entry until a
+   Lean declaration exists: it is for implemented or near-implemented (post-Lean) targets, not
+   pre-Lean planning.
 3. Decide concrete Lean encoding (Mathlib Matrix/vector directly vs a wrapper / bilinear-form /
    inner-product abstraction that still exposes the Markowitz-shaped statement).
 4. Create Lean theorem scaffold (`AuditHarness/MarkowitzLemmaDPositive.lean` + a `Helpers.lean`).
@@ -535,11 +540,11 @@ GMVP, MK-008 risk-free/CML, MK-009 one-fund/tangency); MK-010/MK-011 (Sharpe/CAP
 
 ## 23. Open blockers
 
-- **Formal-mapping draft lifecycle (active blocker for Markowitz).** `validate_mapping.py` requires
-  every `formal_mapping.yaml` target to have an existing Lean declaration, Comparator config, and
-  review file; there is no draft/`NOT_IMPLEMENTED` state. Smallest fix: a draft lifecycle that skips
-  those checks for a target explicitly marked draft. **Do not force a mapping entry before this exists
-  or before the Lean/review/Comparator artifacts exist.**
+- **Formal-mapping entry for Markowitz is intentionally deferred to post-Lean — not a blocker.**
+  `validate_mapping.py` requires every target to have a Lean declaration, Comparator config, and review
+  file. We are **not** adding a draft/`NOT_IMPLEMENTED` lifecycle; `formal_mapping.yaml` is for
+  implemented or near-implemented Lean targets. **Do not force a mapping entry before the
+  Lean/review/Comparator artifacts exist;** the entry follows the Lean scaffold.
 - **Concrete Lean encoding for MK-003 is open** (a design decision, deferred to the card/mapping stage).
 - **Residual (informational):** several non-`.md` files (`docs/formal_mapping.yaml` comments and some
   `scripts/*.py` docstrings) still cite `ARCHITECTURE.md §§`; those `§` numbers now map to sections of
@@ -572,6 +577,12 @@ future controller.**
   / HUMAN_REVIEW.
 - **Theorem dependency graph** (blueprint-style nodes/`depends_on`) for large projects (Markowitz).
 - **Multi-judge ensemble** — gate on consensus/disagreement when a single judge has low recall.
+- **External tooling (LeanArchitect / LeanMarathon) — evaluated, not adopted.** The LeanArchitect spike
+  was **structurally promising but not enough to justify an immediate dependency** (Mathlib coexistence
+  unproven); **LeanArchitect is not adopted yet** and **LeanMarathon is deferred / not duplicated**.
+  This project **remains an audit layer**; front-pipeline simplification means reducing duplicated
+  structural fields, **not deleting source-fidelity evidence**. The closed-loop controller remains
+  future research (§24).
 
 ## 26. Milestone history (condensed; short commit hashes)
 

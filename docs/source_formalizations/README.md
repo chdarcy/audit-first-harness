@@ -54,3 +54,10 @@ real records — that there is at least one symbol, one assumption, a conclusion
 choice, an ambiguity or risk, and a proof subtarget. It deliberately does **not** check mathematical
 correctness, the truth of the source, or whether the proposed formalisation is the *right* one.
 `target_links` may be left blank while a record is still `draft` / `ready_for_card`.
+
+These records **guard source fidelity, not Lean structure**: the structural fields (`target_links`'
+Lean module/declaration/mapping id, and a subtarget's `depends_on` / `proposed_lean_declaration`) are
+**optional** and meant to be filled only once the Lean exists — do **not** invent a Lean declaration
+name, module, or dependency DAG pre-Lean. `formal_mapping.yaml` is created **after** a Lean
+declaration exists (for implemented or near-implemented targets), not as pre-Lean planning; there is
+**no** draft formal-mapping lifecycle.

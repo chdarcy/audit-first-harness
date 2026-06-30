@@ -63,11 +63,14 @@ ambiguities:               # at least one ambiguity (with an issue) OR one audit
 proof_decomposition:
   strategy: ""             # overall plan (required for real records)
   subtargets:              # at least one well-formed subtarget for real records
-    - id: ""               # local id for the subtarget
-      informal_goal: ""    # what this step must establish
-      depends_on: []       # ids of subtargets this depends on
-      proposed_lean_declaration: ""  # intended declaration name (informal; not Lean code)
+    - id: ""               # local id for the subtarget (required: source-fidelity content)
+      informal_goal: ""    # what this step must establish (required)
+      depends_on: []       # OPTIONAL structural hint — leave []; do not invent a Lean dependency DAG pre-Lean
+      proposed_lean_declaration: ""  # OPTIONAL — leave ""; do not invent Lean declaration names pre-Lean
 
+# target_links are OPTIONAL structural cross-references. Leave them blank until the corresponding
+# Lean module/declaration, theorem card, or formal_mapping actually exist — do NOT invent Lean
+# structure here pre-Lean. A source-formalisation record guards source fidelity, not Lean structure.
 target_links:              # may be left blank during the early source-formalisation stage
   theorem_card_id: ""      # docs/theorem_index.yaml entry, once created
   formal_mapping_id: ""    # docs/formal_mapping.yaml target, once created
