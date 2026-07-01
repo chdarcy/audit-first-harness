@@ -99,6 +99,9 @@ entries:
       source_file: examples/markowitz_lecture_notes/source.tex
       env: lemma
       title: "Invertibility of the dual system"
+      # `source_label` is the actual LaTeX \label in the source; the ledger key
+      # `thm:markowitz_lemma_d_positive` is the internal theorem-index identifier (they differ).
+      source_label: "lem:D"
       line_start: 240
       line_end: 245
       equation_labels: []
@@ -127,17 +130,18 @@ entries:
         [NOT judge-visible] First Markowitz proof target (source-formalisation entry
         MK-003-lemma-D-positive). Source-formalisation record:
         docs/source_formalizations/markowitz_mk003_lemma_D_positive.yaml; intake/triage:
-        docs/source_inventories/markowitz_lecture_notes.yaml. Planning status: SOURCE CARD ONLY.
-        There is NO Lean declaration, NO formal proof, NO formal_mapping.yaml entry, NO Comparator
-        artifact, NO source-fidelity judge package, and NO promotion gate has run for this target.
-        Proposed (NOT created) future formal-mapping target name MarkowitzLemmaDPositive (proposed Lean
-        module AuditHarness.MarkowitzLemmaDPositive / declaration markowitz_lemma_D_positive) -- a
-        formal_mapping entry is deferred because validate_mapping.py requires an existing Lean
-        declaration, Comparator config, and review file (no draft/unimplemented mapping state exists
-        yet). Preserved decisions: the public source-facing theorem stays Markowitz-shaped
-        (finite-dim real vectors + Sigma + mu + ones + A/B/C/D); the abstract real-inner-product /
-        Gram-determinant lemma is only a PROPOSED proof helper, not the public statement; the concrete
-        Lean encoding / Mathlib API choice remains OPEN. MK-002 and the probabilistic covariance
-        construction remain deferred; the 2x2 dual-system uniqueness is split off from this target
-        (positivity only). Source-fidelity caveat: the source's Lemma D STATEMENT advertises only
-        C > 0 and D > 0; B > 0 is established within its proof and is surfaced explicitly here.
+        docs/source_inventories/markowitz_lecture_notes.yaml. Post-Lean status: mapped and proved as
+        `AuditHarness.markowitz_lemma_D_positive`. The source LaTeX label is `lem:D`;
+        `thm:markowitz_lemma_d_positive` is the internal theorem-index key. Formal mapping entry:
+        MarkowitzLemmaDPositive (Lean module AuditHarness.MarkowitzLemmaDPositive / declaration
+        markowitz_lemma_D_positive); fidelity review: docs/fidelity_reviews/MarkowitzLemmaDPositive.md
+        (human source-fidelity review PASS with note). The source lemma statement advertises `C > 0`
+        and `D > 0`; the source proof explicitly establishes `B > 0`, which is surfaced in the MK-003
+        Lean theorem as a source-supported proof-body positivity fact (accepted, not a deviation).
+        Preserved decisions: the public source-facing theorem stays Markowitz-shaped (finite-dim real
+        vectors + Sigma + mu + ones + A/B/C/D); the abstract real-inner-product / Gram-determinant
+        argument is proof machinery in AuditHarness.MarkowitzLemmaDPositive.Helpers, not the public
+        statement. MK-002 and the probabilistic covariance construction remain deferred; the 2x2
+        dual-system uniqueness consequence remains deliberately split off to a later target
+        (positivity only). Formal-correctness status (Lean proof done, axiom-audited) is distinct from
+        the Comparator run, which is still NOT_RUN pending a real Comparator writeback.

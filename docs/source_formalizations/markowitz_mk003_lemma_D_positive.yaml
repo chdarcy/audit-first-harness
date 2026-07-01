@@ -1,10 +1,13 @@
 # Source-formalisation record — MK-003: Lemma D positivity (C > 0, B > 0, D = BC - A^2 > 0).
 #
 # Per-target semantic-alignment record (source-fidelity layer only). It documents HOW the source's
-# Lemma D is to be formalised; it asserts NO mathematical truth and NO proof. There is no Lean
-# declaration, theorem card, formal mapping, mutant, or Comparator artifact for this target yet.
+# Lemma D is formalised; it asserts NO mathematical truth and NO proof of its own.
+# Original pre-Lean source-formalisation record. Post-Lean artifacts now exist:
+# Lean declaration `AuditHarness.markowitz_lemma_D_positive`, formal mapping entry
+# `MarkowitzLemmaDPositive`, and fidelity review
+# `docs/fidelity_reviews/MarkowitzLemmaDPositive.md`.
+# This record remains the source-fidelity/intake rationale and does not itself assert proof truth.
 # Promoted from docs/source_inventories/markowitz_lecture_notes.yaml entry MK-003-lemma-D-positive.
-# This is the recommended FIRST proof target, but nothing here is proved or verified.
 
 schema_version: "0.1.0"
 record_type: "source_formalization"
@@ -147,9 +150,10 @@ ambiguities:
       exposes the Markowitz-shaped statement; the choice affects proof effort and reuse but not the
       shape of the public statement.
     resolution: >-
-      Deferred to a human decision before the theorem card / formal mapping. Both options keep the
-      source-facing statement Markowitz-shaped, so source fidelity is unaffected by which is chosen.
-    status: "needs_human_review"
+      Resolved by direct Mathlib Matrix/vector encoding in `AuditHarness.MarkowitzLemmaDPositive`
+      (Matrix.PosDef, S⁻¹, ⬝ᵥ, *ᵥ; A/B/C/D as Gram scalars). The source-facing statement stays
+      Markowitz-shaped, so source fidelity is unaffected by the chosen encoding.
+    status: "resolved"
   - issue: "deriving B > 0 from the non-proportionality hypothesis"
     risk: >-
       B = mu^T Sigma^{-1} mu > 0 holds iff mu != 0 (Sigma^{-1} positive definite). Mathematically
@@ -159,11 +163,13 @@ ambiguities:
       1' must be strong enough to discharge mu != 0 (e.g. NOT (exists c, mu = c . 1) gives mu != 0 by
       taking c = 0), and the dimension must be nonempty (n > 0) so the ones vector is itself nonzero.
     resolution: >-
-      Mathematically settled (non-proportionality => mu != 0 => B > 0). Open only as a Lean-encoding
-      check: confirm the chosen formal statement of non-proportionality discharges mu != 0, under n > 0.
-      Note: the source's Lemma D STATEMENT advertises only C > 0 and D > 0; B > 0 is established within
-      the proof and is surfaced explicitly in this record's conclusion (not a deviation from the source).
-    status: "needs_human_review"
+      B > 0 is explicitly established in the source proof and follows from the same hypotheses; it is
+      accepted as a source-supported proof-body positivity fact surfaced by MK-003. Confirmed in Lean:
+      the encoding `¬ ∃ c, μ = c • 1` discharges `μ ≠ 0` (via c = 0) under `[Nonempty (Fin n)]`, and
+      `S.PosDef` gives `B = μᵀ S⁻¹ μ > 0` (see AuditHarness.MarkowitzLemmaDPositive). The source's
+      Lemma D STATEMENT advertises only C > 0 and D > 0; B > 0 is a source-supported strengthening, not
+      a deviation (see docs/fidelity_reviews/MarkowitzLemmaDPositive.md, PASS with note).
+    status: "resolved"
   - issue: "the exact strict Cauchy-Schwarz equality condition available in Mathlib"
     risk: "strict A^2 < BC depends on the 'equality iff linearly dependent' characterisation; the precise Mathlib lemma form must match the source argument"
     resolution: "use Mathlib's inner-product Cauchy-Schwarz plus its equality case; confirm the exact lemma during formalisation"

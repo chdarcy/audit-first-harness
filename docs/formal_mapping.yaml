@@ -103,17 +103,16 @@ targets:
       challenge_module: Audit.MarkowitzLemmaDPositive.Challenge
       solution_module: Audit.MarkowitzLemmaDPositive.Solution
       audit_theorem: AuditHarness.StatementAudit.markowitz_lemma_D_positive
-    # CANDIDATE (post-Lean wiring). The Lean theorem is fully PROVED and axiom-audited
-    # ([propext, Quot.sound, Classical.choice]; no sorryAx). But the SOURCE-FIDELITY human review
-    # and the Comparator run are both still PENDING, so this target is NOT promoted. `verdict` is
-    # intentionally `null` — no source-fidelity verdict is asserted yet (Lean correctness done is
-    # NOT source fidelity established). Open fidelity question for the human reviewer: the source
-    # (thm:markowitz_lemma_d_positive) explicitly advertises C > 0 and D > 0, whereas the Lean
-    # conclusion ALSO asserts B > 0 (used implicitly in the source proof) — a reviewer must decide
-    # whether including B > 0 preserves source fidelity. See the draft review.
-    verdict: null
+    # Human source-fidelity review approved as PASS with note. The source LaTeX label is `lem:D`;
+    # `thm:markowitz_lemma_d_positive` is the internal theorem-index key. The Lean conclusion includes
+    # `B > 0` in addition to the lemma headline's `C > 0` and `D > 0`; this is accepted because
+    # `B > 0` is explicitly established in the source proof under the same hypotheses. The Lean theorem
+    # is fully PROVED and axiom-audited ([propext, Quot.sound, Classical.choice]; no sorryAx). Comparator
+    # remains NOT_RUN until real writeback, so this target is HUMAN_APPROVED but NOT yet promoted
+    # (Lean correctness + source-fidelity done; Comparator/promotion gate still outstanding).
+    verdict: PASS
     equivalence: null
     comparator_status: NOT_RUN
     review: docs/fidelity_reviews/MarkowitzLemmaDPositive.md
-    state: MAPPED
-    human_approved: false
+    state: HUMAN_APPROVED
+    human_approved: true
