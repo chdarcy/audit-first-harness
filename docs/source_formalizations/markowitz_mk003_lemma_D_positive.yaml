@@ -118,8 +118,8 @@ formalization_choices:
   abstraction_level: "algebraic / finite-dimensional linear algebra; no probability"
   representation_choices:
     - "SETTLED (source-fidelity decision): the public/source-facing theorem stays Markowitz-shaped - finite-dimensional real vectors mu, 1 in R^n, a symmetric positive-definite matrix Sigma (and Sigma^{-1}), and the scalars A/B/C/D. The public statement is NOT merely an abstract inner-product inequality."
-    - "SETTLED (proof-engineering permission): the proof MAY use a reusable abstract real-inner-product-space strict Cauchy-Schwarz / Gram-determinant helper - if x and y are linearly independent then <x,x> * <y,y> - <x,y>^2 > 0 - instantiated with the Sigma^{-1}-weighted inner product, x = mu, y = ones. This helper is PROPOSED, not implemented or proved."
-    - "OPEN (Lean-design decision pending) - concrete Lean encoding: whether to implement the public Markowitz-shaped theorem directly with Mathlib Matrix/vector APIs, or through a thin wrapper / positive-definite bilinear-form / inner-product abstraction that STILL EXPOSES the Markowitz-shaped statement. Distinct from, and not resolved by, the now-settled source-facing-vs-helper boundary; structured status is tracked in the ambiguities list."
+    - "SETTLED (proof-engineering decision): the proof may use helper lemmas in `AuditHarness.MarkowitzLemmaDPositive.Helpers`; these are proof machinery only and do not replace the public source-facing theorem."
+    - "RESOLVED (Lean-design decision): the public Markowitz-shaped theorem is implemented directly using Mathlib Matrix/vector APIs in `AuditHarness.MarkowitzLemmaDPositive` (`Matrix.PosDef`, `S⁻¹`, `⬝ᵥ`, `*ᵥ`). This preserves the Markowitz-shaped public statement."
   preserved_from_source:
     - "the Sigma^{-1}-weighted inner product"
     - "the strict Cauchy-Schwarz step and its equality condition"
@@ -138,10 +138,10 @@ ambiguities:
       lemma. The two must be kept distinct.
     resolution: >-
       RESOLVED (settled source-fidelity decision): the source-facing theorem stays Markowitz-shaped
-      (Sigma / mu / 1 / A / B / C / D over R^n); the abstract '<x,x> <y,y> - <x,y>^2 > 0 for linearly
-      independent x, y' lemma is a PERMITTED but proposed (not implemented) proof helper, to be
-      instantiated with the Sigma^{-1}-weighted inner product, x = mu, y = ones. This resolves ONLY the
-      source-facing-vs-helper boundary; the concrete Lean encoding remains open (see next ambiguity).
+      (Sigma / mu / 1 / A / B / C / D over R^n); the Gram-determinant positivity argument is proof
+      machinery implemented in AuditHarness.MarkowitzLemmaDPositive.Helpers (e.g. the witness-vector
+      Gram identity), not the public statement. This resolves the source-facing-vs-helper boundary; the
+      concrete Lean encoding is likewise resolved (see next ambiguity).
     status: "resolved"
   - issue: "concrete Lean encoding of the Markowitz-shaped statement (Mathlib API choice)"
     risk: >-
@@ -183,9 +183,9 @@ proof_decomposition:
   strategy: >-
     Set up the Sigma^{-1}-weighted inner product, derive the three positivity facts, then strengthen
     Cauchy-Schwarz to a strict inequality using non-proportionality, and conclude D > 0. The strict
-    step may optionally be factored through a reusable ABSTRACT helper lemma ('<x,x> <y,y> - <x,y>^2 >
-    0 for linearly independent x, y') instantiated at x = mu, y = 1 (see formalization_choices). (NOTE:
-    this is a PROPOSED decomposition only - no step is proved or implemented here.)
+    step is factored through the witness-vector Gram positivity argument (see formalization_choices).
+    (NOTE: this decomposition is now realised in AuditHarness.MarkowitzLemmaDPositive and its Helpers;
+    the record is retained as the source-fidelity rationale, not as a claim of proof by itself.)
   subtargets:
     - id: "ip-pd"
       informal_goal: "define <x,y> = x^T Sigma^{-1} y and show it is a positive-definite inner product (from Sigma^{-1} SPD)"
