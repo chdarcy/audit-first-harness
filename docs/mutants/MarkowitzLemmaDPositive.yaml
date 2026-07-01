@@ -1,0 +1,185 @@
+# Mutation test cases for the MarkowitzLemmaDPositive target.
+#
+# Textual judge test cases; not compiled. Expected labels are fixed before any judge run.
+#   discriminative -> judge must REJECT (FAIL or WARN)
+#   consistency    -> judge must ACCEPT (PASS / PASS_EQUIV / PASS_PROVABLE_EQUIV)
+#
+# Source lemma (lem:D): with the covariance Σ (written S, since Σ is reserved in Lean) symmetric
+# positive-definite and μ not proportional to the all-ones vector 1, define A = 1ᵀΣ⁻¹μ, B = μᵀΣ⁻¹μ,
+# C = 1ᵀΣ⁻¹1, D = BC − A². The target proves 0 < C ∧ 0 < B ∧ 0 < D. The source statement advertises
+# C > 0 and D > 0; B > 0 is a source-supported proof-body positivity fact. The dual-system
+# uniqueness / Cramer's-rule consequence is deliberately split off (not part of this target).
+# These mutants are source-fidelity focused: they do not ask the judge to prove Lean mathematics.
+
+target: MarkowitzLemmaDPositive
+real_statement_ref: markowitz_lemma_D_positive
+lean_ambient: ""
+
+formalisation_choices:
+  - "the covariance is a symmetric positive-definite matrix S : Matrix (Fin n) (Fin n) ℝ (hypothesis S.PosDef); S stands for Σ, which is a reserved token in Lean"
+  - "the Gram scalars are A = 1 ⬝ᵥ (S⁻¹ *ᵥ μ), B = μ ⬝ᵥ (S⁻¹ *ᵥ μ), C = 1 ⬝ᵥ (S⁻¹ *ᵥ 1), and the discriminant D = B * C - A ^ 2, all via the inverse matrix S⁻¹"
+  - "the non-degeneracy hypothesis is that μ is not a scalar multiple of the all-ones vector 1, written ¬ ∃ c, μ = c • 1"
+  - "the conclusion is the three strict positivity facts 0 < C, 0 < B, 0 < D; the dual-system uniqueness / Cramer's-rule consequence is deliberately not part of this target"
+  - "[Nonempty (Fin n)] encodes the finite dimension n > 0, so the all-ones vector 1 is nonzero"
+
+real_statement: |
+  theorem markowitz_lemma_D_positive {n : ℕ} [Nonempty (Fin n)]
+      (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.PosDef) (μ : Fin n → ℝ)
+      (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :
+      let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+      let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);
+      let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+      let D := B * C - A ^ 2;
+      0 < C ∧ 0 < B ∧ 0 < D
+
+mutants:
+  # ---------------- Discriminative (judge must REJECT) ----------------
+  - id: MLDP-D1
+    class: discriminative
+    operator: drop-hypothesis
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.PosDef) (μ : Fin n → ℝ) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := B * C - A ^ 2;
+          0 < C ∧ 0 < B ∧ 0 < D
+    note: "the non-degeneracy hypothesis (μ not proportional to 1) is dropped; without it μ may be a multiple of 1, giving A² = BC (Cauchy-Schwarz equality) so D = BC - A² = 0 and 0 < D is false"
+
+  - id: MLDP-D2
+    class: discriminative
+    operator: alter-formula
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.PosDef) (μ : Fin n → ℝ)
+          (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := A ^ 2 - B * C;
+          0 < C ∧ 0 < B ∧ 0 < D
+    note: "the discriminant is sign-flipped to D := A² - BC instead of BC - A²; since BC > A² under the hypotheses this D is negative, so 0 < D is false (the source defines D = BC - A²)"
+
+  - id: MLDP-D3
+    class: discriminative
+    operator: weaken-hypothesis
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.IsSymm) (μ : Fin n → ℝ)
+          (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := B * C - A ^ 2;
+          0 < C ∧ 0 < B ∧ 0 < D
+    note: "positive-definiteness S.PosDef is weakened to mere symmetry S.IsSymm; a symmetric but non-positive-definite (or singular) S makes S⁻¹ fail to be positive definite, so 0 < C, 0 < B, 0 < D no longer hold"
+
+  - id: MLDP-D4
+    class: discriminative
+    operator: strengthen-conclusion
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.PosDef) (μ : Fin n → ℝ)
+          (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := B * C - A ^ 2;
+          0 < C ∧ 0 < B ∧ 0 < D ∧
+            ∀ m : ℝ, ∃! lg : ℝ × ℝ, lg.1 * D = C * m - A ∧ lg.2 * D = B - A * m
+    note: "augments the positivity conclusion with the dual-system uniqueness/Cramer's-rule consequence (a unique (λ,γ) for every m); this target deliberately covers positivity ONLY and the Lean theorem proves no uniqueness, so the candidate claims strictly more than the target formalises"
+
+  - id: MLDP-D5
+    class: discriminative
+    operator: invent-claim
+    expected_verdict: FAIL
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.PosDef) (μ : Fin n → ℝ)
+          (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := B * C - A ^ 2;
+          0 < C ∧ 0 < B ∧ 0 < D ∧ 0 < A
+    note: "adds 0 < A (A = 1ᵀS⁻¹μ) as a further positivity fact; unlike B > 0 — which the source proof explicitly establishes — the sign of A is not determined by the hypotheses and A can be negative, so 0 < A is an invented, false strengthening"
+
+  # ---------------- Consistency (judge must ACCEPT) ----------------
+  - id: MLDP-C1
+    class: consistency
+    operator: rename-variables
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (M : Matrix (Fin n) (Fin n) ℝ) (hM : M.PosDef) (v : Fin n → ℝ)
+          (hv : ¬ ∃ c : ℝ, v = c • (1 : Fin n → ℝ)) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (M⁻¹ *ᵥ v);
+          let B := v ⬝ᵥ (M⁻¹ *ᵥ v);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (M⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := B * C - A ^ 2;
+          0 < C ∧ 0 < B ∧ 0 < D
+    note: "the covariance S is renamed to M and the mean μ to v (with hypotheses renamed to match); identical statement up to renaming"
+
+  - id: MLDP-C2
+    class: consistency
+    operator: reorder-conjuncts
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.PosDef) (μ : Fin n → ℝ)
+          (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := B * C - A ^ 2;
+          0 < B ∧ 0 < D ∧ 0 < C
+    note: "the three positivity conjuncts are reordered to 0 < B ∧ 0 < D ∧ 0 < C (∧ is commutative and associative); the statement is unchanged"
+
+  - id: MLDP-C3
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.PosDef) (μ : Fin n → ℝ)
+          (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := (μ ⬝ᵥ (S⁻¹ *ᵥ μ)) * C - A ^ 2;
+          0 < C ∧ 0 < (μ ⬝ᵥ (S⁻¹ *ᵥ μ)) ∧ 0 < D
+    note: "B is inlined to its definition μ ⬝ᵥ (S⁻¹ *ᵥ μ) in the middle conjunct and in D; B > 0 is the source-supported proof-body positivity fact and the statement is unchanged"
+
+  - id: MLDP-C4
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.PosDef) (μ : Fin n → ℝ)
+          (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := C * B - A ^ 2;
+          0 < C ∧ 0 < B ∧ 0 < D
+    note: "the discriminant is written D := C * B - A² instead of B * C - A² (multiplication commutes); the positivity claim is unchanged and, as in the target, the dual-system uniqueness is deferred (not asserted)"
+
+  - id: MLDP-C5
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    mutated_statement: |
+      theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]
+          (S : Matrix (Fin n) (Fin n) ℝ) (hS : S.PosDef) (μ : Fin n → ℝ)
+          (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :
+          let A := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);
+          let C := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));
+          let D := B * C - A * A;
+          0 < C ∧ 0 < B ∧ 0 < D
+    note: "A² is written as A * A in the discriminant (identical value); positivity-only statement matching the target scope (uniqueness of the dual system remains deferred, consistent with the source's split-off)"

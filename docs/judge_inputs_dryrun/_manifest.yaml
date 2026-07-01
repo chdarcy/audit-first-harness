@@ -1,48 +1,258 @@
 _warning: ANSWER KEY — maps blind_id to target/class/expected. NEVER sent to a judge.
-generated_utc: '2026-06-27T23:10:32Z'
-prompt_sha256: 31c543738d015c9a9a958fc6266ffcf726e6d4225f60b9016a4f29e3f3450319
-mutants_sha256: 8fe2db652167273547916b0ea2f6da9e7a45bb50b49323165dfbc80494b26455
+generated_utc: '2026-07-01T23:20:48Z'
+prompt_sha256: fa052d3eb43c15a8acb933a937fe1e969332e0811f77e1e2f5be51b181a684e6
+mutants_sha256: 36d366159f7c23c953cd327f2b7004aa654af11c0e0d68567e5fcdb1b27abf51
 dry_run: true
 variants:
-  V-0004:
+  V-0024:
+    target: GoldIrrationalSqrtTwo
+    variant_id: gold_irrational_sqrt_two
+    class: real
+    operator: none
+    expected_verdict: PASS
+    input_sha256: d1754c288ccfcc5926156adbb4c7fa6ab0f7ac127e9d4e07bd46b3e67db76470
+  V-0036:
+    target: GoldIrrationalSqrtTwo
+    variant_id: GIST-D1
+    class: discriminative
+    operator: negate-claim
+    expected_verdict: FAIL
+    input_sha256: 40a8ea6794cdab6ceb371015e39921babdf26c60e859167809ddb82794faaca7
+  V-0028:
+    target: GoldIrrationalSqrtTwo
+    variant_id: GIST-D2
+    class: discriminative
+    operator: alter-constant
+    expected_verdict: FAIL
+    input_sha256: f0da4f02596c86e360f72d8267c4193b6ce7a30d4a05ed7804a83424f575a85a
+  V-0023:
+    target: GoldIrrationalSqrtTwo
+    variant_id: GIST-D3
+    class: discriminative
+    operator: weaken-conclusion
+    expected_verdict: FAIL
+    input_sha256: 0019146ad7e1d85c16018c738590f68333be163ee94bc40df91e7d028e1b55c0
+  V-0026:
+    target: GoldIrrationalSqrtTwo
+    variant_id: GIST-D4
+    class: discriminative
+    operator: replace-property
+    expected_verdict: FAIL
+    input_sha256: 37a7770f60b1d69aed9de35e39bbacb1f6e940ff3cd4f48bde4f9ced0fa7b528
+  V-0022:
+    target: GoldIrrationalSqrtTwo
+    variant_id: GIST-D5
+    class: discriminative
+    operator: add-hypothesis
+    expected_verdict: WARN
+    input_sha256: 23064dfbea8b8c09c98cf2386b1347feb14dffe8b05f02d939ef27b3b13fa0a8
+  V-0003:
+    target: GoldIrrationalSqrtTwo
+    variant_id: GIST-D6
+    class: discriminative
+    operator: alter-formula
+    expected_verdict: FAIL
+    input_sha256: 921a1ffb009e4896c0c952ba5e67a79e29198a78c59c7e4abd46928b9f030ed5
+  V-0016:
+    target: GoldIrrationalSqrtTwo
+    variant_id: GIST-D7
+    class: discriminative
+    operator: alter-constant
+    expected_verdict: FAIL
+    input_sha256: d711f338f327dfd91d29fd3a9ed83bb92502c790bb6464f09c1bb8c12f040d85
+  V-0025:
+    target: GoldIrrationalSqrtTwo
+    variant_id: GIST-C1
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    input_sha256: eb2e368c730a8b4c9f275ef62eb89f61b0a8e6872881d1b9d2b3967fb03df6bd
+  V-0011:
+    target: GoldIrrationalSqrtTwo
+    variant_id: GIST-C2
+    class: consistency
+    operator: definition-unfold
+    expected_verdict: PASS_EQUIV
+    input_sha256: 9319731c3963f7576a631ce7ca8de0b748a6d1d84c327b691b666f885d29c4c8
+  V-0008:
+    target: MarkowitzLemmaDPositive
+    variant_id: markowitz_lemma_D_positive
+    class: real
+    operator: none
+    expected_verdict: PASS
+    input_sha256: 0443f628b28d70399aa7d875ab9d438ddeafce5a8f86a7c193857f1633596df0
+  V-0020:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-D1
+    class: discriminative
+    operator: drop-hypothesis
+    expected_verdict: FAIL
+    input_sha256: e08da048393d8adb9cef9b4f74968ae5759e0160715eca18a72409ebb6eccca8
+  V-0002:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-D2
+    class: discriminative
+    operator: alter-formula
+    expected_verdict: FAIL
+    input_sha256: c297c1b917e2ace318db3c2c6a6f1999e7d8d50ed08a107be47e7c8b1511b054
+  V-0031:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-D3
+    class: discriminative
+    operator: weaken-hypothesis
+    expected_verdict: FAIL
+    input_sha256: 78cf951cdb342e047c0610d13fc264c7f487f2ee377bd6567dcfe77fef67ab56
+  V-0035:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-D4
+    class: discriminative
+    operator: strengthen-conclusion
+    expected_verdict: FAIL
+    input_sha256: 0f3b7179272822164888da44d774553e7fb0cccf2c374125b993e48da29e5d3f
+  V-0017:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-D5
+    class: discriminative
+    operator: invent-claim
+    expected_verdict: FAIL
+    input_sha256: d8d25b73e604e6a967cf37961cc16a13e50c19ff1b2f083cb3de33025bbdd8db
+  V-0014:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-C1
+    class: consistency
+    operator: rename-variables
+    expected_verdict: PASS
+    input_sha256: d797fb93fd776c21b402881d17d88f01995d16a5898c1644e787c201ee3c4461
+  V-0029:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-C2
+    class: consistency
+    operator: reorder-conjuncts
+    expected_verdict: PASS
+    input_sha256: 056363cacee1d7ea2a7a892ee5cfc82c5b1b7714c4fa44e615125c550134696f
+  V-0010:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-C3
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    input_sha256: ca87769b3d400cbeb6b0cac318391402d50b0b2c5298cbb8c314b8aa8fae04a3
+  V-0019:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-C4
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    input_sha256: 90304343a1569e3fd2fff541a6952bcd3a8fcf884e88ad334efc80e55d7bd9c3
+  V-0018:
+    target: MarkowitzLemmaDPositive
+    variant_id: MLDP-C5
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    input_sha256: 1d702af3bed46dd46c736a513bb5d33f421baaaf9f82b76a8d269f4586d2434a
+  V-0015:
     target: PutCallParity
     variant_id: put_call_payoff_parity
     class: real
     operator: none
     expected_verdict: PASS
-    input_sha256: 39589eab62208d3490c272773f414b180cb64ed865da750d9bb43a46a870a9c1
-  V-0005:
+    input_sha256: 95cc4b6ba4b13c10cf58896d0df3fcc07bd7826b2f773425277eb7c130cfd503
+  V-0009:
     target: PutCallParity
     variant_id: PCP-D1
     class: discriminative
     operator: alter-formula
     expected_verdict: FAIL
-    input_sha256: 8fb07dd4d697cf899aa72e06e18faabad8ccdc49a557b4e5029782be802781dc
-  V-0001:
+    input_sha256: 4505fb85a4fd5a20b49927d12e6b7f628f8678745df1fccc0d427131f4e1eed0
+  V-0013:
     target: PutCallParity
     variant_id: PCP-D2
     class: discriminative
     operator: swap-variable
     expected_verdict: FAIL
-    input_sha256: 923e7d7e624782d1bb5e23e323f428b5a76533df04c53fd37b6964e5a185aa9f
-  V-0003:
+    input_sha256: 14d49c7318b2c1d98c1ec832d056fdb91b0509119eb694855f1e45c2cee4608f
+  V-0034:
     target: PutCallParity
     variant_id: PCP-D3
     class: discriminative
     operator: weaken-conclusion
     expected_verdict: FAIL
-    input_sha256: f8db026f1d9021363d15d2397f38a0412b90360aa9fa960b2370274738701b19
-  V-0002:
+    input_sha256: 4e08404b50cfa2556eeb4bf301403f9c9878cf6c9b9df7f8ad098d9c47a93df4
+  V-0030:
     target: PutCallParity
     variant_id: PCP-C1
     class: consistency
     operator: rename-variables
     expected_verdict: PASS
-    input_sha256: 7ec2edb706e8b8e7d579adf0b93817cf8a0c98c94ef2018e39c466ea5f67486f
-  V-0006:
+    input_sha256: 5a771650c28b82f98eac7033c4fceeac5edae6a77bca11627dc15d11c846726d
+  V-0005:
     target: PutCallParity
     variant_id: PCP-C2
     class: consistency
     operator: notation-variant
     expected_verdict: PASS
-    input_sha256: e22b3d012a3af4665982136c0a6a1a13b316257d10ed90df87e393f1341dc3b6
+    input_sha256: 8b60afaf78f147a6eb99e7e670f8d480d803428635ad1e9a219c8bbd412128a5
+  V-0033:
+    target: TwoAssetMinVar
+    variant_id: two_asset_min_variance_weight
+    class: real
+    operator: none
+    expected_verdict: PASS
+    input_sha256: e05cabaf8caf39c756a7b69ec01a9d376c83bb0abef13f434065a1b3bf2040e2
+  V-0027:
+    target: TwoAssetMinVar
+    variant_id: TAM-D1
+    class: discriminative
+    operator: drop-hypothesis
+    expected_verdict: FAIL
+    input_sha256: 25d29373bf95c8821a6618b6bd090dbc9d00bad35fc44d125ba65fc44a09418d
+  V-0032:
+    target: TwoAssetMinVar
+    variant_id: TAM-D2
+    class: discriminative
+    operator: alter-formula
+    expected_verdict: FAIL
+    input_sha256: 4836d5fd3be81fd2a7b02697118933efd6c32be959c644794b05870b1cdf8fbe
+  V-0021:
+    target: TwoAssetMinVar
+    variant_id: TAM-D3
+    class: discriminative
+    operator: narrow-domain
+    expected_verdict: FAIL
+    input_sha256: e80b536319b40a4b1d35d737e51d8e681c706f1e1973c1a6c658ff8c1dfffe1e
+  V-0004:
+    target: TwoAssetMinVar
+    variant_id: TAM-D4
+    class: discriminative
+    operator: strengthen-conclusion
+    expected_verdict: FAIL
+    input_sha256: 62f237d7fccf1052dbf0c52426d1dc8be3f6573139f4f7e77b5648a9f5bd434c
+  V-0007:
+    target: TwoAssetMinVar
+    variant_id: TAM-D5
+    class: discriminative
+    operator: alter-formula
+    expected_verdict: FAIL
+    input_sha256: 08ba28df5912d0f27d74bf32873644d85ca3ca961409c08e31699631e3a0c251
+  V-0006:
+    target: TwoAssetMinVar
+    variant_id: TAM-D6
+    class: discriminative
+    operator: swap-variable
+    expected_verdict: FAIL
+    input_sha256: 415934e8207467a6a6f01b06b429ca97f53c7adc35b3d6e327ba4830a54d20af
+  V-0001:
+    target: TwoAssetMinVar
+    variant_id: TAM-C1
+    class: consistency
+    operator: rename-variables
+    expected_verdict: PASS
+    input_sha256: dc45d7809620926923caf5e0e81856f5e81aa103a3e9469b4150575d735ab88b
+  V-0012:
+    target: TwoAssetMinVar
+    variant_id: TAM-C2
+    class: consistency
+    operator: notation-variant
+    expected_verdict: PASS
+    input_sha256: 9cd861fbe782180588e82b17befa436b1764fdf6ff719d06c024ff7fb0a84401

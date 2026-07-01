@@ -1,13 +1,13 @@
 meta:
-  blind_id: V-0002
+  blind_id: V-0014
   dry_run: true
   prompt_sha256: fa052d3eb43c15a8acb933a937fe1e969332e0811f77e1e2f5be51b181a684e6
-  input_sha256: c297c1b917e2ace318db3c2c6a6f1999e7d8d50ed08a107be47e7c8b1511b054
+  input_sha256: d797fb93fd776c21b402881d17d88f01995d16a5898c1644e787c201ee3c4461
   mutants_sha256: 36d366159f7c23c953cd327f2b7004aa654af11c0e0d68567e5fcdb1b27abf51
   note: DRY RUN ONLY. 'package' below is exactly what a judge would receive as user content. 'meta' is
     NOT sent to the judge.
 package:
-  variant: V-0002
+  variant: V-0014
   instructions: Compare the source claim to the Lean statement and output the verdict YAML defined in
     the system prompt. Judge this package in isolation.
   source:
@@ -40,10 +40,10 @@ package:
       - scalars are real; Sigma^{-1} exists and is symmetric positive definite
   lean:
     ambient: ''
-    statement: "theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]\n    (S : Matrix (Fin n) (Fin n)\
-      \ ℝ) (hS : S.PosDef) (μ : Fin n → ℝ)\n    (hμ : ¬ ∃ c : ℝ, μ = c • (1 : Fin n → ℝ)) :\n    let A\
-      \ := (1 : Fin n → ℝ) ⬝ᵥ (S⁻¹ *ᵥ μ);\n    let B := μ ⬝ᵥ (S⁻¹ *ᵥ μ);\n    let C := (1 : Fin n → ℝ)\
-      \ ⬝ᵥ (S⁻¹ *ᵥ (1 : Fin n → ℝ));\n    let D := A ^ 2 - B * C;\n    0 < C ∧ 0 < B ∧ 0 < D"
+    statement: "theorem candidate_statement {n : ℕ} [Nonempty (Fin n)]\n    (M : Matrix (Fin n) (Fin n)\
+      \ ℝ) (hM : M.PosDef) (v : Fin n → ℝ)\n    (hv : ¬ ∃ c : ℝ, v = c • (1 : Fin n → ℝ)) :\n    let A\
+      \ := (1 : Fin n → ℝ) ⬝ᵥ (M⁻¹ *ᵥ v);\n    let B := v ⬝ᵥ (M⁻¹ *ᵥ v);\n    let C := (1 : Fin n → ℝ)\
+      \ ⬝ᵥ (M⁻¹ *ᵥ (1 : Fin n → ℝ));\n    let D := B * C - A ^ 2;\n    0 < C ∧ 0 < B ∧ 0 < D"
   formalisation_choices:
   - 'the covariance is a symmetric positive-definite matrix S : Matrix (Fin n) (Fin n) ℝ (hypothesis S.PosDef);
     S stands for Σ, which is a reserved token in Lean'

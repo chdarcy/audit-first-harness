@@ -1,13 +1,13 @@
 meta:
-  blind_id: V-0006
+  blind_id: V-0027
   dry_run: true
   prompt_sha256: fa052d3eb43c15a8acb933a937fe1e969332e0811f77e1e2f5be51b181a684e6
-  input_sha256: 415934e8207467a6a6f01b06b429ca97f53c7adc35b3d6e327ba4830a54d20af
+  input_sha256: 25d29373bf95c8821a6618b6bd090dbc9d00bad35fc44d125ba65fc44a09418d
   mutants_sha256: 36d366159f7c23c953cd327f2b7004aa654af11c0e0d68567e5fcdb1b27abf51
   note: DRY RUN ONLY. 'package' below is exactly what a judge would receive as user content. 'meta' is
     NOT sent to the judge.
 package:
-  variant: V-0006
+  variant: V-0027
   instructions: Compare the source claim to the Lean statement and output the verdict YAML defined in
     the system prompt. Judge this package in isolation.
   source:
@@ -35,10 +35,9 @@ package:
   lean:
     ambient: "def twoAssetVariance (sigma1Sq sigma2Sq sigma12 w : ℝ) : ℝ :=\n  w ^ 2 * sigma1Sq + (1 -\
       \ w) ^ 2 * sigma2Sq + 2 * w * (1 - w) * sigma12\n"
-    statement: "theorem candidate_statement\n    (sigma1Sq sigma2Sq sigma12 : ℝ)\n    (hdenom : 0 < sigma1Sq\
-      \ + sigma2Sq - 2 * sigma12) :\n    ∀ w : ℝ,\n      twoAssetVariance sigma1Sq sigma2Sq sigma12\n\
-      \          ((sigma1Sq - sigma12) / (sigma1Sq + sigma2Sq - 2 * sigma12))\n        ≤ twoAssetVariance\
-      \ sigma1Sq sigma2Sq sigma12 w"
+    statement: "theorem candidate_statement\n    (sigma1Sq sigma2Sq sigma12 : ℝ) :\n    ∀ w : ℝ,\n   \
+      \   twoAssetVariance sigma1Sq sigma2Sq sigma12\n          ((sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq\
+      \ - 2 * sigma12))\n        ≤ twoAssetVariance sigma1Sq sigma2Sq sigma12 w"
   formalisation_choices:
   - portfolio variance V(w) = twoAssetVariance sigma1Sq sigma2Sq sigma12 w (see lean_ambient)
   - the minimiser is the closed form w* = (sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq - 2*sigma12)

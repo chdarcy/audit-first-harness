@@ -1,9 +1,9 @@
 meta:
   blind_id: V-0001
   dry_run: true
-  prompt_sha256: 31c543738d015c9a9a958fc6266ffcf726e6d4225f60b9016a4f29e3f3450319
-  input_sha256: 923e7d7e624782d1bb5e23e323f428b5a76533df04c53fd37b6964e5a185aa9f
-  mutants_sha256: 8fe2db652167273547916b0ea2f6da9e7a45bb50b49323165dfbc80494b26455
+  prompt_sha256: fa052d3eb43c15a8acb933a937fe1e969332e0811f77e1e2f5be51b181a684e6
+  input_sha256: dc45d7809620926923caf5e0e81856f5e81aa103a3e9469b4150575d735ab88b
+  mutants_sha256: 36d366159f7c23c953cd327f2b7004aa654af11c0e0d68567e5fcdb1b27abf51
   note: DRY RUN ONLY. 'package' below is exactly what a judge would receive as user content. 'meta' is
     NOT sent to the judge.
 package:
@@ -12,21 +12,35 @@ package:
     the system prompt. Judge this package in isolation.
   source:
     refs:
-    - thm:putcall
+    - thm:two_asset_minvar
     claims:
-    - ref: thm:putcall
-      paraphrase: 'The payoff of a long call minus the payoff of a long put, both struck at K on an underlying
-        worth S at expiry, equals the forward payoff S - K. As a pointwise identity in the reals: max(S
-        - K, 0) - max(K - S, 0) = S - K.'
-      body_tex: \max(S - K,\, 0) - \max(K - S,\, 0) = S - K .
+    - ref: thm:two_asset_minvar
+      paraphrase: For two risky assets with variance parameters sigma1Sq, sigma2Sq and covariance sigma12,
+        the portfolio variance V(w) = w^2 sigma1Sq + (1-w)^2 sigma2Sq + 2 w (1-w) sigma12 is minimized
+        over ALL real weights w at w* = (sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq - 2 sigma12), provided
+        the quadratic coefficient sigma1Sq + sigma2Sq - 2 sigma12 is positive. The conclusion is the non-strict
+        global inequality V(w*) <= V(w) for every real w; uniqueness is not claimed.
+      body_tex: 'V(w) = w^2 \sigma_1^2 + (1-w)^2 \sigma_2^2 + 2 w (1-w) \sigma_{12},\quad
+
+        w^\ast = \frac{\sigma_2^2 - \sigma_{12}}{\sigma_1^2 + \sigma_2^2 - 2\sigma_{12}},\quad
+
+        \sigma_1^2 + \sigma_2^2 - 2\sigma_{12} > 0
+
+        \;\Rightarrow\; \forall w \in \mathbb{R},\ V(w^\ast) \le V(w).'
       informal_assumptions:
-      - S and K are real numbers
-      - no interest rate or no-arbitrage assumption is required (a pointwise identity)
+      - sigma1Sq, sigma2Sq, sigma12 are real parameters
+      - the quadratic coefficient sigma1Sq + sigma2Sq - 2 sigma12 is strictly positive (the only hypothesis)
+      - no separate sigma1Sq > 0 / sigma2Sq > 0 positivity is required for the inequality
+      - the minimisation domain is ALL real weights w, not a long-only 0 <= w <= 1 constraint
   lean:
-    ambient: ''
-    statement: "theorem candidate_statement (S K : ℝ) :\n    max (K - S) 0 - max (S - K) 0 = S - K"
+    ambient: "def twoAssetVariance (sigma1Sq sigma2Sq sigma12 w : ℝ) : ℝ :=\n  w ^ 2 * sigma1Sq + (1 -\
+      \ w) ^ 2 * sigma2Sq + 2 * w * (1 - w) * sigma12\n"
+    statement: "theorem candidate_statement\n    (a b c : ℝ)\n    (hpos : 0 < a + b - 2 * c) :\n    ∀\
+      \ x : ℝ,\n      twoAssetVariance a b c ((b - c) / (a + b - 2 * c))\n        ≤ twoAssetVariance a\
+      \ b c x"
   formalisation_choices:
-  - 'payoffs modelled directly over the reals: call = max (S - K) 0, put = max (K - S) 0'
-  - the forward payoff is the right-hand side S - K
-  - no non-negativity hypothesis on S is carried (the identity does not need it)
+  - portfolio variance V(w) = twoAssetVariance sigma1Sq sigma2Sq sigma12 w (see lean_ambient)
+  - the minimiser is the closed form w* = (sigma2Sq - sigma12) / (sigma1Sq + sigma2Sq - 2*sigma12)
+  - 'domain is all real weights w : ℝ (no long-only constraint)'
+  - conclusion is non-strict global minimality V(w*) ≤ V(w); the only hypothesis is denom > 0
   provable_equiv_lemma: null

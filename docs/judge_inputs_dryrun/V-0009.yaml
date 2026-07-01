@@ -1,13 +1,13 @@
 meta:
-  blind_id: V-0005
+  blind_id: V-0009
   dry_run: true
   prompt_sha256: fa052d3eb43c15a8acb933a937fe1e969332e0811f77e1e2f5be51b181a684e6
-  input_sha256: 8b60afaf78f147a6eb99e7e670f8d480d803428635ad1e9a219c8bbd412128a5
+  input_sha256: 4505fb85a4fd5a20b49927d12e6b7f628f8678745df1fccc0d427131f4e1eed0
   mutants_sha256: 36d366159f7c23c953cd327f2b7004aa654af11c0e0d68567e5fcdb1b27abf51
   note: DRY RUN ONLY. 'package' below is exactly what a judge would receive as user content. 'meta' is
     NOT sent to the judge.
 package:
-  variant: V-0005
+  variant: V-0009
   instructions: Compare the source claim to the Lean statement and output the verdict YAML defined in
     the system prompt. Judge this package in isolation.
   source:
@@ -24,8 +24,7 @@ package:
       - no interest rate or no-arbitrage assumption is required (a pointwise identity)
   lean:
     ambient: ''
-    statement: "theorem candidate_statement (S K : ℝ) :\n    max (S - K) (0 : ℝ) - max (K - S) (0 : ℝ)\
-      \ = S - K"
+    statement: "theorem candidate_statement (S K : ℝ) :\n    max (S - K) 0 - max (K - S) 0 = K - S"
   formalisation_choices:
   - 'payoffs modelled directly over the reals: call = max (S - K) 0, put = max (K - S) 0'
   - the forward payoff is the right-hand side S - K
