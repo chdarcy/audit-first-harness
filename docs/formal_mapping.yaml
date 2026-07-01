@@ -107,12 +107,14 @@ targets:
     # `thm:markowitz_lemma_d_positive` is the internal theorem-index key. The Lean conclusion includes
     # `B > 0` in addition to the lemma headline's `C > 0` and `D > 0`; this is accepted because
     # `B > 0` is explicitly established in the source proof under the same hypotheses. The Lean theorem
-    # is fully PROVED and axiom-audited ([propext, Quot.sound, Classical.choice]; no sorryAx). Comparator
-    # remains NOT_RUN until real writeback, so this target is HUMAN_APPROVED but NOT yet promoted
-    # (Lean correctness + source-fidelity done; Comparator/promotion gate still outstanding).
+    # is fully PROVED and axiom-audited ([propext, Quot.sound, Classical.choice]; no sorryAx). The real
+    # Comparator has now been run on WSL/Linux (real landrun sandbox, --best-effort; kernel 6.6 Landlock
+    # ABI < 5) and the Lean default kernel ACCEPTS the solution ("Your solution is okay!"); Challenge and
+    # Solution export the same theorem within the permitted axioms. Recorded conservatively as
+    # PASSED_REAL_LANDRUN_BEST_EFFORT (consistent with the other targets).
     verdict: PASS
     equivalence: null
-    comparator_status: NOT_RUN
+    comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT
     review: docs/fidelity_reviews/MarkowitzLemmaDPositive.md
     state: HUMAN_APPROVED
     human_approved: true

@@ -29,12 +29,13 @@ human_approved_utc: "2026-07-01T20:55:14Z"
 
 # MarkowitzLemmaDPositive — fidelity review
 
-> **Status: HUMAN SOURCE-FIDELITY APPROVED — pending real Comparator run and promotion gate.**
+> **Status: HUMAN SOURCE-FIDELITY APPROVED — Comparator passed (real landrun, best-effort).**
 > **Lean correctness is done** — the theorem is fully proved and axiom-audited
-> (`[propext, Quot.sound, Classical.choice]`; no `sorryAx`). **The source-fidelity review is now
-> approved** (`verdict: PASS`, `human_approved: true`). **The Comparator status is still `NOT_RUN`**
-> until the real Comparator writeback is executed, and **this target is not yet promoted** (the
-> promotion gate runs after the Comparator).
+> (`[propext, Quot.sound, Classical.choice]`; no `sorryAx`). **The source-fidelity review is
+> approved** (`verdict: PASS`, `human_approved: true`). **The real Comparator has now been run** on
+> WSL/Linux and the Lean default kernel accepts the solution
+> (`comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT`). This does not change the fidelity decision:
+> the Comparator is formal Challenge/Solution evidence, not source-fidelity evidence.
 
 ## Source claim
 From internal source-ledger key `thm:markowitz_lemma_d_positive`, corresponding to source LaTeX
@@ -86,5 +87,6 @@ deliberately deferred to a later target.
 
 ## Verdict
 **PASS** (`verdict: PASS`, `human_approved: true`, approver Christopher Darcy). Lean correctness is
-established and the source-fidelity review is approved. The Comparator run (`comparator_status:
-NOT_RUN`) and the promotion gate are still outstanding; this target is not yet promoted.
+established and the source-fidelity review is approved. The real Comparator has now been run and
+accepts the solution (`comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT`); this is formal evidence
+only and does not alter the source-fidelity decision above.
