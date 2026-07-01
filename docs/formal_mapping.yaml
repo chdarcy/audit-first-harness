@@ -112,9 +112,19 @@ targets:
     # ABI < 5) and the Lean default kernel ACCEPTS the solution ("Your solution is okay!"); Challenge and
     # Solution export the same theorem within the permitted axioms. Recorded conservatively as
     # PASSED_REAL_LANDRUN_BEST_EFFORT (consistent with the other targets).
+    #
+    # Promotion gate returned HUMAN_REVIEW because the calibrated judge produced false alarms on
+    # meaning-preserving consistency variants (consistency false-alarm / false-rejection rate 0.6).
+    # Human reviewer Christopher Darcy reviewed the cap and approved promotion: the real mapping was
+    # accepted as PASS, discriminative recall was 1.0, and all formal/source-fidelity evidence is
+    # already satisfied (Lean build, no-sorry, axiom audit, human-approved fidelity review, and real
+    # Comparator pass recorded as PASSED_REAL_LANDRUN_BEST_EFFORT). The override is a judgement-layer
+    # override only; it does not override Lean, source fidelity, axiom audit, or Comparator.
     verdict: PASS
     equivalence: null
     comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT
     review: docs/fidelity_reviews/MarkowitzLemmaDPositive.md
     state: HUMAN_APPROVED
     human_approved: true
+    human_override: true
+    promotion_state: PROMOTED_WITH_HUMAN_REVIEW

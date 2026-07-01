@@ -1,0 +1,38 @@
+promotion_decision:
+  target: MarkowitzLemmaDPositive
+  status: HUMAN_REVIEW
+  confidence: low
+  reasons:
+  - Formal mapping, theorem card, and a human-approved fidelity review are all present.
+  - The judge accepted the real mapping (verdict PASS).
+  - Lean build is recorded as passing.
+  - Comparator passed with best-effort landrun (degraded ABI); confidence capped to medium.
+  - A human override is recorded, permitting promotion despite open caveats.
+  - All formal checks and judge-calibration thresholds are satisfied.
+  - Structured false_rejection_rate_consistency 0.6 exceeds 0.0; the judge rejected a meaning-preserving
+    variant.
+  - Structured judge raised 2 high/critical fidelity concern(s) for MarkowitzLemmaDPositive; a human must
+    review whether the mapping needs revision.
+  - These structured judge metrics cap promotion to HUMAN_REVIEW; they are source-fidelity reliability
+    evidence, not proof about the theorem (the judge is not a theorem oracle).
+  allowed_next_steps:
+  - human_review
+  - rerun_with_stronger_judge
+  - record_human_override
+  judge_metrics_status: PRESENT
+  judge_metric_cap:
+    applied: true
+    capped_from: PROMOTE
+    capped_to: HUMAN_REVIEW
+    reasons:
+    - Structured false_rejection_rate_consistency 0.6 exceeds 0.0; the judge rejected a meaning-preserving
+      variant.
+    - Structured judge raised 2 high/critical fidelity concern(s) for MarkowitzLemmaDPositive; a human
+      must review whether the mapping needs revision.
+  provenance:
+    prompt_sha256: fa052d3eb43c15a8acb933a937fe1e969332e0811f77e1e2f5be51b181a684e6
+    mutants_sha256: 36d366159f7c23c953cd327f2b7004aa654af11c0e0d68567e5fcdb1b27abf51
+    scored_utc: '2026-07-01T23:23:36Z'
+    comparator_status: PASSED_REAL_LANDRUN_BEST_EFFORT
+    landrun_abi: unknown
+  decided_utc: '2026-07-01T23:43:20Z'

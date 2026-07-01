@@ -6,14 +6,14 @@
     "with_equivalence_check": true,
     "writeback_comparator_status": false
   },
-  "generated_utc": "2026-07-01T23:35:54Z",
+  "generated_utc": "2026-07-01T23:43:12Z",
   "input_fingerprints": {
     "Audit/MarkowitzLemmaDPositive/Challenge.lean": "sha256:15846289cb84830c2cd38d07b903661fd6c411c529819ac4caeeda0d8043e10e",
     "Audit/MarkowitzLemmaDPositive/Solution.lean": "sha256:8f043b2a939f311764fa04a67a6162eec8aaeed531b4db273298df50249d552e",
     "Audit/MarkowitzLemmaDPositive/comparator.json": "sha256:d8a0d600250253bc0a10a4d71054bb68cd1eeb92fabcd893f199ea5969083ce5",
     "AuditHarness/MarkowitzLemmaDPositive.lean": "sha256:3a50601cf0b29ff4b193eac67484f5cec8d9ad3a09417db3c1eb9a7910500d79",
     "AuditHarness/MarkowitzLemmaDPositive/Helpers.lean": "sha256:6f1019c7cc5dcb93c96c4a3302b8d4bbfa1a2b620f783c4651e4ade7519989ab",
-    "docs/formal_mapping.yaml": "sha256:7098ac9c9d64e0629050dc442ce0126acb00fa2dc7ee3bd8f6fecf890607a72e",
+    "docs/formal_mapping.yaml": "sha256:8580fe288e0634cd1d4f2ba0ca68a23016f756dc1a4f14eccede8ebd425b443c",
     "docs/theorem_index.yaml": "sha256:34a730f63be4736dcdc482e42a9610858bfdd38e98b341f57b5652d5765866ad"
   },
   "overall_status": "PASS",
